@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FalkorSDK</RootNamespace>
+    <AssemblyName>FalkorSDK</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <NuGetPackageImportStamp>e8530194</NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ExtendedDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Akavache, Version=4.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\akavache.core.4.0.4\lib\net45\Akavache.dll</HintPath>
+    </Reference>
+    <Reference Include="Akavache.Sqlite3, Version=4.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\akavache.sqlite3.4.0.4\lib\Portable-Net45+Win8+WP8+Wpa81\Akavache.Sqlite3.dll</HintPath>
+    </Reference>
+    <Reference Include="C5, Version=2.3.5280.26713, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=0.15.0.99, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\MahApps.Metro.0.15.0-ALPHA99\lib\net45\MahApps.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Experimental.Collections, Version=1.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\Microsoft.Experimental.Collections.1.0.3-alpha\lib\portable-net45+win8+wp8\Microsoft.Experimental.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.Composition">
+      <HintPath>..\..\..\packages\Prism.Composition.5.0.0\lib\NET45\Microsoft.Practices.Prism.Composition.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.Interactivity">
+      <HintPath>..\..\..\packages\Prism.Interactivity.5.0.0\lib\NET45\Microsoft.Practices.Prism.Interactivity.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.MefExtensions">
+      <HintPath>..\..\..\packages\Prism.MEFExtensions.5.0.0\lib\NET45\Microsoft.Practices.Prism.MefExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.Mvvm">
+      <HintPath>..\..\..\packages\Prism.Mvvm.1.1.1\lib\net45\Microsoft.Practices.Prism.Mvvm.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.Mvvm.Desktop">
+      <HintPath>..\..\..\packages\Prism.Mvvm.1.1.1\lib\net45\Microsoft.Practices.Prism.Mvvm.Desktop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.PubSubEvents">
+      <HintPath>..\..\..\packages\Prism.PubSubEvents.1.1.2\lib\portable-sl5+windowsphone8+windows8+net40+wpa81\Microsoft.Practices.Prism.PubSubEvents.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism.SharedInterfaces">
+      <HintPath>..\..\..\packages\Prism.Mvvm.1.1.1\lib\net45\Microsoft.Practices.Prism.SharedInterfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\CommonServiceLocator.1.3\lib\portable-net4+sl5+netcore45+wpa81+wp8\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI, Version=6.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\reactiveui-core.6.2.0\lib\Net45\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\..\..\packages\Splat.1.5.1\lib\Net45\Splat.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SQLitePCL.raw, Version=0.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\SQLitePCL.raw_basic.0.6.4-pre1\lib\net45\SQLitePCL.raw.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.Composition.registration" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.93.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\lib\Packages\UimfLibrary\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\..\..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\..\..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\..\..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\..\..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Windows.Threading">
+      <HintPath>..\..\..\packages\Rx-XAML.2.2.5\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.9.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\packages\Microsoft.Tpl.Dataflow.4.5.23\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\MahApps.Metro.0.15.0-ALPHA99\lib\net45\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UIMFLibrary">
+      <HintPath>..\..\..\lib\Packages\UimfLibrary\UIMFLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AkavacheSqliteLinkerOverride.cs" />
+    <Compile Include="AsciiControlChars.cs" />
+    <Compile Include="Channel\AIChannel.cs" />
+    <Compile Include="Channel\AOChannel.cs" />
+    <Compile Include="Channel\Channel.cs" />
+    <Compile Include="Channel\ChannelType.cs" />
+    <Compile Include="Channel\CIChannel.cs" />
+    <Compile Include="Channel\COChannel.cs" />
+    <Compile Include="Channel\DIChannel.cs" />
+    <Compile Include="Channel\DOChannel.cs" />
+    <Compile Include="Data\AnalogToDigitalConverterProperties.cs" />
+    <Compile Include="Data\Calibration\CalibrationData.cs" />
+    <Compile Include="Data\Events\AnalogPulseEvent.cs" />
+    <Compile Include="Data\Events\AnalogStepEvent.cs" />
+    <Compile Include="Data\Events\ClockEvent.cs" />
+    <Compile Include="Data\Events\DigitalStepEvent.cs" />
+    <Compile Include="Data\Events\DigitalPulseEvent.cs" />
+    <Compile Include="Data\Events\AnalogRampEvent.cs" />
+    <Compile Include="Data\Events\LoopEvent.cs" />
+    <Compile Include="Data\Events\SignalEventType.cs" />
+    <Compile Include="Data\Events\SignalTableEvent.cs" />
+    <Compile Include="Data\Events\SignalTableEventTypes.cs" />
+    <Compile Include="Data\Events\StepEvent.cs" />
+    <Compile Include="Data\Experiment\ComparisonType.cs" />
+    <Compile Include="Data\Experiment\DataAcquisitionBlock.cs" />
+    <Compile Include="Data\Experiment\Experiment.cs" />
+    <Compile Include="Data\Experiment\ExperimentBlock.cs" />
+    <Compile Include="Data\Experiment\ExperimentExecutionEngine.cs" />
+    <Compile Include="Data\Experiment\IActionBlock.cs" />
+    <Compile Include="Data\Experiment\IDecisionBlock.cs" />
+    <Compile Include="Data\Experiment\IExperimentBlock.cs" />
+    <Compile Include="Data\Experiment\IExperimentExecutionEngine.cs" />
+    <Compile Include="Data\Experiment\IonMobilityExperiment.cs" />
+    <Compile Include="Data\Experiment\IOutputBlock.cs" />
+    <Compile Include="Data\Experiment\ISingleModuleInputBlock.cs" />
+    <Compile Include="Data\Experiment\CountingLoopBlock.cs" />
+    <Compile Include="Data\Experiment\ITransformDataBlock.cs" />
+    <Compile Include="Data\Experiment\ITransformManyBlock.cs" />
+    <Compile Include="Data\Experiment\RunTimeTableBlock.cs" />
+    <Compile Include="Data\Experiment\TimeTableBlock.cs" />
+    <Compile Include="Data\Experiment\WaitBlock.cs" />
+    <Compile Include="Data\FalkorErrorArgs.cs" />
+    <Compile Include="Data\Instruments\IInstrument.cs" />
+    <Compile Include="Data\Instruments\Instrument.cs" />
+    <Compile Include="Data\Instruments\InstrumentComponent.cs" />
+    <Compile Include="Data\ITimeUnitConverter.cs" />
+    <Compile Include="Data\Scheduler.cs" />
+    <Compile Include="Data\Signals\DigitalSignalDirection.cs" />
+    <Compile Include="Data\Signals\InvalidSignalException.cs" />
+    <Compile Include="Data\Signals\LoadedSignalProfile.cs" />
+    <Compile Include="Data\Signals\SignalOutputProfile.cs" />
+    <Compile Include="Data\Signals\GeneralPurposeInputOutputOutOfRangeException.cs" />
+    <Compile Include="Data\Signals\SignalTableExceptions.cs" />
+    <Compile Include="Data\Signals\SignalTypes.cs" />
+    <Compile Include="Data\SystemInformationReporter.cs" />
+    <Compile Include="Data\UnifiedIonMobilityFile.cs" />
+    <Compile Include="Devices\CalibratorType.cs" />
+    <Compile Include="Devices\DeviceStatus.cs" />
+    <Compile Include="Devices\Frame.cs" />
+    <Compile Include="Devices\IAnalogToDigitalConverterProperties.cs" />
+    <Compile Include="Devices\IDigitalInputOutputDevice.cs" />
+    <Compile Include="Devices\IInputOutputDevice.cs" />
+    <Compile Include="Devices\IFalkorADC.cs" />
+    <Compile Include="Devices\IFalkorDAC.cs" />
+    <Compile Include="Devices\IFalkorDAQ.cs" />
+    <Compile Include="Devices\ISourceControlDevice.cs" />
+    <Compile Include="Extensions\ObservableCollectionExtensions.cs" />
+    <Compile Include="Extensions\ReactiveListExtensions.cs" />
+    <Compile Include="FalkorSetting.cs" />
+    <Compile Include="Devices\DeviceSignalUpdateEventArgs.cs" />
+    <Compile Include="Devices\DeviceStatusEventArgs.cs" />
+    <Compile Include="Devices\HardwareConfiguration.cs" />
+    <Compile Include="IO\Devices\IDeviceConfigurationReader.cs" />
+    <Compile Include="IO\Devices\IDeviceConfigurationWriter.cs" />
+    <Compile Include="IO\Experiments\JsonExperimentReader.cs" />
+    <Compile Include="IO\FalkorConfiguration.cs" />
+    <Compile Include="IO\Generic\BinaryReader.cs" />
+    <Compile Include="IO\Generic\BinaryWriter.cs" />
+    <Compile Include="IO\Generic\ConfigurationFormatType.cs" />
+    <Compile Include="IO\Generic\DataContractReader.cs" />
+    <Compile Include="IO\Generic\DataContractWriter.cs" />
+    <Compile Include="IO\Generic\FactoryTypeNotSpecifiedException.cs" />
+    <Compile Include="IO\Generic\IReaderAsync.cs" />
+    <Compile Include="IO\Generic\IWriterAsync.cs" />
+    <Compile Include="IO\Ports\FalkorSerialPort.cs" />
+    <Compile Include="IO\Ports\SerialPortProperties.cs" />
+    <Compile Include="IO\Signals\AnalogOutputDcChannelReader.cs" />
+    <Compile Include="IO\Signals\ISignalProfileReader.cs" />
+    <Compile Include="IO\Signals\ISignalProfileWriter.cs" />
+    <Compile Include="IO\Signals\ISignalTableReaderAsync.cs" />
+    <Compile Include="IO\Signals\SignalProfileReaderPlain.cs" />
+    <Compile Include="IO\Signals\SignalProfileIOFactory.cs" />
+    <Compile Include="IO\Signals\SignalProfileTableInvalidException.cs" />
+    <Compile Include="IO\Signals\SignalProfileWriterPlain.cs" />
+    <Compile Include="IO\Signals\SignalTableWriterType.cs" />
+    <Compile Include="IO\Signals\SignalTimeTableReaderPlain.cs" />
+    <Compile Include="IO\Signals\SignalTimeTableReaderPlainAsync.cs" />
+    <Compile Include="IO\Signals\AmpsBoxTimeTableWriterPlain.cs" />
+    <Compile Include="IO\Signals\SignalTableReaderFactory.cs" />
+    <Compile Include="IO\Signals\SignalTableWriterFactory.cs" />
+    <Compile Include="Data\Signals\ClockSignal.cs" />
+    <Compile Include="Data\Events\PulseEvent.cs" />
+    <Compile Include="Data\Events\SignalEvent.cs" />
+    <Compile Include="Data\Signals\SignalTable.cs" />
+    <Compile Include="Data\Signals\SynchronizedSignal.cs" />
+    <Compile Include="Data\SimpleTimeConverter.cs" />
+    <Compile Include="Data\TimeTableUnits.cs" />
+    <Compile Include="Devices\IAnalogInputDevice.cs" />
+    <Compile Include="Devices\IAnalogOutputDevice.cs" />
+    <Compile Include="Devices\IDigitalInputDevice.cs" />
+    <Compile Include="Devices\IDigitalOutputDevice.cs" />
+    <Compile Include="Devices\IDigitizer.cs" />
+    <Compile Include="Devices\IFalkorDevice.cs" />
+    <Compile Include="Devices\ISignalTableDevice.cs" />
+    <Compile Include="Devices\PhysicalDeviceConfiguration.cs" />
+    <Compile Include="Devices\SerialBaudRateFactory.cs" />
+    <Compile Include="IO\Generic\IReader.cs" />
+    <Compile Include="IO\Generic\IWriter.cs" />
+    <Compile Include="IO\Experiments\IExperimentReader.cs" />
+    <Compile Include="IO\Experiments\IExperimentWriter.cs" />
+    <Compile Include="IO\Generic\ReaderFactory.cs" />
+    <Compile Include="IO\Generic\WriterFactory.cs" />
+    <Compile Include="IO\Generic\JsonReader.cs" />
+    <Compile Include="IO\Generic\JsonWriter.cs" />
+    <Compile Include="IO\Generic\XmlReader.cs" />
+    <Compile Include="IO\Generic\XmlWriter.cs" />
+    <Compile Include="IO\Signals\ISignalTableFormatter.cs" />
+    <Compile Include="IO\Signals\ISignalTableReader.cs" />
+    <Compile Include="IO\Signals\ISignalTableWriter.cs" />
+    <Compile Include="IO\Signals\IChannelReader.cs" />
+    <Compile Include="IO\Signals\IChannelWriter.cs" />
+    <Compile Include="IO\Signals\AnalogOutputDcChannelWriter.cs" />
+    <Compile Include="IO\Signals\StaticSignalTableFormats.cs" />
+    <Compile Include="Notifications\NotificationAction.cs" />
+    <Compile Include="Notifications\NotificationErrorArgs.cs" />
+    <Compile Include="Notifications\INotifier.cs" />
+    <Compile Include="Notifications\NotificationNoAction.cs" />
+    <Compile Include="Notifications\NotificationSystem.cs" />
+    <Compile Include="Notifications\NotificationStatusArgs.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDictionary Include="..\..\..\CustomDictionary.xml">
+      <Link>CustomDictionary.xml</Link>
+    </CodeAnalysisDictionary>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /y $(TargetPath)  "$(ProjectDir)..\..\..\lib\SDK\Falkor\"</PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+    <Error Condition="!Exists('..\..\..\packages\SQLitePCL.raw_basic.0.6.4-pre1\build\net45\SQLitePCL.raw_basic.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\packages\SQLitePCL.raw_basic.0.6.4-pre1\build\net45\SQLitePCL.raw_basic.targets'))" />
+  </Target>
+  <Import Project="..\..\..\packages\SQLitePCL.raw_basic.0.6.4-pre1\build\net45\SQLitePCL.raw_basic.targets" Condition="Exists('..\..\..\packages\SQLitePCL.raw_basic.0.6.4-pre1\build\net45\SQLitePCL.raw_basic.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

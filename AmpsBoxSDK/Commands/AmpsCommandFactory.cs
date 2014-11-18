@@ -34,13 +34,7 @@ namespace AmpsBoxSdk.Commands
         {
             providerMap = new Dictionary<string, AmpsCommandProvider>();
 
-            AmpsCommandProvider provider;
-
-            // providerMap.Add(provider.GetSupportedVersions().ToLower(), provider);
-
-            // provider = new BetaCommandProvider();
-            // providerMap.Add(provider.GetSupportedVersions().ToLower(), provider);
-            provider = new GammaCommandProvider();
+            AmpsCommandProvider provider = new GammaCommandProvider();
             providerMap.Add(provider.GetSupportedVersions().ToLower(), provider);
         }
 
