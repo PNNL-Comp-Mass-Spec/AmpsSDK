@@ -7,9 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmpsBoxTests", "AmpsBoxTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmpsBoxSdk", "AmpsBoxSDK\AmpsBoxSdk.csproj", "{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FalkorSDK", "FalkorSDK\FalkorSDK.csproj", "{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FalkorSDKTest", "FalkorSDKTest\FalkorSDKTest.csproj", "{55B27E5C-5E4A-400E-996A-A2E0F96849C1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{A2881495-9A79-4E80-B577-A9087BC4A23D}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,30 +45,6 @@ Global
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.ActiveCfg = Release|x64
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.Build.0 = Release|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Debug|x64.ActiveCfg = Debug|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Debug|x64.Build.0 = Debug|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.PNNLRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.PNNLRelease|Any CPU.Build.0 = Release|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.PNNLRelease|x64.ActiveCfg = Release|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.PNNLRelease|x64.Build.0 = Release|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Release|x64.ActiveCfg = Release|x64
-		{7DE1D572-9350-4CDC-9BDE-BDC484A638AB}.Release|x64.Build.0 = Release|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Debug|x64.ActiveCfg = Debug|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Debug|x64.Build.0 = Debug|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.PNNLRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.PNNLRelease|Any CPU.Build.0 = Release|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.PNNLRelease|x64.ActiveCfg = Release|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.PNNLRelease|x64.Build.0 = Release|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Release|x64.ActiveCfg = Release|x64
-		{55B27E5C-5E4A-400E-996A-A2E0F96849C1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

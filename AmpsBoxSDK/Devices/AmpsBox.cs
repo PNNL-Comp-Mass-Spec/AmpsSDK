@@ -26,8 +26,6 @@ namespace AmpsBoxSdk.Devices
     using FalkorSDK.IO.Ports;
     using FalkorSDK.IO.Signals;
 
-    using Microsoft.Practices.Prism.Logging;
-
     using ReactiveUI;
 
     /// <summary>
@@ -85,11 +83,6 @@ namespace AmpsBoxSdk.Devices
         private readonly Queue<string> dataBufferQueue;
 
         /// <summary>
-        /// TODO The logger.
-        /// </summary>
-        private readonly ILoggerFacade logger;
-
-        /// <summary>
         /// Synchronization object.
         /// </summary>
         private readonly object sync;
@@ -139,10 +132,8 @@ namespace AmpsBoxSdk.Devices
         /// The falkor Serial Port.
         /// </param>
         [ImportingConstructor]
-        public AmpsBox(ILoggerFacade logger)
+        public AmpsBox()
         {
-            this.logger = logger;
-            this.taskFactory = new TaskFactory<string>();
             this.boxVersion = CONST_DEFAULT_BOX_VERSION;
             this.sync = new object();
             this.ReadTimeout = CONST_READ_TIMEOUT;
@@ -622,7 +613,7 @@ namespace AmpsBoxSdk.Devices
                     }
                     catch (Exception ex)
                     {
-                        this.logger.Log(ex.Message, Category.Exception, Priority.High);
+                       
                     }
                 }
             }
