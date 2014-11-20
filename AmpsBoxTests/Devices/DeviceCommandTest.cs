@@ -1,5 +1,4 @@
 ﻿using System;
-using NUnit.Framework;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 using FalkorSDK.Data.Signals;
@@ -7,11 +6,13 @@ using FalkorSDK.Data.Events;
 
 namespace AmpsBoxTests.Devices
 {
-    [TestFixture]
+    using FalkorSDK.Channel;
+
+    using Xunit;
+
     class DeviceCommandTest
     {
-        [Test]
-        [TestCase("v1.6")]
+        [Fact]
         public void CommandText(string version)
         {
             AmpsCommandProvider provider = AmpsCommandFactory.CreateCommandProvider(version);
@@ -21,7 +22,7 @@ namespace AmpsBoxTests.Devices
             AmpsBox ampsBox  = new AmpsBox();
             ampsBox.Emulated = true;
 
-            ampsBox.AbortTimeTable();
+            ampsBox.AbortTimeTableAsync();
             try
             {
                 ampsBox.GetDriveLevel(1);
@@ -64,35 +65,21 @@ namespace AmpsBoxTests.Devices
             double offset     = 10;
             double clockTicks = 60;
 
-            for(int j = 0; j < 4; j++)
-            {
-                Signal signal = new AnalogOutputSignal(j.ToString(), 0, j);
-                for(int i = 0; i < 10; i++)
-                {
-                    SignalEvent signalEvent = new AnalogStepEvent(signal, Convert.ToDouble(i) * clockTicks, Convert.ToDouble(i * offset));
-                    table.Add(signalEvent);
-                }
-                offset += 10;
-            }
             
             ampsBox.SaveParameters();
-            ampsBox.SetHvOutput(1, 100);
-            ampsBox.SetRfDriveLevel(1, 1500);
-            ampsBox.SetRfFrequency(1, 1500);
-            ampsBox.SetRfOutputVoltage(1, 1500);
+           
 
             ampsBox.ClockType       = ClockType.Internal;            
-            ampsBox.TriggerType = StartTriggerTypes.External;
-            ampsBox.StartTimeTable(table, 1);
-
-            ampsBox.TriggerType = StartTriggerTypes.Software;
-            ampsBox.StartTimeTable(table, 0);
-            ampsBox.AbortTimeTable();
+            ampsBox.TriggerType = StartTriggerTypes.EXT;
+           
+            ampsBox.TriggerType = StartTriggerTypes.SW;
+          
+            ampsBox.AbortTimeTableAsync();
 
             ampsBox.ClockType       = ClockType.External;
             ampsBox.ClockFrequency  = 10;
-            ampsBox.StartTimeTable(table, 0);
-            ampsBox.AbortTimeTable();
+            
+            ampsBox.AbortTimeTableAsync();
         }
     }
 }

@@ -37,10 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FalkorSDK">
-      <HintPath>..\..\..\lib\SDK\Falkor\FalkorSDK.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework">
-      <HintPath>..\..\..\lib\Testing\nunit\framework\nunit.framework.dll</HintPath>
+      <HintPath>..\lib\FalkorSDK\FalkorSDK.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.6.2.0\lib\Net45\ReactiveUI.dll</HintPath>
@@ -71,6 +68,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+    <Reference Include="xunit">
+      <HintPath>..\packages\xunit.1.9.2\lib\net20\xunit.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\ConverterTests.cs" />

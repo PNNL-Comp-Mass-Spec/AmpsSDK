@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace AmpsBoxSdk.IO
+namespace AmpsBoxSdk.Data
 {
     using System;
     using System.Collections.Generic;

@@ -84,6 +84,9 @@
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.6.2.0\lib\Net45\ReactiveUI.dll</HintPath>
     </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.5.1\lib\Net45\Splat.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.1\System.dll</HintPath>
     </Reference>
@@ -93,6 +96,21 @@
     <Reference Include="System.ComponentModel.Composition.registration" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Windows.Threading">
+      <HintPath>..\packages\Rx-XAML.2.2.5\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -106,6 +124,9 @@
     <Compile Include="Commands\AmpsCommandNotSupported.cs" />
     <Compile Include="Commands\AmpsCommandType.cs" />
     <Compile Include="Commands\GammaCommandProvider.cs" />
+    <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
+    <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
+    <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
     <Compile Include="Devices\AmpsBox.cs" />
     <Compile Include="Devices\AmpsBoxChannelData.cs" />
     <Compile Include="Devices\AmpsBoxDeviceData.cs" />
@@ -124,9 +145,6 @@
     <Compile Include="Devices\StartTriggerTypes.cs" />
     <Compile Include="Devices\AmpsClockConverter.cs" />
     <Compile Include="Devices\State.cs" />
-    <Compile Include="IO\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
-    <Compile Include="IO\AmpsBoxSignalTableDisplayFormatter.cs" />
-    <Compile Include="IO\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Channels\" />
+    <Folder Include="Events\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
