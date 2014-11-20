@@ -135,6 +135,7 @@ namespace AmpsBoxSdk.Devices
             this.ReadWriteTimeout = ConstSleepTime;
             this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
             this.dataBufferQueue = new Queue<string>();
+
         }
 
         #endregion
@@ -1009,9 +1010,10 @@ namespace AmpsBoxSdk.Devices
         /// </param>
         private void OnNext(SerialPort serialPort)
         {
-            serialPort.DataReceived += this.PortOnDataReceived;
-            serialPort.ErrorReceived += this.PortErrorReceived;
-            serialPort.PinChanged += this.PortPinChanged;
+            this.CreateObservable(serialPort);
+            //   serialPort.DataReceived += this.PortOnDataReceived;
+            //   serialPort.ErrorReceived += this.PortErrorReceived;
+            //   serialPort.PinChanged += this.PortPinChanged;
         }
 
         /// <summary>
@@ -1095,7 +1097,7 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
-        private async void CreateObservable()
+        private void CreateObservable(SerialPort serialPort)
         {
             this.serialPortObservable = Observable.Create<string>(
                 observer =>
@@ -1124,16 +1126,14 @@ namespace AmpsBoxSdk.Devices
                                         }
                                     }
                                 });
-                        this.falkorPort.Port.DataReceived += receiveCallback;
+                        serialPort.DataReceived += receiveCallback;
                         var errorCallback = new SerialErrorReceivedEventHandler((sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
-                        this.falkorPort.Port.ErrorReceived += errorCallback;
+                        serialPort.ErrorReceived += errorCallback;
 
                         return () =>
                     {
-                    this.falkorPort.Port.DataReceived -= receiveCallback;
-                    this.falkorPort.Port.ErrorReceived -= errorCallback;
-                    this.falkorPort.Port.Close();
-                    this.falkorPort.Port.Dispose();
+                        serialPort.DataReceived -= receiveCallback;
+                        serialPort.ErrorReceived -= errorCallback;
                      };
 
                     });
