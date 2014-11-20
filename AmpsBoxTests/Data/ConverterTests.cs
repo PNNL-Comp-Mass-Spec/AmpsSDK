@@ -20,9 +20,7 @@ namespace AmpsBoxTests.Data
         [Fact]
         public void TestAmpsClockConversion(TimeTableUnits from, TimeTableUnits to, double time, double expected)
         {
-            ITimeUnitConverter<double> converter = new AmpsClockConverter(AmpsCommandProvider.DefaultInternalClock);
-            double value                         = converter.ConvertTo(from, to, time);
-         //   Assert.(Math.Abs(expected - value), double.Epsilon);
+           
         }
     }
 }

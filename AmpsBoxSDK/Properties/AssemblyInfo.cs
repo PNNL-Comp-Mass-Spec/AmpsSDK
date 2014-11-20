@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("AmpsBoxSDK")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PNNL")]
+[assembly: AssemblyCompany("Battelle Memorial Institute")]
 [assembly: AssemblyProduct("AmpsBoxSDK")]
 [assembly: AssemblyCopyright("Copyright © PNNL 2013")]
 [assembly: AssemblyTrademark("")]
