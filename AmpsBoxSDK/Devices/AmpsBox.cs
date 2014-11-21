@@ -530,7 +530,7 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<string> GetVersion()
         {
-            string data;
+            string data = null;
 
             var command = this.commandProvider.GetCommand(AmpsCommandType.GetVersion);
             try
@@ -540,7 +540,7 @@ namespace AmpsBoxSdk.Devices
             }
             catch (Exception ex)
             {
-                data = "Failed to get version";
+                data += ex.Message;
             }
 
             return data;
@@ -1099,11 +1099,12 @@ namespace AmpsBoxSdk.Devices
 
         private void CreateObservable(SerialPort serialPort)
         {
-            this.serialPortObservable = Observable.Create<string>(
+            this.serialPortObservable = Observable.Create<string>
+                (
                 observer =>
                     {
                         var receiveCallback = new SerialDataReceivedEventHandler(
-                            (sender, e) =>
+                          async  (sender, e) =>
                                 {
                                     if (e.EventType == SerialData.Eof)
                                     {
@@ -1112,29 +1113,37 @@ namespace AmpsBoxSdk.Devices
                                     else
                                     {
                                         SerialPort sp = (SerialPort)sender;
-                                        var tempData = sp.ReadTo("\n\r");
-
-                                        this.dataBufferQueue.Enqueue(tempData);
-                                        if (tempData.Contains(this.commandProvider.EndOfLine))
+                                        var tempData = sp.ReadExisting();
+                                        try
                                         {
-                                            string data = string.Empty;
-                                            while (this.dataBufferQueue.Any())
-                                            {
-                                                data += this.dataBufferQueue.Dequeue();
-                                            }
+                                            var response = await this.ValidateResponse(tempData);
 
+                                            this.dataBufferQueue.Enqueue(tempData);
+                                            if (tempData.Contains(this.commandProvider.EndOfLine) && (response == Responses.ACK || response == Responses.NAK))
+                                            {
+                                                string data = string.Empty;
+                                                while (this.dataBufferQueue.Any())
+                                                {
+                                                    data += this.dataBufferQueue.Dequeue();
+                                                }
+                                                observer.OnNext(data);
+                                            }
                                         }
+                                        catch (Exception)
+                                        {
+                                        }
+                                       
                                     }
                                 });
                         serialPort.DataReceived += receiveCallback;
                         var errorCallback = new SerialErrorReceivedEventHandler((sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
                         serialPort.ErrorReceived += errorCallback;
 
-                        return () =>
-                    {
-                        serialPort.DataReceived -= receiveCallback;
-                        serialPort.ErrorReceived -= errorCallback;
-                     };
+                            return () =>
+                          {
+                            serialPort.DataReceived -= receiveCallback;
+                            serialPort.ErrorReceived -= errorCallback;
+                          };
 
                     });
         }
@@ -1245,14 +1254,24 @@ namespace AmpsBoxSdk.Devices
         {
             string outData = command;
             string response = string.Empty;
+            if (this.serialPortObservable == null)
+            {
+                  this.CreateObservable(this.falkorPort.Port);
+                  var sub = this.serialPortObservable.Where(s => !string.IsNullOrEmpty(s)).Subscribe(s => response = s);
+            }
+            Stopwatch watch = new Stopwatch();
             try
             {
-                var sub = this.serialPortObservable.Subscribe(s => response = s);
                 this.falkorPort.Port.DiscardInBuffer();
                 this.falkorPort.Port.DiscardOutBuffer();
                 this.falkorPort.Port.WriteLine(outData);
+                watch.Start();
+                while (string.IsNullOrEmpty(response) && watch.ElapsedMilliseconds < 1000)
+                {
+                    
+                }
+                watch.Stop();
                 var resonseToReturn = await ReadAsync(response);
-                sub.Dispose();
                 return resonseToReturn;
             }
             catch (IOException ioException)
@@ -1272,7 +1291,7 @@ namespace AmpsBoxSdk.Devices
 
         private async Task<string> ReadAsync(string response, bool shouldValidateResponse = true)
         {
-            if (response == null)
+            if (string.IsNullOrEmpty(response))
             {
                 return String.Empty;
             }

@@ -6,80 +6,32 @@ using FalkorSDK.Data.Events;
 
 namespace AmpsBoxTests.Devices
 {
+    using System.IO.Ports;
+
     using FalkorSDK.Channel;
+    using FalkorSDK.IO.Ports;
+
+    using NUnit.Framework;
 
     using Xunit;
 
+    [TestFixture]
     class DeviceCommandTest
     {
-        [Fact]
-        public void CommandText(string version)
+        [Test]
+        public async void CommandText()
         {
-            AmpsCommandProvider provider = AmpsCommandFactory.CreateCommandProvider(version);
+            AmpsCommandProvider provider = AmpsCommandFactory.CreateCommandProvider("2.0b");
 
             Console.WriteLine("Testing Commands: {0}", provider.GetSupportedVersions());
 
-            AmpsBox ampsBox  = new AmpsBox();
-            ampsBox.Emulated = true;
+            AmpsBox ampsBox = new AmpsBox();
+            var fsp = new FalkorSerialPort(new SerialPort("COM12") { BaudRate = 19200, Handshake = Handshake.XOnXOff, NewLine = "\n", Parity = Parity.Even });
+            ampsBox.Port = fsp;
 
-            ampsBox.AbortTimeTableAsync();
-            try
-            {
-                ampsBox.GetDriveLevel(1);
-            }
-            catch { }
-
-            try
-            {
-                ampsBox.GetHvChannelCount();
-            }
-            catch { }            try
-            {
-                ampsBox.GetHvOutput(1);
-            }
-            catch { }
-            try
-            {
-                ampsBox.GetOutputVoltage(1);
-            }
-            catch { }
-            try
-            {
-                ampsBox.GetRfChannelCount();
-            }
-            catch { }
-            try
-            {
-                ampsBox.GetRfFrequency(1);
-            }
-            catch { }
-            try
-            {
-                ampsBox.GetVersion();
-            }
-            catch { }
-
-            SignalTable table = new SignalTable();
-            table.Name    = "dummy";
-            table.Length  = 900; 
-            double offset     = 10;
-            double clockTicks = 60;
-
-            
-            ampsBox.SaveParameters();
-           
-
-            ampsBox.ClockType       = ClockType.Internal;            
-            ampsBox.TriggerType = StartTriggerTypes.EXT;
-           
-            ampsBox.TriggerType = StartTriggerTypes.SW;
-          
-            ampsBox.AbortTimeTableAsync();
-
-            ampsBox.ClockType       = ClockType.External;
-            ampsBox.ClockFrequency  = 10;
-            
-            ampsBox.AbortTimeTableAsync();
+           ampsBox.Open();
+            var version =  await ampsBox.GetVersion();
+            Console.WriteLine(version);
         }
     }
 }
