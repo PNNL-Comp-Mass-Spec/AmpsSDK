@@ -157,7 +157,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y "$(TargetDir)*" "$(SolutionDir)lib\SDK\AmpsBox\"
+    <PostBuildEvent>xcopy /y "$(TargetDir)*" "$(SolutionDir)lib\SDK\$(ProjectName)\"
 </PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
