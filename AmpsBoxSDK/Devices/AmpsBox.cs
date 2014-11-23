@@ -1113,20 +1113,17 @@ namespace AmpsBoxSdk.Devices
                                     else
                                     {
                                         SerialPort sp = (SerialPort)sender;
-                                        var tempData = sp.ReadExisting();
+                                        byte[] buffer = new byte[2048];
                                         try
                                         {
-                                            var response = await this.ValidateResponse(tempData);
-
-                                            this.dataBufferQueue.Enqueue(tempData);
-                                            if (tempData.Contains(this.commandProvider.EndOfLine) && (response == Responses.ACK || response == Responses.NAK))
+                                            var actualLength = await sp.BaseStream.ReadAsync(buffer, 0, buffer.Length);
+                                            byte[] received = new byte[actualLength];
+                                            Buffer.BlockCopy(buffer, 0, received, 0, actualLength);
+                                            var str = System.Text.Encoding.ASCII.GetString(received);
+                                            var response = await this.ValidateResponse(str);
+                                            if (str.Contains(this.commandProvider.EndOfLine) && (response == Responses.ACK || response == Responses.NAK))
                                             {
-                                                string data = string.Empty;
-                                                while (this.dataBufferQueue.Any())
-                                                {
-                                                    data += this.dataBufferQueue.Dequeue();
-                                                }
-                                                observer.OnNext(data);
+                                                observer.OnNext(str);
                                             }
                                         }
                                         catch (Exception)
