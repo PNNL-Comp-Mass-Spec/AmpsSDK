@@ -49,7 +49,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// read timeout in milliseconds
         /// </summary>
-        private const int ConstReadTimeout = 10000;
+        private const int ConstReadTimeout = 5000;
 
         /// <summary>
         /// Default sleep time between writes / reads
@@ -59,7 +59,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// TODO The cons t_ writ e_ timeout.
         /// </summary>
-        private const int ConstWriteTimeout = 10000;
+        private const int ConstWriteTimeout = 5000;
 
         /// <summary>
         /// Emulated channel count for RF and HV testing
@@ -79,11 +79,6 @@ namespace AmpsBoxSdk.Devices
         /// Gets or sets the command provider for the given box in case versions are different.
         /// </summary>
         private readonly AmpsCommandProvider commandProvider;
-
-        /// <summary>
-        /// TODO The data buffer queue.
-        /// </summary>
-        private readonly Queue<string> dataBufferQueue;
 
         /// <summary>
         /// Synchronization object.
@@ -134,7 +129,6 @@ namespace AmpsBoxSdk.Devices
             this.ClockFrequency = this.commandProvider.InternalClock;
             this.ReadWriteTimeout = ConstSleepTime;
             this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
-            this.dataBufferQueue = new Queue<string>();
 
         }
 
@@ -1010,6 +1004,8 @@ namespace AmpsBoxSdk.Devices
         /// </param>
         private void OnNext(SerialPort serialPort)
         {
+            serialPort.ReadTimeout = ConstReadTimeout;
+            serialPort.WriteTimeout = ConstWriteTimeout;
             this.CreateObservable(serialPort);
             //   serialPort.DataReceived += this.PortOnDataReceived;
             //   serialPort.ErrorReceived += this.PortErrorReceived;
@@ -1052,48 +1048,6 @@ namespace AmpsBoxSdk.Devices
             if (e.EventType == SerialError.TXFull)
             {
                 throw new IOException("IO TXFull Error");
-            }
-        }
-
-        /// <summary>
-        /// TODO The m port on data received.
-        /// </summary>
-        /// <param name="sender">
-        /// TODO The sender.
-        /// </param>
-        /// <param name="serialDataReceivedEventArgs">
-        /// TODO The serial data received event args.
-        /// </param>
-        private async void PortOnDataReceived(object sender, SerialDataReceivedEventArgs serialDataReceivedEventArgs)
-        {
-            SerialPort sp = (SerialPort)sender;
-            if (serialDataReceivedEventArgs.EventType == SerialData.Chars)
-            {
-                var tempData = sp.ReadExisting();
-                try
-                {
-                    var response = await this.ValidateResponse(tempData);
-                    this.dataBufferQueue.Enqueue(tempData);
-                    if (tempData.Contains(this.commandProvider.EndOfLine) || response == Responses.ACK
-                        || response == Responses.NAK)
-                    {
-                        string data = string.Empty;
-                        while (this.dataBufferQueue.Any())
-                        {
-                            data += this.dataBufferQueue.Dequeue();
-                        }
-
-                        if (data.Contains(this.commandProvider.TableResponse))
-                        {
-                           
-                        }
-                        
-                    }
-                }
-                catch (Exception ex)
-                {
-                   
-                }
             }
         }
 
@@ -1299,7 +1253,8 @@ namespace AmpsBoxSdk.Devices
             {
                 this.falkorPort.Port.DiscardInBuffer();
                 this.falkorPort.Port.DiscardOutBuffer();
-                this.falkorPort.Port.WriteLine(outData);
+               var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
+                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
                 watch.Start();
                 while (string.IsNullOrEmpty(response) && watch.ElapsedMilliseconds < 1000)
                 {
