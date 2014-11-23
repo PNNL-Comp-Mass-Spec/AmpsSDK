@@ -6,6 +6,7 @@
 //   Communicates with a PNNL Amps Box
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace AmpsBoxSdk.Devices
 {
     using System;
@@ -29,6 +30,7 @@ namespace AmpsBoxSdk.Devices
     using FalkorSDK.Data.Signals;
     using FalkorSDK.IO.Ports;
     using FalkorSDK.IO.Signals;
+
     using ReactiveUI;
 
     /// <summary>
@@ -102,7 +104,7 @@ namespace AmpsBoxSdk.Devices
 
         private IObservable<string> serialPortObservable;
 
-            #endregion
+        #endregion
 
         #region Constructors and Destructors
 
@@ -129,7 +131,6 @@ namespace AmpsBoxSdk.Devices
             this.ClockFrequency = this.commandProvider.InternalClock;
             this.ReadWriteTimeout = ConstSleepTime;
             this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
-
         }
 
         #endregion
@@ -242,7 +243,10 @@ namespace AmpsBoxSdk.Devices
             ampsBoxData += string.Format("\tDevice Settings\n");
             foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(this.falkorPort.Port))
             {
-                ampsBoxData += string.Format("\t\t{0}:        {1}\n", propertyDescriptor.DisplayName, propertyDescriptor.GetValue(this.falkorPort.Port)); 
+                ampsBoxData += string.Format(
+                    "\t\t{0}:        {1}\n",
+                    propertyDescriptor.DisplayName,
+                    propertyDescriptor.GetValue(this.falkorPort.Port));
             }
 
             ampsBoxData += "\n";
@@ -251,7 +255,6 @@ namespace AmpsBoxSdk.Devices
             ampsBoxData += string.Format("\t\tClock:           {0}\n", this.ClockType);
             ampsBoxData += string.Format("\t\tExt. Clock Freq: {0}\n", this.ClockFrequency);
             ampsBoxData += string.Format("\t\tLast Table:      {0}\n", this.lastTable);
-
 
             return ampsBoxData;
         }
@@ -286,9 +289,9 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{2}", 
-                            this.commandProvider.CommandSeparator, 
-                            this.commandProvider.GetCommand(AmpsCommandType.GetDriveLevel).Value, 
+                            "{1}{0}{2}",
+                            this.commandProvider.CommandSeparator,
+                            this.commandProvider.GetCommand(AmpsCommandType.GetDriveLevel).Value,
                             channel)));
 
             if (this.Emulated)
@@ -298,7 +301,6 @@ namespace AmpsBoxSdk.Devices
             int driveLevel = 0;
             int.TryParse(response, out driveLevel);
             return driveLevel;
-
         }
 
         /// <summary>
@@ -383,9 +385,9 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{2}", 
-                            this.commandProvider.CommandSeparator, 
-                            this.commandProvider.GetCommand(AmpsCommandType.GetDcBias).Value, 
+                            "{1}{0}{2}",
+                            this.commandProvider.CommandSeparator,
+                            this.commandProvider.GetCommand(AmpsCommandType.GetDcBias).Value,
                             channel)));
 
             if (this.Emulated)
@@ -430,9 +432,9 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{2}", 
-                            this.commandProvider.CommandSeparator, 
-                            this.commandProvider.GetCommand(AmpsCommandType.GetRfVoltage).Value, 
+                            "{1}{0}{2}",
+                            this.commandProvider.CommandSeparator,
+                            this.commandProvider.GetCommand(AmpsCommandType.GetRfVoltage).Value,
                             channel)));
 
             if (this.Emulated)
@@ -553,15 +555,15 @@ namespace AmpsBoxSdk.Devices
         {
             IList<string> list = new List<string>();
 
-			list.Add("\tSending Time Table Data.");
+            list.Add("\tSending Time Table Data.");
             await this.LoadTimeTable(table);
 
-			list.Add("\tSetting Clock Type.");
-			await this.SetClock(this.ClockType);
+            list.Add("\tSetting Clock Type.");
+            await this.SetClock(this.ClockType);
 
-			await this.SetTrigger(this.TriggerType);
+            await this.SetTrigger(this.TriggerType);
 
-			list.Add("\tSetting mode.");
+            list.Add("\tSetting mode.");
             await this.SetMode();
 
             this.lastTable = table.Name;
@@ -589,7 +591,6 @@ namespace AmpsBoxSdk.Devices
                     }
                     catch (Exception ex)
                     {
-                       
                     }
                 }
             }
@@ -612,10 +613,10 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{2}{0}{3}", 
-                            this.commandProvider.CommandSeparator, 
-                            command.Value, 
-                            channel, 
+                            "{1}{0}{2}{0}{3}",
+                            this.commandProvider.CommandSeparator,
+                            command.Value,
+                            channel,
                             "P")));
         }
 
@@ -675,10 +676,10 @@ namespace AmpsBoxSdk.Devices
                         () =>
                         this.WriteAsync(
                             string.Format(
-                                "{1}{0}{3}{0}{2:000}", 
-                                this.commandProvider.CommandSeparator, 
-                                command.Value, 
-                                voltage, 
+                                "{1}{0}{3}{0}{2:000}",
+                                this.commandProvider.CommandSeparator,
+                                command.Value,
+                                voltage,
                                 channel)));
             }
             catch (Exception ex)
@@ -779,10 +780,10 @@ namespace AmpsBoxSdk.Devices
                         () =>
                         this.WriteAsync(
                             string.Format(
-                                "{1}{0}{3}{0}{2:000}", 
-                                this.commandProvider.CommandSeparator, 
-                                command.Value, 
-                                voltage, 
+                                "{1}{0}{3}{0}{2:000}",
+                                this.commandProvider.CommandSeparator,
+                                command.Value,
+                                voltage,
                                 channel)));
             }
             catch (Exception ex)
@@ -810,10 +811,10 @@ namespace AmpsBoxSdk.Devices
                         () =>
                         this.WriteAsync(
                             string.Format(
-                                "{1}{0}{3}{0}{2:000}", 
-                                this.commandProvider.CommandSeparator, 
-                                command.Value, 
-                                frequency, 
+                                "{1}{0}{3}{0}{2:000}",
+                                this.commandProvider.CommandSeparator,
+                                command.Value,
+                                frequency,
                                 channel)));
             }
             catch (Exception ex)
@@ -842,10 +843,10 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{3}{0}{2:000}", 
-                            this.commandProvider.CommandSeparator, 
-                            command.Value, 
-                            voltage, 
+                            "{1}{0}{3}{0}{2:000}",
+                            this.commandProvider.CommandSeparator,
+                            command.Value,
+                            voltage,
                             channel)));
         }
 
@@ -877,7 +878,7 @@ namespace AmpsBoxSdk.Devices
 
             list.Add("\tStarting time table.");
             await Task.Run(() => this.WriteAsync(string.Format("{0}", command.Value)));
-            
+
             this.lastTable = table.Name;
 
             return list;
@@ -905,10 +906,10 @@ namespace AmpsBoxSdk.Devices
                         () =>
                         this.WriteAsync(
                             string.Format(
-                                "{0}{1}{0}{2}{0}{3}", 
-                                this.commandProvider.CommandSeparator, 
-                                command.Value, 
-                                channel, 
+                                "{0}{1}{0}{2}{0}{3}",
+                                this.commandProvider.CommandSeparator,
+                                command.Value,
+                                channel,
                                 direction)));
             }
             catch (Exception ex)
@@ -936,10 +937,10 @@ namespace AmpsBoxSdk.Devices
                     () =>
                     this.WriteAsync(
                         string.Format(
-                            "{1}{0}{2}{0}{3}", 
-                            this.commandProvider.CommandSeparator, 
-                            command.Value, 
-                            channel, 
+                            "{1}{0}{2}{0}{3}",
+                            this.commandProvider.CommandSeparator,
+                            command.Value,
+                            channel,
                             Convert.ToInt32(state))));
         }
 
@@ -971,7 +972,10 @@ namespace AmpsBoxSdk.Devices
         {
             var command = this.commandProvider.GetCommand(AmpsCommandType.ToggleHeater);
             await
-                Task.Run(() => this.WriteAsync(string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state)));
+                Task.Run(
+                    () =>
+                    this.WriteAsync(
+                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state)));
         }
 
         #endregion
@@ -1051,10 +1055,13 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serialPort"></param>
         private void CreateObservable(SerialPort serialPort)
         {
-            this.serialPortObservable = Observable.Create<string>
-                (
+            this.serialPortObservable = Observable.Create<string>(
                 observer =>
                     {
                         Action kickOffRead = async () =>
@@ -1066,7 +1073,6 @@ namespace AmpsBoxSdk.Devices
                                 try
 
                                 {
-
                                     var actualLength = await sp.BaseStream.ReadAsync(buffer, 0, buffer.Length);
 
                                     byte[] received = new byte[actualLength];
@@ -1078,62 +1084,45 @@ namespace AmpsBoxSdk.Devices
                                     var response = await this.ValidateResponse(str);
 
                                     if (str.Contains(this.commandProvider.EndOfLine)
-
                                         && (response == Responses.ACK || response == Responses.NAK))
 
                                     {
-
                                         observer.OnNext(str);
-
                                     }
-
                                 }
 
                                 catch (InvalidOperationException ex)
 
                                 {
-
                                 }
 
                                 catch (NotSupportedException ex)
 
                                 {
-
                                 }
 
                                 catch (ArgumentNullException ex)
 
                                 {
-
-
-
                                 }
 
                                 catch (ArgumentOutOfRangeException ex)
 
                                 {
-
-
-
                                 }
 
                                 catch (ArgumentException ex)
 
                                 {
-
-
-
                                 }
                             };
                         kickOffRead();
-                        var errorCallback = new SerialErrorReceivedEventHandler((sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
+                        var errorCallback =
+                            new SerialErrorReceivedEventHandler(
+                                (sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
                         serialPort.ErrorReceived += errorCallback;
 
-                            return () =>
-                          {
-                            serialPort.ErrorReceived -= errorCallback;
-                          };
-
+                        return () => { serialPort.ErrorReceived -= errorCallback; };
                     });
         }
 
@@ -1149,6 +1138,65 @@ namespace AmpsBoxSdk.Devices
         private void PortPinChanged(object sender, SerialPinChangedEventArgs e)
         {
         }
+
+        private async Task<string> Read(SerialPort port)
+        {
+            byte[] buffer = new byte[1024];
+            int actualLength = 0;
+            string response = String.Empty;
+            string stringToReturn = String.Empty;
+            try
+            {
+                const int Offset = 0;
+                while (stringToReturn.Length < 2)
+                {
+                    actualLength = await port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
+
+                    byte[] received = new byte[actualLength];
+
+                    Buffer.BlockCopy(buffer, Offset, received, Offset, actualLength);
+
+                    stringToReturn = System.Text.Encoding.ASCII.GetString(received);
+
+                    var ampsResponse = await this.ValidateResponse(stringToReturn);
+                 //   Console.WriteLine(ampsResponse);
+                 //  response = ampsResponse.ToString();
+
+                    if (stringToReturn.Contains(this.commandProvider.EndOfLine)
+                        && (ampsResponse == Responses.ACK || ampsResponse == Responses.NAK) && stringToReturn.Length > 1)
+
+                    {
+                        return stringToReturn;
+                    }
+                }
+            }
+
+            catch (InvalidOperationException ex)
+
+            {
+            }
+
+            catch (NotSupportedException ex)
+
+            {
+            }
+
+            catch (ArgumentNullException ex)
+
+            {
+            }
+
+            catch (ArgumentOutOfRangeException ex)
+
+            {
+            }
+
+            catch (ArgumentException ex)
+
+            {
+            }
+            throw new AmpsEmptyResponseErrorException(actualLength.ToString());
+    }
 
         /// <summary>
         /// Tells the AMPS box which clock to use: external or internal
@@ -1175,12 +1223,12 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
-	    private async Task SetTrigger(StartTriggerTypes startTriggerType)
-	    {
-		    AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.CommandSetTrigger);
-	        var commandString = string.Format("{0},{1}", command.Value, startTriggerType);
-	        this.WriteAsync(commandString);
-	    }
+        private async Task SetTrigger(StartTriggerTypes startTriggerType)
+        {
+            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.CommandSetTrigger);
+            var commandString = string.Format("{0},{1}", command.Value, startTriggerType);
+            this.WriteAsync(commandString);
+        }
 
         /// <summary>
         /// Tells the AMPS Box how to repeat (if at all) 
@@ -1230,37 +1278,35 @@ namespace AmpsBoxSdk.Devices
             {
                 throw new AmpsEmptyResponseErrorException("The AMPS Response was empty.");
             }
-
-            throw new AmpsErrErrorException("The command expected an acknowledge response but did not receive it.");
+            return new Responses();
         }
 
-      /// <summary>
-      /// Writes command to serial port.
-      /// </summary>
-      /// <param name="command"></param>
-      /// <param name="readBack"></param>
+        /// <summary>
+        /// Writes command to serial port.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="readBack"></param>
         private async Task<string> WriteAsync(string command)
         {
             string outData = command;
             string response = string.Empty;
-            if (this.serialPortObservable == null)
-            {
-                  this.CreateObservable(this.falkorPort.Port);
-                  var sub = this.serialPortObservable.Where(s => !string.IsNullOrEmpty(s)).Subscribe(s => response = s);
-            }
-            Stopwatch watch = new Stopwatch();
+
             try
             {
                 this.falkorPort.Port.DiscardInBuffer();
                 this.falkorPort.Port.DiscardOutBuffer();
-               var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
-                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
-                watch.Start();
-                while (string.IsNullOrEmpty(response) && watch.ElapsedMilliseconds < 1000)
+                var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
+               
+                if (this.serialPortObservable == null)
                 {
-                    
+                    this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
+                    this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
+            //        this.CreateObservable(this.falkorPort.Port);
+
                 }
-                watch.Stop();
+                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
+                response = await Read(this.falkorPort.Port);
+                //var sub = this.serialPortObservable.Where(s => !string.IsNullOrEmpty(s)).Subscribe(s => response = s);
                 var resonseToReturn = await ReadAsync(response);
                 return resonseToReturn;
             }
@@ -1277,7 +1323,6 @@ namespace AmpsBoxSdk.Devices
                 throw new ArgumentNullException(exception.Message, exception.InnerException);
             }
         }
-
 
         private async Task<string> ReadAsync(string response, bool shouldValidateResponse = true)
         {
@@ -1310,7 +1355,6 @@ namespace AmpsBoxSdk.Devices
                 catch (Exception)
                 {
                 }
-              
             }
 
             return localStringData;

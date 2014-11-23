@@ -30,8 +30,11 @@ namespace AmpsBoxTests.Devices
             ampsBox.Port = fsp;
 
            ampsBox.Open();
-            var version =  await ampsBox.GetVersion();
-            Console.WriteLine(version);
+            for (int i = 0; i < 5; i++)
+            {
+                var version = await ampsBox.GetVersion();
+                Console.WriteLine(version);
+            }
         }
     }
 }
