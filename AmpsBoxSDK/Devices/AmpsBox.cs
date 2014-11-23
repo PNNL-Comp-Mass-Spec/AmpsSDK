@@ -1103,42 +1103,80 @@ namespace AmpsBoxSdk.Devices
                 (
                 observer =>
                     {
-                        var receiveCallback = new SerialDataReceivedEventHandler(
-                          async  (sender, e) =>
+                        Action kickOffRead = async () =>
+                            {
+                                SerialPort sp = serialPort;
+
+                                byte[] buffer = new byte[2048];
+
+                                try
+
                                 {
-                                    if (e.EventType == SerialData.Eof)
+
+                                    var actualLength = await sp.BaseStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                    byte[] received = new byte[actualLength];
+
+                                    Buffer.BlockCopy(buffer, 0, received, 0, actualLength);
+
+                                    var str = System.Text.Encoding.ASCII.GetString(received);
+
+                                    var response = await this.ValidateResponse(str);
+
+                                    if (str.Contains(this.commandProvider.EndOfLine)
+
+                                        && (response == Responses.ACK || response == Responses.NAK))
+
                                     {
-                                        observer.OnCompleted();
+
+                                        observer.OnNext(str);
+
                                     }
-                                    else
-                                    {
-                                        SerialPort sp = (SerialPort)sender;
-                                        byte[] buffer = new byte[2048];
-                                        try
-                                        {
-                                            var actualLength = await sp.BaseStream.ReadAsync(buffer, 0, buffer.Length);
-                                            byte[] received = new byte[actualLength];
-                                            Buffer.BlockCopy(buffer, 0, received, 0, actualLength);
-                                            var str = System.Text.Encoding.ASCII.GetString(received);
-                                            var response = await this.ValidateResponse(str);
-                                            if (str.Contains(this.commandProvider.EndOfLine) && (response == Responses.ACK || response == Responses.NAK))
-                                            {
-                                                observer.OnNext(str);
-                                            }
-                                        }
-                                        catch (Exception)
-                                        {
-                                        }
-                                       
-                                    }
-                                });
-                        serialPort.DataReceived += receiveCallback;
+
+                                }
+
+                                catch (InvalidOperationException ex)
+
+                                {
+
+                                }
+
+                                catch (NotSupportedException ex)
+
+                                {
+
+                                }
+
+                                catch (ArgumentNullException ex)
+
+                                {
+
+
+
+                                }
+
+                                catch (ArgumentOutOfRangeException ex)
+
+                                {
+
+
+
+                                }
+
+                                catch (ArgumentException ex)
+
+                                {
+
+
+
+                                }
+                            };
+                        kickOffRead();
                         var errorCallback = new SerialErrorReceivedEventHandler((sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
                         serialPort.ErrorReceived += errorCallback;
 
                             return () =>
                           {
-                            serialPort.DataReceived -= receiveCallback;
                             serialPort.ErrorReceived -= errorCallback;
                           };
 
