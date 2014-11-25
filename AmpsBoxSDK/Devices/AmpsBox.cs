@@ -204,13 +204,17 @@ namespace AmpsBoxSdk.Devices
 
             try
             {
-                var response = await Task.Run(() => this.WriteAsync(command.Value));
+                var response = await this.WriteAsync(command.Value);
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message, ex.InnerException);
             }
         }
+
+        public string LatestResponse { get; private set; }
+
+        public string LatestWrite { get; private set; }
 
         /// <summary>
         /// Closes the port
@@ -268,7 +272,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<string> GetDcGuardStateAsync()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetGuardOffset);
-            var stringToReturn = await Task.Run(() => this.WriteAsync(string.Format("{0}", command.Value)));
+            var stringToReturn = await this.WriteAsync(string.Format("{0}", command.Value));
             return stringToReturn;
         }
 
@@ -285,14 +289,12 @@ namespace AmpsBoxSdk.Devices
         {
             var response =
                 await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{2}",
                             this.commandProvider.CommandSeparator,
                             this.commandProvider.GetCommand(AmpsCommandType.GetDriveLevel).Value,
-                            channel)));
+                            channel));
 
             if (this.Emulated)
             {
@@ -312,7 +314,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<ErrorCodes> GetError()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetError);
-            string response = await Task.Run(() => this.WriteAsync(command.Value));
+            string response = await this.WriteAsync(command.Value);
             int responseCode;
             int.TryParse(response, out responseCode);
             var code = (ErrorCodes)Enum.ToObject(typeof(ErrorCodes), responseCode);
@@ -330,8 +332,7 @@ namespace AmpsBoxSdk.Devices
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetHeaterTemperature);
             var response =
                 await
-                Task.Run(
-                    () => this.WriteAsync(string.Format("{1}{0}", this.commandProvider.CommandSeparator, command.Value)));
+                this.WriteAsync(string.Format("{1}{0}", this.commandProvider.CommandSeparator, command.Value));
             var splitResponse = response.Split(new[] { ']' });
             double temperature;
             double.TryParse(splitResponse[1], out temperature);
@@ -355,7 +356,7 @@ namespace AmpsBoxSdk.Devices
             string response = string.Empty;
             try
             {
-                response = await Task.Run(() => this.WriteAsync(command.Value));
+                response = await this.WriteAsync(command.Value);
 
                 // var channelResponse = response.Split(new[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
                 int channels;
@@ -381,14 +382,12 @@ namespace AmpsBoxSdk.Devices
         {
             string response =
                 await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{2}",
                             this.commandProvider.CommandSeparator,
                             this.commandProvider.GetCommand(AmpsCommandType.GetDcBias).Value,
-                            channel)));
+                            channel));
 
             if (this.Emulated)
             {
@@ -428,14 +427,12 @@ namespace AmpsBoxSdk.Devices
         {
             var response =
                 await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{2}",
                             this.commandProvider.CommandSeparator,
                             this.commandProvider.GetCommand(AmpsCommandType.GetRfVoltage).Value,
-                            channel)));
+                            channel));
 
             if (this.Emulated)
             {
@@ -459,7 +456,7 @@ namespace AmpsBoxSdk.Devices
             string response = string.Empty;
             try
             {
-                response = await Task.Run(() => this.WriteAsync(command.Value));
+                response = await this.WriteAsync(command.Value);
 
                 if (this.Emulated)
                 {
@@ -531,7 +528,7 @@ namespace AmpsBoxSdk.Devices
             var command = this.commandProvider.GetCommand(AmpsCommandType.GetVersion);
             try
             {
-                data = await Task.Run(() => this.WriteAsync(command.Value));
+                data = await this.WriteAsync(command.Value);
                 this.boxVersion = data;
             }
             catch (Exception ex)
@@ -609,15 +606,13 @@ namespace AmpsBoxSdk.Devices
         {
             var command = this.commandProvider.GetCommand(AmpsCommandType.SetDigitalIo);
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{2}{0}{3}",
                             this.commandProvider.CommandSeparator,
                             command.Value,
                             channel,
-                            "P")));
+                            "P"));
         }
 
         /// <summary>
@@ -629,7 +624,7 @@ namespace AmpsBoxSdk.Devices
         public async Task SaveParameters()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.Save);
-            await Task.Run(() => this.WriteAsync(command.Value));
+            await this.WriteAsync(command.Value);
         }
 
         /// <summary>
@@ -672,15 +667,13 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 await
-                    Task.Run(
-                        () =>
                         this.WriteAsync(
                             string.Format(
                                 "{1}{0}{3}{0}{2:000}",
                                 this.commandProvider.CommandSeparator,
                                 command.Value,
                                 voltage,
-                                channel)));
+                                channel));
             }
             catch (Exception ex)
             {
@@ -699,7 +692,7 @@ namespace AmpsBoxSdk.Devices
         public async Task SetDcGuardStateAsync(string state)
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetGuardOffset);
-            await Task.Run(() => this.WriteAsync(string.Format("{0},{1}", command.Value, state)));
+            await this.WriteAsync(string.Format("{0},{1}", command.Value, state));
         }
 
         /// <summary>
@@ -715,10 +708,8 @@ namespace AmpsBoxSdk.Devices
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetHeaterSetpoint);
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
-                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, temperature)));
+                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, temperature));
         }
 
         /// <summary>
@@ -732,10 +723,8 @@ namespace AmpsBoxSdk.Devices
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetNegativeHV);
 
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
-                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage)));
+                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage));
         }
 
         /// <summary>
@@ -752,10 +741,8 @@ namespace AmpsBoxSdk.Devices
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetPositiveHV);
 
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
-                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage)));
+                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage));
         }
 
         /// <summary>
@@ -776,15 +763,13 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 await
-                    Task.Run(
-                        () =>
                         this.WriteAsync(
                             string.Format(
                                 "{1}{0}{3}{0}{2:000}",
                                 this.commandProvider.CommandSeparator,
                                 command.Value,
                                 voltage,
-                                channel)));
+                                channel));
             }
             catch (Exception ex)
             {
@@ -807,15 +792,13 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 await
-                    Task.Run(
-                        () =>
                         this.WriteAsync(
                             string.Format(
                                 "{1}{0}{3}{0}{2:000}",
                                 this.commandProvider.CommandSeparator,
                                 command.Value,
                                 frequency,
-                                channel)));
+                                channel));
             }
             catch (Exception ex)
             {
@@ -839,15 +822,13 @@ namespace AmpsBoxSdk.Devices
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetRfVoltage);
 
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{3}{0}{2:000}",
                             this.commandProvider.CommandSeparator,
                             command.Value,
                             voltage,
-                            channel)));
+                            channel));
         }
 
         /// <summary>
@@ -859,7 +840,7 @@ namespace AmpsBoxSdk.Devices
         public async Task SetRealTimeOff()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetRTOff);
-            await Task.Run(() => this.WriteAsync(command.Value));
+            await this.WriteAsync(command.Value);
         }
 
         /// <summary>
@@ -877,7 +858,7 @@ namespace AmpsBoxSdk.Devices
             IList<string> list = new List<string>();
 
             list.Add("\tStarting time table.");
-            await Task.Run(() => this.WriteAsync(string.Format("{0}", command.Value)));
+            await this.WriteAsync(string.Format("{0}", command.Value));
 
             this.lastTable = table.Name;
 
@@ -902,15 +883,13 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 await
-                    Task.Run(
-                        () =>
                         this.WriteAsync(
                             string.Format(
                                 "{0}{1}{0}{2}{0}{3}",
                                 this.commandProvider.CommandSeparator,
                                 command.Value,
                                 channel,
-                                direction)));
+                                direction));
             }
             catch (Exception ex)
             {
@@ -933,15 +912,13 @@ namespace AmpsBoxSdk.Devices
         {
             var command = this.commandProvider.GetCommand(AmpsCommandType.SetDigitalIo);
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
                         string.Format(
                             "{1}{0}{2}{0}{3}",
                             this.commandProvider.CommandSeparator,
                             command.Value,
                             channel,
-                            Convert.ToInt32(state))));
+                            Convert.ToInt32(state)));
         }
 
         /// <summary>
@@ -972,10 +949,8 @@ namespace AmpsBoxSdk.Devices
         {
             var command = this.commandProvider.GetCommand(AmpsCommandType.ToggleHeater);
             await
-                Task.Run(
-                    () =>
                     this.WriteAsync(
-                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state)));
+                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state));
         }
 
         #endregion
@@ -997,7 +972,7 @@ namespace AmpsBoxSdk.Devices
 
             string command = formatter.FormatTable(table, converter);
 
-            await Task.Run(() => this.WriteAsync(command));
+            await this.WriteAsync(command);
         }
 
         /// <summary>
@@ -1213,12 +1188,12 @@ namespace AmpsBoxSdk.Devices
             {
                 case ClockType.External:
                     command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableClockSyncExternal);
-                    await Task.Run(() => this.WriteAsync(command.Value));
+                    await this.WriteAsync(command.Value);
                     break;
 
                 case ClockType.Internal:
                     command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableClockSycnInternal);
-                    await Task.Run(() => this.WriteAsync(command.Value));
+                    await this.WriteAsync(command.Value);
                     break;
             }
         }
@@ -1227,7 +1202,7 @@ namespace AmpsBoxSdk.Devices
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.CommandSetTrigger);
             var commandString = string.Format("{0},{1}", command.Value, startTriggerType);
-            this.WriteAsync(commandString);
+           await this.WriteAsync(commandString);
         }
 
         /// <summary>
@@ -1241,7 +1216,7 @@ namespace AmpsBoxSdk.Devices
         private async Task SetMode()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.Mode);
-            await Task.Run(() => this.WriteAsync(string.Format("{0}", command.Value)));
+            await this.WriteAsync(string.Format("{0}", command.Value));
         }
 
         /// <summary>
@@ -1288,9 +1263,7 @@ namespace AmpsBoxSdk.Devices
         /// <param name="readBack"></param>
         private async Task<string> WriteAsync(string command)
         {
-            string outData = command;
-            string response = string.Empty;
-
+            LatestWrite = command;
             try
             {
                 this.falkorPort.Port.DiscardInBuffer();
@@ -1305,10 +1278,11 @@ namespace AmpsBoxSdk.Devices
 
                 }
                 await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
-                response = await Read(this.falkorPort.Port);
+               string response = await Read(this.falkorPort.Port);
                 //var sub = this.serialPortObservable.Where(s => !string.IsNullOrEmpty(s)).Subscribe(s => response = s);
-                var resonseToReturn = await ReadAsync(response);
-                return resonseToReturn;
+                LatestResponse = await ReadAsync(response);
+
+                return LatestResponse;
             }
             catch (IOException ioException)
             {
@@ -1330,7 +1304,6 @@ namespace AmpsBoxSdk.Devices
             {
                 return String.Empty;
             }
-            var log = "\tSW>> " + response;
 
             string localStringData = response;
             string dataToValidate = localStringData;
