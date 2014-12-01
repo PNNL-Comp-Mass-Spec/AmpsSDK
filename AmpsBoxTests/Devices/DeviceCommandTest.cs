@@ -36,5 +36,18 @@ namespace AmpsBoxTests.Devices
                 Console.WriteLine(version);
             }
         }
+
+        [Test]
+        public async void CommandSignalTable()
+        {
+            AmpsCommandProvider provider = AmpsCommandFactory.CreateCommandProvider("2.0b");
+
+            Console.WriteLine("Testing Commands: {0}", provider.GetSupportedVersions());
+            AmpsBox ampsBox = new AmpsBox();
+            var fsp = new FalkorSerialPort(new SerialPort("COM12") { BaudRate = 19200, Handshake = Handshake.XOnXOff, NewLine = "\n", Parity = Parity.Even });
+            ampsBox.Port = fsp;
+            ampsBox.Open();
+           await ampsBox.LoadTimeTableAsync(new SignalTable());
+        }
     }
 }

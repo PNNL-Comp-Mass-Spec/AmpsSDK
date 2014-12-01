@@ -1123,7 +1123,7 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 const int Offset = 0;
-                while (stringToReturn.Length < 2)
+                while (stringToReturn.Length < 1 && stringToReturn == string.Empty)
                 {
                     actualLength = await port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
 
@@ -1147,7 +1147,6 @@ namespace AmpsBoxSdk.Devices
             }
 
             catch (InvalidOperationException ex)
-
             {
             }
 
@@ -1202,7 +1201,7 @@ namespace AmpsBoxSdk.Devices
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.CommandSetTrigger);
             var commandString = string.Format("{0},{1}", command.Value, startTriggerType);
-           await this.WriteAsync(commandString);
+            await this.WriteAsync(commandString);
         }
 
         /// <summary>
@@ -1241,17 +1240,11 @@ namespace AmpsBoxSdk.Devices
                     switch ((int)char.GetNumericValue(s))
                     {
                         case 0x15:
-                            error = await this.GetError();
                             return Responses.NAK;
                         case 0x06:
                             return Responses.ACK;
                     }
                 }
-            }
-
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrEmpty(message))
-            {
-                throw new AmpsEmptyResponseErrorException("The AMPS Response was empty.");
             }
             return new Responses();
         }
@@ -1266,8 +1259,6 @@ namespace AmpsBoxSdk.Devices
             LatestWrite = command;
             try
             {
-                this.falkorPort.Port.DiscardInBuffer();
-                this.falkorPort.Port.DiscardOutBuffer();
                 var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
                
                 if (this.serialPortObservable == null)
@@ -1278,8 +1269,8 @@ namespace AmpsBoxSdk.Devices
 
                 }
                 await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
+                Thread.Sleep(500);
                string response = await Read(this.falkorPort.Port);
-                //var sub = this.serialPortObservable.Where(s => !string.IsNullOrEmpty(s)).Subscribe(s => response = s);
                 LatestResponse = await ReadAsync(response);
 
                 return LatestResponse;
@@ -1327,6 +1318,7 @@ namespace AmpsBoxSdk.Devices
                 }
                 catch (Exception)
                 {
+                    // ignored
                 }
             }
 
