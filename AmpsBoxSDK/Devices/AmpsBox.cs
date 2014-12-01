@@ -582,13 +582,7 @@ namespace AmpsBoxSdk.Devices
             {
                 if (!this.falkorPort.IsOpen)
                 {
-                    try
-                    {
-                        this.falkorPort.Open();
-                    }
-                    catch (Exception ex)
-                    {
-                    }
+                  this.falkorPort.Open();
                 }
             }
         }
@@ -1123,7 +1117,10 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 const int Offset = 0;
-                while (stringToReturn.Length < 1 && stringToReturn == string.Empty)
+                while (this.falkorPort.Port.BytesToRead == 0)
+                {   
+                }
+                while (!stringToReturn.Contains("\n"))
                 {
                     actualLength = await port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
 
@@ -1138,7 +1135,7 @@ namespace AmpsBoxSdk.Devices
                  //  response = ampsResponse.ToString();
 
                     if (stringToReturn.Contains(this.commandProvider.EndOfLine)
-                        && (ampsResponse == Responses.ACK || ampsResponse == Responses.NAK) && stringToReturn.Length > 1)
+                        && (ampsResponse == Responses.ACK || ampsResponse == Responses.NAK))
 
                     {
                         return stringToReturn;
@@ -1269,8 +1266,9 @@ namespace AmpsBoxSdk.Devices
 
                 }
                 await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
-                Thread.Sleep(500);
-               string response = await Read(this.falkorPort.Port);
+                
+                string response = await Read(this.falkorPort.Port);
+                
                 LatestResponse = await ReadAsync(response);
 
                 return LatestResponse;
