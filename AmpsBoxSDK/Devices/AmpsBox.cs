@@ -102,8 +102,6 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         private string lastTable;
 
-        private IObservable<string> serialPortObservable;
-
         #endregion
 
         #region Constructors and Destructors
@@ -215,6 +213,8 @@ namespace AmpsBoxSdk.Devices
         public string LatestResponse { get; private set; }
 
         public string LatestWrite { get; private set; }
+
+        public string LastTable { get; private set; }
 
         /// <summary>
         /// Closes the port
@@ -582,7 +582,9 @@ namespace AmpsBoxSdk.Devices
             {
                 if (!this.falkorPort.IsOpen)
                 {
-                  this.falkorPort.Open();
+                    this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
+                    this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
+                    this.falkorPort.Open();
                 }
             }
         }
@@ -965,6 +967,7 @@ namespace AmpsBoxSdk.Devices
             ISignalTableFormatter<SignalTable, double> formatter = new AmpsBoxSignalTableCommandFormatter();
 
             string command = formatter.FormatTable(table, converter);
+            this.LastTable = command;
 
             await this.WriteAsync(command);
         }
@@ -979,7 +982,6 @@ namespace AmpsBoxSdk.Devices
         {
             serialPort.ReadTimeout = ConstReadTimeout;
             serialPort.WriteTimeout = ConstWriteTimeout;
-            this.CreateObservable(serialPort);
             //   serialPort.DataReceived += this.PortOnDataReceived;
             //   serialPort.ErrorReceived += this.PortErrorReceived;
             //   serialPort.PinChanged += this.PortPinChanged;
@@ -1024,76 +1026,6 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="serialPort"></param>
-        private void CreateObservable(SerialPort serialPort)
-        {
-            this.serialPortObservable = Observable.Create<string>(
-                observer =>
-                    {
-                        Action kickOffRead = async () =>
-                            {
-                                SerialPort sp = serialPort;
-
-                                byte[] buffer = new byte[2048];
-
-                                try
-
-                                {
-                                    var actualLength = await sp.BaseStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                    byte[] received = new byte[actualLength];
-
-                                    Buffer.BlockCopy(buffer, 0, received, 0, actualLength);
-
-                                    var str = System.Text.Encoding.ASCII.GetString(received);
-
-                                    var response = await this.ValidateResponse(str);
-
-                                    if (str.Contains(this.commandProvider.EndOfLine)
-                                        && (response == Responses.ACK || response == Responses.NAK))
-
-                                    {
-                                        observer.OnNext(str);
-                                    }
-                                }
-
-                                catch (InvalidOperationException ex)
-
-                                {
-                                }
-
-                                catch (NotSupportedException ex)
-
-                                {
-                                }
-
-                                catch (ArgumentNullException ex)
-
-                                {
-                                }
-
-                                catch (ArgumentOutOfRangeException ex)
-
-                                {
-                                }
-
-                                catch (ArgumentException ex)
-
-                                {
-                                }
-                            };
-                        kickOffRead();
-                        var errorCallback =
-                            new SerialErrorReceivedEventHandler(
-                                (sender, e) => observer.OnError(new Exception(e.EventType.ToString())));
-                        serialPort.ErrorReceived += errorCallback;
-
-                        return () => { serialPort.ErrorReceived -= errorCallback; };
-                    });
-        }
 
         /// <summary>
         /// TODO The m_port_ pin changed.
@@ -1117,10 +1049,7 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 const int Offset = 0;
-                while (this.falkorPort.Port.BytesToRead == 0)
-                {   
-                }
-                while (!stringToReturn.Contains("\n"))
+                while (!stringToReturn.Contains("\r\n"))
                 {
                     actualLength = await port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
 
@@ -1128,11 +1057,9 @@ namespace AmpsBoxSdk.Devices
 
                     Buffer.BlockCopy(buffer, Offset, received, Offset, actualLength);
 
-                    stringToReturn = System.Text.Encoding.ASCII.GetString(received);
+                    stringToReturn += System.Text.Encoding.ASCII.GetString(received);
 
                     var ampsResponse = await this.ValidateResponse(stringToReturn);
-                 //   Console.WriteLine(ampsResponse);
-                 //  response = ampsResponse.ToString();
 
                     if (stringToReturn.Contains(this.commandProvider.EndOfLine)
                         && (ampsResponse == Responses.ACK || ampsResponse == Responses.NAK))
@@ -1258,13 +1185,6 @@ namespace AmpsBoxSdk.Devices
             {
                 var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
                
-                if (this.serialPortObservable == null)
-                {
-                    this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
-                    this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
-            //        this.CreateObservable(this.falkorPort.Port);
-
-                }
                 await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
                 
                 string response = await Read(this.falkorPort.Port);

@@ -9,6 +9,7 @@ namespace AmpsBoxTests.Devices
     using System.IO.Ports;
 
     using FalkorSDK.Channel;
+    using FalkorSDK.Data;
     using FalkorSDK.IO.Ports;
 
     using NUnit.Framework;
@@ -47,7 +48,15 @@ namespace AmpsBoxTests.Devices
             var fsp = new FalkorSerialPort(new SerialPort("COM12") { BaudRate = 19200, Handshake = Handshake.XOnXOff, NewLine = "\n", Parity = Parity.Even });
             ampsBox.Port = fsp;
             ampsBox.Open();
-           await ampsBox.LoadTimeTableAsync(new SignalTable());
+            var signalTable = new SignalTable();
+            signalTable.AddStepEvent(1.0, 1, 5, "");
+            signalTable.TimeUnits = TimeTableUnits.Milliseconds;
+            signalTable.Iterations = 5;
+            var list = await ampsBox.LoadTimeTableAsync(signalTable);
+            foreach (var item in list)
+            {
+                Console.WriteLine(item);
+            }
         }
     }
 }
