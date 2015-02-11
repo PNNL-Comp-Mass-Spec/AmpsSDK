@@ -169,164 +169,18 @@
             Unit separator
             </summary>
         </member>
-        <member name="T:FalkorSDK.Data.AnalogToDigitalConverterProperties">
+        <member name="T:FalkorSDK.Channel.Channel">
             <summary>
-            TODO The Analog To Digital Converter properties.
+            
             </summary>
         </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.SamplingRate">
+        <member name="M:FalkorSDK.Channel.DOChannel.#ctor(System.Int32,System.String,System.String)">
             <summary>
-            Gets or sets the sampling rate
+            
             </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.GateThreshold">
-            <summary>
-            Gets or sets GateThreshold. Samples whose NormalizedIntensity is less than GateThreshold 
-            would be rejected upon acquisition. Set this number to 0 to disable this feature.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.EnablePulse">
-            <summary>
-            Gets or sets a value indicating whether enable pulse.
-            Enable Pulse is a waveform regulates the trigger to period of interests.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.IntervalSamples">
-            <summary>
-            Gets or sets the interval samples
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.AcquireChannelOffset">
-            <summary>
-            Gets or sets the acquire channel offset.
-            The channel offset of the ADC channel, unit volts.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.AcquireChannelFSR">
-            <summary>
-            Gets or sets the acquire channel full scale range, in volts
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.AverageTimeOfFlightWidth">
-            <summary>
-            Gets or sets the average time of flight width.
-            The unit is time in seconds
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.DateCalibrated">
-            <summary>
-            Gets or sets the date calibrated.
-            The last time a Manual calibration is performed.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.StartDelaySamples">
-            <summary>
-            Gets or sets the start delay samples. Software handled ommition of a certain number of
-            samples after each trigger.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.FullScaleIntensity">
-            <summary>
-            Gets or sets the full scale intensity.
-            The full scale range, in units of intensity.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.CalType">
-            <summary>
-            Gets or sets the cal type.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.TimeOffset">
-            <summary>
-            Gets or sets the time offset.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.CalibrationA">
-            <summary>
-            Gets or sets the cal a.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.CalibrationT0">
-            <summary>
-            Gets or sets the calibration t 0.
-            For IMS t0 is the time the ion spent outside of a drift cell.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.DitherEnable">
-            <summary>
-            Gets or sets a value indicating whether dither enable.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.Accumulations">
-            <summary>
-            Gets or sets the accumulations. An accumulation is a primitive form of a frame, the summation of multiple
-            accumulations equals a frame.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.NumberOfFrames">
-            <summary>
-            Gets or sets the number of frames.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.NumberOfSamples">
-            <summary>
-            Gets or sets the nbr samples. Should hold the same value as Number of segment per waveform. 
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.NumberOfRecordsPerWaveform">
-            <summary>
-            Gets or sets the nbr segments per waveform; samples per waveform/TOFpulse
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.PredefinedNumScans">
-            <summary>
-            Gets or sets the predefined num scans. The number of mobility scans for each accumulation.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.PropertiesFileName">
-            <summary>
-            Gets or sets the properties file name.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.NameMultiplexingProfile">
-            <summary>
-            Gets or sets the name multiplexing profile.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.WriteDirectory">
-            <summary>
-            Gets or sets the write directory.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.TimeOfFlightSpectraPerFrame">
-            <summary>
-            Gets or sets the tof spectra per frame.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.TriggerLength">
-            <summary>
-            Gets or sets the ims trigger len.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.TypeTrigger">
-            <summary>
-            Gets or sets the type trigger.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.SpectraTriggerPeriod">
-            <summary>
-            Gets or sets the spectra trigger period.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.SyncOnTrigOutSync">
-            <summary>
-            Gets or sets a value indicating whether sync on trig out sync.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Data.AnalogToDigitalConverterProperties.ThresholdTrigger">
-            <summary>
-            Gets or sets the threshold trigger.
-            </summary>
+            <param name="address"></param>
+            <param name="name"></param>
+            <param name="description"></param>
         </member>
         <member name="T:FalkorSDK.Data.Calibration.CalibrationData`1">
             <summary>
@@ -1961,6 +1815,189 @@
             The <see cref="T:System.String"/>.
             </returns>
         </member>
+        <member name="P:FalkorSDK.Data.Uimf.Frame`1.Accumulations">
+            <summary>
+            Gets the number of accumulations that have been summed into the <see cref="P:FalkorSDK.Data.Uimf.Frame`1.Spectra"/>.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Data.Uimf.Frame`1.DateTime">
+            <summary>
+            Gets the dateTime that the fream was first created on.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Data.Uimf.Frame`1.Parameters">
+            <summary>
+            Gets or sets the parameters.
+            </summary>
+        </member>
+        <member name="T:FalkorSDK.Data.Uimf.SpectrumArrayFrame">
+            <summary>
+            The spectrum array frame.
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumArrayFrame.#ctor(System.Collections.Generic.IEnumerable{System.Int32[]})">
+            <summary>
+            Initializes a new instance of the <see cref="T:FalkorSDK.Data.Uimf.SpectrumArrayFrame"/> class.
+            </summary>
+            <param name="spectra">
+            The spectra.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumArrayFrame.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:FalkorSDK.Data.Uimf.SpectrumArrayFrame"/> class.
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumArrayFrame.AddAccumulation(System.Collections.Generic.IEnumerable{System.Int32[]})">
+            <summary>
+            Adds an accumulation and increments the counter.
+            </summary>
+            <param name="spectra">
+            The spectra to be added.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumArrayFrame.MergeFrames(FalkorSDK.Data.Uimf.Frame{System.Collections.Generic.IEnumerable{System.Int32[]}})">
+            <summary>
+            Merges two frames and sums the two accumulations together.
+            </summary>
+            <param name="frame">
+            The frame to be merged in.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumArrayFrame.mergeAndSumAccumulations(System.Collections.Generic.IEnumerable{System.Int32[]})">
+            <summary>
+            The algorithm used to merge and sum accumulations (essentially a matrix addition operation).
+            </summary>
+            <param name="spectra">
+            The spectra to be added in.
+            </param>
+            <exception cref="T:System.NullReferenceException">
+            </exception>
+            <exception cref="T:System.ArgumentNullException">
+            </exception>
+        </member>
+        <member name="T:FalkorSDK.Data.Uimf.SpectrumFrame">
+            <summary>
+            The SpectrumFrame class is used to contain information about a SpectrumFrame, sometimes refered to as <see cref="!:Spectra"/>, 
+            which is a set of accumulations that has been summed where each set intersects.
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumFrame.#ctor(System.Collections.Concurrent.ConcurrentDictionary{System.UInt32,System.Collections.Generic.IDictionary{System.Int32,System.Int32}})">
+            <summary>
+            Initializes a new instance of the <see cref="T:FalkorSDK.Data.Uimf.SpectrumFrame"/> class.
+            </summary>
+            <param name="spectra">
+            The spectra.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumFrame.AddAccumulation(System.Collections.Concurrent.ConcurrentDictionary{System.UInt32,System.Collections.Generic.IDictionary{System.Int32,System.Int32}})">
+            <summary>
+            Add an accumulation into the Spectra.
+            </summary>
+            <param name="accumulation">
+            The accumulation.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumFrame.MergeFrames(FalkorSDK.Data.Uimf.SpectrumFrame)">
+            <summary>
+            Merges two frames and updates the accumulations to reflect to total accumulations in each.
+            </summary>
+            <param name="spectrumFrame">
+            The SpectrumFrame that will be merged into this one.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.SpectrumFrame.MergeAndSumAccumulations(System.Collections.Concurrent.ConcurrentDictionary{System.UInt32,System.Collections.Generic.IDictionary{System.Int32,System.Int32}})">
+            <summary>
+            Sums two mobility scans together.
+            </summary>
+            <param name="accumulation">
+            One or more mobility scans.
+            </param>
+        </member>
+        <member name="T:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile">
+            <summary>
+            TODO The Unified Ion Mobility File.
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile._frameParameters">
+            <summary>
+            TODO The _frame parameters.
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile._globalParameters">
+            <summary>
+            TODO The _global parameters.
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.fileName">
+            <summary>
+            TODO The _uimf file name.
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.frameCount">
+            <summary>
+            TODO The frame count.
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile"/> class.
+            </summary>
+            <param name="logger">
+            The logger.
+            </param>
+        </member>
+        <member name="P:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.AcquisitionProperties">
+            <summary>
+            Gets or sets the properties.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.InstrumentCalibrationProperties">
+            <summary>
+            Gets or sets the instrument calibration properties.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.ExperimentCalibrationProperties">
+            <summary>
+            Gets or sets the experiment calibration properties.
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.CreateNewUnifiedIonMobilityFile(System.String,FalkorSDK.Devices.Digitizer.IAcquisitionProperties,FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties,FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties)">
+            <summary>
+            </summary>
+            <param name="nameOfFile">
+            </param>
+            <param name="acquisitionProperties">
+            The acquisition Properties.
+            </param>
+            <param name="instrumentCalibrationProperties">
+            The instrument Calibration Properties.
+            </param>
+            <param name="experimentCalibrationProperties">
+            The experiment Calibration Properties.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.WriteUnifiedIonMobilityFileFrame(System.Collections.Generic.IDictionary{System.UInt32,System.Collections.Generic.IDictionary{System.Int32,System.Int32}})">
+            <summary>
+            </summary>
+            <param name="accumulatedData">
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.CheckFrameParameters(UIMFLibrary.FrameParameters)">
+            <summary>
+            TODO The check frame parameters.
+            </summary>
+            <param name="fp">
+            TODO The fp.
+            </param>
+        </member>
+        <member name="M:FalkorSDK.Data.Uimf.UnifiedIonMobilityFile.CheckGlobalParameters(UIMFLibrary.GlobalParameters)">
+            <summary>
+            Ensure no null properties in the global parameters.
+            </summary>
+            <param name="gp">
+            </param>
+        </member>
         <member name="T:FalkorSDK.Data.SimpleTimeConverter">
             <summary>
             Converts 
@@ -2058,158 +2095,207 @@
             TODO The has error.
             </summary>
         </member>
-        <member name="T:FalkorSDK.Devices.IAnalogToDigitalConverterProperties">
+        <member name="T:FalkorSDK.Devices.Digitizer.DigitizerSampleRate">
             <summary>
-            Gets or sets GateThreshold. Samples whose NormalizedIntensity is less than GateThreshold 
-            would be rejected upon acquisition. Set this number to 0 to disable this feature.
+            Digitizer sample rate. All values in Hz.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.GateThreshold">
+        <member name="T:FalkorSDK.Devices.Digitizer.IAcquisitionProperties">
             <summary>
-            Gets or sets the for samples to be accepted, in volts.
+            The IAcquisitionProperties interface.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.EnablePulse">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.NumberOfBinsPerSpectrum">
             <summary>
-            Gets or sets a value indicating whether enable pulse.
-            Enable Pulse is a waveform regulates the trigger to period of interests.
+            Gets or sets the number of bins per Spectrum/Waveform. Should hold the same value as Number of segment per waveform. 
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.IntervalSamples">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.NumberOfSpectraPerFrame">
             <summary>
-            Gets or sets the interval samples
+            Gets or sets the NumberOfSpectraPerFrame. The number of Spectra/Waveform for each accumulation, which is the same as
+            number of spectra per frame.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.AcquireChannelOffset">
-            <summary>
-            Gets or sets the acquire channel offset.
-            The channel offset of the ADC channel, unit volts.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.AcquireChannelFSR">
-            <summary>
-            Gets or sets the acquire channel full scale range, in volts
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.AverageTimeOfFlightWidth">
-            <summary>
-            Gets or sets the average time of flight width.
-            The unit is time in seconds
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.DateCalibrated">
-            <summary>
-            Gets or sets the date calibrated.
-            The last time a Manual calibration is performed.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.StartDelaySamples">
-            <summary>
-            Gets or sets the start delay samples. Software handled ommition of a certain number of
-            samples after each trigger.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.FullScaleIntensity">
-            <summary>
-            Gets or sets the full scale intensity.
-            The full scale range, in units of intensity.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.CalType">
-            <summary>
-            Gets or sets the cal type.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.TimeOffset">
-            <summary>
-            Gets or sets the time offset.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.CalibrationA">
-            <summary>
-            Gets or sets the cal a.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.CalibrationT0">
-            <summary>
-            Gets or sets the calibration t 0.
-            For IMS t0 is the time the ion spent outside of a drift cell.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.DitherEnable">
-            <summary>
-            Gets or sets a value indicating whether dither enable.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.Accumulations">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.NumberOfAccumulationsPerFrame">
             <summary>
             Gets or sets the accumulations. An accumulation is a primitive form of a frame, the summation of multiple
             accumulations equals a frame.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.NumberOfFrames">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.NumberOfFrames">
             <summary>
             Gets or sets the number of frames.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.NumberOfSamples">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.SamplingRate">
             <summary>
-            Gets or sets the nbr samples. Should hold the same value as Number of segment per waveform. 
+            Gets or sets the sampling rate
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.NumberOfRecordsPerWaveform">
+        <member name="P:FalkorSDK.Devices.Digitizer.IAcquisitionProperties.DitherEnable">
             <summary>
-            Gets or sets the number records per waveform; samples per Fetch / Read Operation of Digitizer
+            Gets or sets a value indicating whether dither enable.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.PredefinedNumScans">
+        <member name="T:FalkorSDK.Devices.Digitizer.IDigitizerPipelineProperties">
             <summary>
-            Gets or sets the predefined num scans. Number of spectra per accumulation.
+            The digitizer pipeline properties.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.PropertiesFileName">
+        <member name="P:FalkorSDK.Devices.Digitizer.IDigitizerPipelineProperties.CacheEnabled">
+            <summary>
+            Gets or sets a value indicating whether cache enabled.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IDigitizerPipelineProperties.ParallelizationEnableOfAdd">
+            <summary>
+            Gets or sets a value indicating whether parallelization enable of add.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IDigitizerPipelineProperties.ParallelLevelOfAdding">
+            <summary>
+            Gets or sets the parallel level of adding.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IDigitizerPipelineProperties.NumberOfRecordsPerAcquisition">
+            <summary>
+            Gets or sets the page size, which is a chunk to read.
+            </summary>
+        </member>
+        <member name="T:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties">
+            <summary>
+            The ExperimentCalibrationProperties interface.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties.FullScaleIntensity">
+            <summary>
+            Gets or sets the full scale intensity.
+            The full scale range, in units of intensity.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties.CalType">
+            <summary>
+            Gets or sets the cal type.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties.TimeOffset">
+            <summary>
+            Gets or sets the time offset.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties.CalibrationA">
+            <summary>
+            Gets or sets the cal a.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IExperimentCalibrationProperties.CalibrationT0">
+            <summary>
+            Gets or sets the calibration t 0.
+            For IMS t0 is the time the ion spent outside of a drift cell.
+            </summary>
+        </member>
+        <member name="T:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties">
+            <summary>
+            The instrument calibration properties.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.GateThreshold">
+            <summary>
+            Gets or sets GateThreshold. Samples whose NormalizedIntensity is less than GateThreshold 
+            would be rejected upon AcquisitionProperties. Set this number to 0 to disable this feature.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.AcquireChannelOffset">
+            <summary>
+            Gets or sets the acquire channel offset.
+            The channel offset of the ADC channel, unit volts.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.AcquireChannelFSR">
+            <summary>
+            Gets or sets the acquire channel full scale range, in volts
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.AverageTimeOfFlightWidth">
+            <summary>
+            Gets or sets the average time of flight width.
+            The unit is time in seconds
+            Caution: Fail to specify this variable correctly
+            could result false warnings about timestamps.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.DateCalibrated">
+            <summary>
+            Gets or sets the date calibrated.
+            The last time a Manual calibration is performed.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.StartDelaySamples">
+            <summary>
+            Gets or sets the start delay samples. Software handled omission of a certain number of
+            samples after each trigger.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IInstrumentCalibrationProperties.EnablePulse">
+            <summary>
+            Gets or sets the enable pulse for control IO enabled digitizers.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:FalkorSDK.Devices.Digitizer.IIOProperties">
+            <summary>
+            The IOProperties interface.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.IIOProperties.SaveFileName">
             <summary>
             Gets or sets the properties file name.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.NameMultiplexingProfile">
+        <member name="P:FalkorSDK.Devices.Digitizer.IIOProperties.NameMultiplexingProfile">
             <summary>
             Gets or sets the name multiplexing profile.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.WriteDirectory">
+        <member name="P:FalkorSDK.Devices.Digitizer.IIOProperties.WriteDirectory">
             <summary>
             Gets or sets the write directory.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.TimeOfFlightSpectraPerFrame">
+        <member name="T:FalkorSDK.Devices.Digitizer.ITimeoutProperties">
             <summary>
-            Gets or sets *total* number of records per frame. Ex: 360
+            The TimeoutProperties interface.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.TriggerLength">
+        <member name="P:FalkorSDK.Devices.Digitizer.ITimeoutProperties.CaptureTimeout">
             <summary>
-            Gets or sets the ims trigger length.
+            Gets or sets the capture timeout.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.TypeTrigger">
+        <member name="P:FalkorSDK.Devices.Digitizer.ITimeoutProperties.DigitizerInitTimeout">
+            <summary>
+            Gets or sets the digitizer initialization timeout.
+            </summary>
+        </member>
+        <member name="T:FalkorSDK.Devices.Digitizer.ITriggerProperties">
+            <summary>
+            The trigger properties.
+            </summary>
+        </member>
+        <member name="P:FalkorSDK.Devices.Digitizer.ITriggerProperties.TriggerType">
             <summary>
             Gets or sets the type trigger.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.SpectraTriggerPeriod">
-            <summary>
-            Gets or sets the spectra trigger period.
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.SyncOnTrigOutSync">
+        <member name="P:FalkorSDK.Devices.Digitizer.ITriggerProperties.SyncOnTrigOutSync">
             <summary>
             Gets or sets a value indicating whether sync on trig out sync.
             </summary>
         </member>
-        <member name="P:FalkorSDK.Devices.IAnalogToDigitalConverterProperties.ThresholdTrigger">
+        <member name="P:FalkorSDK.Devices.Digitizer.ITriggerProperties.TriggerThreshold">
             <summary>
-            Gets or sets the threshold trigger.
+            Gets or sets the threshold trigger, in volts, trigger lower than the given
+            voltage would not be sampled.
             </summary>
         </member>
         <member name="T:FalkorSDK.Devices.IDigitalInputOutputDevice">
@@ -2220,16 +2306,6 @@
         <member name="T:FalkorSDK.Devices.IInputOutputDevice">
             <summary>
             TODO The InputOutputDevice interface.
-            </summary>
-        </member>
-        <member name="T:FalkorSDK.Devices.IFalkorAdc">
-            <summary>
-            Interface for any analog to digital converter devices. (Digitizers, etc)
-            </summary>
-        </member>
-        <member name="P:FalkorSDK.Devices.IFalkorAdc.Properties">
-            <summary>
-            Gets the properties.
             </summary>
         </member>
         <member name="T:FalkorSDK.Devices.IFalkorDAC">
@@ -2634,6 +2710,81 @@
             Gets the value.
             </summary>
         </member>
+        <member name="T:FalkorSDK.IO.Compression.LZFCompressionUtil">
+            <summary>
+            Improved C# LZF Compressor, a very small data compression library. The compression algorithm is extremely fast. 
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.HLOG">
+            <summary>
+            H Log
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.HSIZE">
+            <summary>
+            H Size
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.MAX_LIT">
+            <summary>
+            max lit
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.MAX_OFF">
+            <summary>
+            Mxx off
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.MAX_REF">
+            <summary>
+            Max ref
+            </summary>
+        </member>
+        <member name="F:FalkorSDK.IO.Compression.LZFCompressionUtil.HashTable">
+            <summary>
+            Hashtable, that can be allocated only once
+            </summary>
+        </member>
+        <member name="M:FalkorSDK.IO.Compression.LZFCompressionUtil.Compress(System.Byte[]@,System.Int32,System.Byte[]@,System.Int32)">
+            <summary>
+            Compresses the data using LibLZF algorithm
+            </summary>
+            <param name="input">
+            Reference to the data to compress
+            </param>
+            <param name="inputLength">
+            Lenght of the data to compress
+            </param>
+            <param name="output">
+            Reference to a buffer which will contain the compressed data
+            </param>
+            <param name="outputLength">
+            Lenght of the compression buffer (should be bigger than the input buffer)
+            </param>
+            <returns>
+            The size of the compressed archive in the output buffer
+            </returns>
+        </member>
+        <member name="M:FalkorSDK.IO.Compression.LZFCompressionUtil.Decompress(System.Byte[]@,System.Int32,System.Byte[]@,System.Int32)">
+            <summary>
+            Decompresses the data using LibLZF algorithm
+            </summary>
+            <param name="input">
+            Reference to the data to decompress
+            </param>
+            <param name="inputLength">
+            Lenght of the data to decompress
+            </param>
+            <param name="output">
+            Reference to a buffer which will contain the decompressed data
+            </param>
+            <param name="outputLength">
+            The size of the decompressed archive in the output buffer
+            </param>
+            <returns>
+            Returns decompressed size
+            </returns>
+        </member>
         <member name="T:FalkorSDK.IO.Devices.IDeviceConfigurationReader`1">
             <summary>
             TODO The DeviceConfigurationReader interface.
@@ -2787,7 +2938,7 @@
             The <see cref="T:FalkorSDK.IO.FalkorConfiguration"/>.
             </returns>
         </member>
-        <member name="T:FalkorSDK.IO.Generic.BinaryReader">
+        <member name="T:FalkorSDK.IO.Generic.BinaryReader`1">
             <summary>
             The binary reader.
             </summary>
@@ -2806,8 +2957,8 @@
             <param name="fileName">
             The file name.
             </param>
-            <param name="data">
-            The data.
+            <param name="datum">
+            The datum.
             </param>
             <exception cref="T:System.NotImplementedException">
             </exception>
@@ -2854,7 +3005,7 @@
         </member>
         <member name="T:FalkorSDK.IO.Generic.DataContractWriter`1">
             <summary>
-            TODO The data contract writer.
+            TODO The datum contract writer.
             </summary>
             <typeparam name="T">
             </typeparam>
@@ -2866,8 +3017,8 @@
             <param name="fileName">
             The file name.
             </param>
-            <param name="data">
-            The data.
+            <param name="datum">
+            The datum.
             </param>
         </member>
         <member name="T:FalkorSDK.IO.Generic.FactoryTypeNotSpecifiedException">
@@ -2940,6 +3091,13 @@
             The <see cref="!:T"/>.
             </returns>
         </member>
+        <member name="M:FalkorSDK.IO.Generic.IReader`1.ReadAll(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="fileName"></param>
+            <returns></returns>
+        </member>
         <member name="T:FalkorSDK.IO.Generic.IWriter`1">
             <summary>
             TODO The Writer interface.
@@ -2954,9 +3112,16 @@
             <param name="fileName">
             TODO The file name.
             </param>
-            <param name="data">
-            TODO The data.
+            <param name="datum">
+            TODO The datum.
             </param>
+        </member>
+        <member name="M:FalkorSDK.IO.Generic.IWriter`1.WriteAll(System.String,System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            
+            </summary>
+            <param name="fileName"></param>
+            <param name="data"></param>
         </member>
         <member name="T:FalkorSDK.IO.Generic.ReaderFactory`1">
             <summary>
@@ -3067,8 +3232,8 @@
             <param name="fileName">
             TODO The file name.
             </param>
-            <param name="data">
-            TODO The data.
+            <param name="datum">
+            TODO The datum.
             </param>
         </member>
         <member name="M:FalkorSDK.IO.Generic.JsonWriter`1.WriteAsync(System.String,`0)">
@@ -3079,7 +3244,7 @@
             TODO The file name.
             </param>
             <param name="data">
-            TODO The data.
+            TODO The datum.
             </param>
             <returns>
             The <see cref="T:System.Threading.Tasks.Task"/>.
@@ -3128,8 +3293,8 @@
             <param name="fileName">
             TODO The file name.
             </param>
-            <param name="data">
-            TODO The data.
+            <param name="datum">
+            TODO The datum.
             </param>
         </member>
         <member name="M:FalkorSDK.IO.Generic.XmlWriter`1.WriteAsync(System.String,`0)">
@@ -3140,7 +3305,7 @@
             TODO The file name.
             </param>
             <param name="data">
-            TODO The data.
+            TODO The datum.
             </param>
             <returns>
             The <see cref="T:System.Threading.Tasks.Task"/>.

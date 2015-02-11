@@ -202,6 +202,12 @@ namespace AmpsBoxSdk.Commands
         /// </summary>
         private const string GetError = "GERR";
 
+        private const string TableStop = "TBLSTOP";
+
+        private const string Reset = "RESET,OUT";
+
+        private const string Test = "TEST,OUT";
+
         #endregion
 
         // DIO Commands
@@ -282,6 +288,11 @@ namespace AmpsBoxSdk.Commands
             this.AddCommand(AmpsCommandType.GetDigitalIoDirection, GetDigitalIoDirection);
 			this.AddCommand(AmpsCommandType.CommandSetTrigger, CommandSetTrigger);
             this.AddCommand(AmpsCommandType.GetError, GetError);
+
+            this.AddCommand(AmpsCommandType.TimeTableStop, TableStop);
+
+            this.AddCommand(AmpsCommandType.Reset, Reset);
+            this.AddCommand(AmpsCommandType.Test, Test);
         }
 
         #endregion

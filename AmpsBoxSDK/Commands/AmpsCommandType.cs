@@ -39,7 +39,9 @@ namespace AmpsBoxSdk.Commands
 		/// <summary>
 		/// TODO The time Table abort.
 		/// </summary>
-		TimeTableAbort, 
+		TimeTableAbort,
+
+        TimeTableStop,
 
         /// <summary>
         /// TODO The get version.
@@ -204,6 +206,10 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// The get guard offset.
         /// </summary>
-        GetGuardOffset
+        GetGuardOffset,
+
+        Reset,
+
+        Test
     }
 }

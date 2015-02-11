@@ -99,9 +99,6 @@ namespace AmpsBoxSdk.Data
 
             eventData = eventData.Trim(',');
 
-            // var paddingTime = Convert.ToInt32(converter.ConvertTo(table.TimeUnits, TimeTableUnits.Ticks, table.Length));
-            // paddingTime = paddingTime - maxTime;
-            // eventData += paddingTime + ":";
             var iterationData = "1:" + table.Iterations + ",";
             var stringToReturn = string.Format(this.commandFormat, eventData, "0:[", "]", iterationData);
             return stringToReturn;

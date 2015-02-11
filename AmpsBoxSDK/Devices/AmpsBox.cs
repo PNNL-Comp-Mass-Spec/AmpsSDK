@@ -18,11 +18,14 @@ namespace AmpsBoxSdk.Devices
     using System.IO.Ports;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Reactive.Concurrency;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
+    using System.Runtime.Serialization;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Threading.Tasks.Dataflow;
 
     using AmpsBoxSdk.Commands;
     using AmpsBoxSdk.Data;
@@ -33,13 +36,16 @@ namespace AmpsBoxSdk.Devices
 
     using ReactiveUI;
 
+    using Timer = System.Timers.Timer;
+
     /// <summary>
     /// Communicates with a PNNL Amps Box
     /// Non shared parts creation policy so that multiple amps boxes can exist in the system at once.
     /// </summary>
     [Export]
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public sealed class AmpsBox
+    [DataContract]
+    public sealed class AmpsBox : ReactiveObject
     {
         #region Constants
 
@@ -102,6 +108,12 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         private string lastTable;
 
+        private int clockFrequency;
+
+        private ClockType clockType;
+
+        private StartTriggerTypes triggerType;
+
         #endregion
 
         #region Constructors and Destructors
@@ -129,6 +141,7 @@ namespace AmpsBoxSdk.Devices
             this.ClockFrequency = this.commandProvider.InternalClock;
             this.ReadWriteTimeout = ConstSleepTime;
             this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
+          
         }
 
         #endregion
@@ -137,22 +150,48 @@ namespace AmpsBoxSdk.Devices
 
         /// <summary>
         /// Gets or sets the clock frequency of the AMPS Box.
-        /// </summary>        
-        public int ClockFrequency { get; set; }
+        /// </summary>   
+        [DataMember]
+        public int ClockFrequency
+        {
+            get
+            {
+                return this.clockFrequency;
+            }
+
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.clockFrequency, value);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the clock type for executing a time Table.
         /// </summary>
-        public ClockType ClockType { get; set; }
+        [DataMember]
+        public ClockType ClockType
+        {
+            get
+            {
+                return this.clockType;
+            }
+
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.clockType, value);
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether is emulated or not.
         /// </summary>
+        [DataMember]
         public bool Emulated { get; set; }
 
         /// <summary>
         /// Gets or sets the ID of this device.
         /// </summary>
+        [DataMember]
         public int Id { get; set; }
 
         /// <summary>
@@ -167,24 +206,41 @@ namespace AmpsBoxSdk.Devices
 
             set
             {
-                this.falkorPort = value;
+                lock (this.sync)
+                {
+                    this.falkorPort = value;
+                }
             }
         }
 
         /// <summary>
         /// Gets or sets the amount of time to wait for a number of characters.
         /// </summary>		
+        [DataMember]
         public int ReadTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the read write timeout between IO calls on the serial port
         /// </summary>
+        [DataMember]
         public int ReadWriteTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the trigger type for starting a time Table
         /// </summary>
-        public StartTriggerTypes TriggerType { get; set; }
+        [DataMember]
+        public StartTriggerTypes TriggerType
+        {
+            get
+            {
+                return this.triggerType;
+            }
+
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.triggerType, value);
+            }
+        }
 
         #endregion
 
@@ -210,10 +266,11 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
+        [DataMember]
         public string LatestResponse { get; private set; }
-
+        [DataMember]
         public string LatestWrite { get; private set; }
-
+        [DataMember]
         public string LastTable { get; private set; }
 
         /// <summary>
@@ -354,20 +411,13 @@ namespace AmpsBoxSdk.Devices
 
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetHighVoltageChannels);
             string response = string.Empty;
-            try
-            {
+
                 response = await this.WriteAsync(command.Value);
 
                 // var channelResponse = response.Split(new[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
                 int channels;
                 int.TryParse(response, out channels);
                 return channels;
-            }
-            catch (Exception ex)
-            {
-            }
-
-            return 0;
         }
 
         /// <summary>
@@ -487,8 +537,6 @@ namespace AmpsBoxSdk.Devices
         public async Task<int> GetRfFrequency(int channel)
         {
             var command = this.commandProvider.GetCommand(AmpsCommandType.GetRfFrequency);
-            try
-            {
                 var response =
                     await
                     this.WriteAsync(
@@ -507,12 +555,7 @@ namespace AmpsBoxSdk.Devices
                 }
 
                 return frequency;
-            }
-            catch (Exception ex)
-            {
-            }
-
-            return 0;
+            
         }
 
         /// <summary>
@@ -554,6 +597,7 @@ namespace AmpsBoxSdk.Devices
 
             list.Add("\tSending Time Table Data.");
             await this.LoadTimeTable(table);
+
 
             list.Add("\tSetting Clock Type.");
             await this.SetClock(this.ClockType);
@@ -982,10 +1026,25 @@ namespace AmpsBoxSdk.Devices
         {
             serialPort.ReadTimeout = ConstReadTimeout;
             serialPort.WriteTimeout = ConstWriteTimeout;
-            //   serialPort.DataReceived += this.PortOnDataReceived;
+            this.WhenAnyValue(x => x.Port.Port.BytesToRead).Subscribe(OnNext);
+            serialPort.DataReceived += SerialPort_DataReceived;
             //   serialPort.ErrorReceived += this.PortErrorReceived;
             //   serialPort.PinChanged += this.PortPinChanged;
         }
+
+        private void OnNext(int i)
+        {
+            
+        }
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (e.EventType == SerialData.Eof)
+            {
+                throw new Exception("End of file exception!");
+            }
+        }
+
 
         /// <summary>
         /// TODO The m_port_ error received.
@@ -1049,7 +1108,10 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 const int Offset = 0;
-                while (!stringToReturn.Contains("\r\n"))
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+              
+                while (!stringToReturn.Contains("\r\n") && watch.ElapsedMilliseconds < 1000)
                 {
                     actualLength = await port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
 
@@ -1060,14 +1122,20 @@ namespace AmpsBoxSdk.Devices
                     stringToReturn += System.Text.Encoding.ASCII.GetString(received);
 
                     var ampsResponse = await this.ValidateResponse(stringToReturn);
-
+                    if (ampsResponse == Responses.NAK)
+                    {
+                        var error = await this.GetError();
+                        return error.ToString();
+                    }
                     if (stringToReturn.Contains(this.commandProvider.EndOfLine)
                         && (ampsResponse == Responses.ACK || ampsResponse == Responses.NAK))
 
                     {
+                        watch.Stop();
                         return stringToReturn;
                     }
                 }
+                watch.Stop();
             }
 
             catch (InvalidOperationException ex)
@@ -1093,8 +1161,8 @@ namespace AmpsBoxSdk.Devices
 
             {
             }
-            throw new AmpsEmptyResponseErrorException(actualLength.ToString());
-    }
+            return string.Empty;
+        }
 
         /// <summary>
         /// Tells the AMPS box which clock to use: external or internal
@@ -1136,9 +1204,15 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        private async Task SetMode()
+        public async Task SetMode()
         {
             AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.Mode);
+            await this.WriteAsync(string.Format("{0}", command.Value));
+        }
+
+        public async Task StopTable()
+        {
+            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableStop);
             await this.WriteAsync(string.Format("{0}", command.Value));
         }
 
@@ -1184,11 +1258,11 @@ namespace AmpsBoxSdk.Devices
             try
             {
                 var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
-               
+
                 await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
-                
+
                 string response = await Read(this.falkorPort.Port);
-                
+
                 LatestResponse = await ReadAsync(response);
 
                 return LatestResponse;
@@ -1196,6 +1270,10 @@ namespace AmpsBoxSdk.Devices
             catch (IOException ioException)
             {
                 throw new IOException(ioException.Message, ioException.InnerException);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex.InnerException);
             }
             catch (TimeoutException timeoutException)
             {
@@ -1227,19 +1305,6 @@ namespace AmpsBoxSdk.Devices
             {
                 localStringData = values[values.Length - 1];
             }
-
-            if (shouldValidateResponse)
-            {
-                try
-                {
-                    await Task.Run(() => this.ValidateResponse(dataToValidate));
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
             return localStringData;
         }
 
