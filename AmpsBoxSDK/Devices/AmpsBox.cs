@@ -676,6 +676,18 @@ namespace AmpsBoxSdk.Devices
             this.ClockFrequency = this.commandProvider.InternalClock;
         }
 
+        public async Task Reset()
+        {
+            var command = this.commandProvider.GetCommand(AmpsCommandType.Reset);
+            await this.WriteAsync(command.Value);
+        }
+
+        public async Task Test()
+        {
+            var command = this.commandProvider.GetCommand(AmpsCommandType.Test);
+            await this.WriteAsync(command.Value);
+        }
+
         /// <summary>
         /// Sets the output DC/HV voltage.
         /// </summary>
@@ -1026,15 +1038,9 @@ namespace AmpsBoxSdk.Devices
         {
             serialPort.ReadTimeout = ConstReadTimeout;
             serialPort.WriteTimeout = ConstWriteTimeout;
-            this.WhenAnyValue(x => x.Port.Port.BytesToRead).Subscribe(OnNext);
             serialPort.DataReceived += SerialPort_DataReceived;
             //   serialPort.ErrorReceived += this.PortErrorReceived;
             //   serialPort.PinChanged += this.PortPinChanged;
-        }
-
-        private void OnNext(int i)
-        {
-            
         }
 
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -1252,7 +1258,7 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         /// <param name="command"></param>
         /// <param name="readBack"></param>
-        private async Task<string> WriteAsync(string command)
+        public async Task<string> WriteAsync(string command)
         {
             LatestWrite = command;
             try
@@ -1263,7 +1269,7 @@ namespace AmpsBoxSdk.Devices
 
                 string response = await Read(this.falkorPort.Port);
 
-                LatestResponse = await ReadAsync(response);
+                LatestResponse = await this.ParseResponseAsync(response);
 
                 return LatestResponse;
             }
@@ -1285,7 +1291,7 @@ namespace AmpsBoxSdk.Devices
             }
         }
 
-        private async Task<string> ReadAsync(string response, bool shouldValidateResponse = true)
+        private async Task<string> ParseResponseAsync(string response, bool shouldValidateResponse = true)
         {
             if (string.IsNullOrEmpty(response))
             {
