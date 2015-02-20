@@ -86,26 +86,26 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// Ticks
         /// </returns>
-        public double ConvertTo(TimeTableUnits from, TimeTableUnits to, double time)
+        public double ConvertTo(TimeUnits from, TimeUnits to, double time)
         {
             // Here we first convert to microseconds...just in case we need to convert to ticks
             SimpleTimeConverter subConverter = new SimpleTimeConverter();
-            time = subConverter.ConvertTo(from, TimeTableUnits.Microseconds, time);
+            time = subConverter.ConvertTo(from, TimeUnits.Microseconds, time);
 
             // At this point everything is in microseconds...
             double scaler = SCALER_MICROSECONDS;
             switch (to)
             {
-                case TimeTableUnits.Microseconds:
+                case TimeUnits.Microseconds:
                     scaler = SCALER_MICROSECONDS;
                     break;
-                case TimeTableUnits.Milliseconds:
+                case TimeUnits.Milliseconds:
                     scaler = SCALER_MILLISECONDS;
                     break;
-                case TimeTableUnits.Seconds:
+                case TimeUnits.Seconds:
                     scaler = SCALER_SECONDS;
                     break;
-                case TimeTableUnits.Ticks:
+                case TimeUnits.Ticks:
                     scaler = SCALER_SECONDS / this.ClockFrequency * 1000;
                     break;
                 default:

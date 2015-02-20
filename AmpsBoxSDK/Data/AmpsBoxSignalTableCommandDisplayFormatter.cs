@@ -74,7 +74,7 @@ namespace AmpsBoxSdk.Data
             IEnumerable<double> times = table.GetTimes();
             times = times.OrderBy(x => x);
 
-            TimeTableUnits units = TimeTableUnits.Ticks;
+            TimeUnits units = TimeUnits.Ticks;
             foreach (double time in times)
             {
                 IEnumerable<SignalEvent> signals = table.GetSignals(time);

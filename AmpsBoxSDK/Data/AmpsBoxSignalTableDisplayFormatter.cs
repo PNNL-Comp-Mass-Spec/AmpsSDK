@@ -42,7 +42,7 @@ namespace AmpsBoxSdk.Data
             times = times.OrderBy(x => x);
             StringBuilder timeBuilder = new StringBuilder();
 
-            TimeTableUnits units = TimeTableUnits.Seconds;
+            TimeUnits units = TimeUnits.Seconds;
 
             foreach (double time in times)
             {

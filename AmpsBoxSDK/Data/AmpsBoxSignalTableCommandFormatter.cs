@@ -70,7 +70,7 @@ namespace AmpsBoxSdk.Data
                 var signals = table.GetSignals(time).ToList();
                 var timeBuilder = new StringBuilder();
 
-                int intTime = Convert.ToInt32(converter.ConvertTo(table.TimeUnits, TimeTableUnits.Ticks, time));
+                int intTime = Convert.ToInt32(converter.ConvertTo(table.TimeUnits, TimeUnits.Ticks, time));
                 if (intTime > maxTime)
                 {
                     maxTime = intTime;
