@@ -3,7 +3,7 @@ using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 using FalkorSDK.Data.Signals;
 using FalkorSDK.Data.Events;
-
+///
 namespace AmpsBoxTests.Devices
 {
     using System.IO.Ports;
