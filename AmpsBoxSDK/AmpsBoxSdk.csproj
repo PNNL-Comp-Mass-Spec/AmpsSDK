@@ -87,7 +87,11 @@
     </Reference>
     <Reference Include="Splat, Version=1.6.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Splat.1.6.1\lib\Net45\Splat.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.6.4.0\lib\Net45\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.6.0\lib\Net45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.1\System.dll</HintPath>
@@ -141,6 +145,7 @@
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
     <Compile Include="Devices\AmpsBox.cs" />
     <Compile Include="Devices\AmpsBoxChannelData.cs" />
+    <Compile Include="Devices\AmpsBoxCOMReader.cs" />
     <Compile Include="Devices\AmpsBoxDeviceData.cs" />
     <Compile Include="Commands\AmpsCommandProvider.cs" />
     <Compile Include="Devices\AmpsBoxExtensionMethods.cs" />
@@ -153,6 +158,7 @@
     <Compile Include="Devices\ChannelOutOfRangeException.cs" />
     <Compile Include="Devices\ClockType.cs" />
     <Compile Include="Devices\ErrorCodes.cs" />
+    <Compile Include="Devices\IAmpsBoxCommunicator.cs" />
     <Compile Include="Devices\Responses.cs" />
     <Compile Include="Devices\StartTriggerTypes.cs" />
     <Compile Include="Devices\AmpsClockConverter.cs" />

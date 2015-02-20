@@ -34,6 +34,7 @@ namespace AmpsBoxSdk.Devices
     using FalkorSDK.IO.Ports;
     using FalkorSDK.IO.Signals;
 
+    using System.Reactive;
     using ReactiveUI;
 
     using Timer = System.Timers.Timer;
@@ -114,6 +115,11 @@ namespace AmpsBoxSdk.Devices
 
         private StartTriggerTypes triggerType;
 
+        /// <summary>
+        /// Object responsible for communicating with amps box device.
+        /// </summary>
+       // IAmpsBoxCommunicator ampsBoxCommunicator;
+
         #endregion
 
         #region Constructors and Destructors
@@ -131,17 +137,16 @@ namespace AmpsBoxSdk.Devices
         [ImportingConstructor]
         public AmpsBox()
         {
-            this.boxVersion = ConstDefaultBoxVersion;
-            this.sync = new object();
-            this.ReadTimeout = ConstReadTimeout;
-            this.ClockType = ClockType.Internal;
-            this.TriggerType = StartTriggerTypes.SW;
-            this.Emulated = false;
-            this.commandProvider = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
-            this.ClockFrequency = this.commandProvider.InternalClock;
-            this.ReadWriteTimeout = ConstSleepTime;
-            this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
-          
+            this.boxVersion         = ConstDefaultBoxVersion;
+            this.sync               = new object();
+          // this.ReadTimeout        = ConstReadTimeout;
+            this.ClockType          = ClockType.Internal;
+            this.TriggerType        = StartTriggerTypes.SW;
+            this.Emulated           = false;
+            this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
+            this.ClockFrequency     = this.commandProvider.InternalClock;
+            //this.ReadWriteTimeout   = ConstSleepTime;
+            //this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
         }
 
         #endregion
@@ -195,35 +200,44 @@ namespace AmpsBoxSdk.Devices
         public int Id { get; set; }
 
         /// <summary>
+        /// Gets or sets the communication interface for the amps box.
+        /// </summary>
+        public IAmpsBoxCommunicator Communicator
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the serial port
         /// </summary>
-        public FalkorSerialPort Port
-        {
-            get
-            {
-                return this.falkorPort;
-            }
+        //public FalkorSerialPort Port
+        //{
+        //    get
+        //    {
+        //        return this.falkorPort;
+        //    }
 
-            set
-            {
-                lock (this.sync)
-                {
-                    this.falkorPort = value;
-                }
-            }
-        }
+        //    set
+        //    {
+        //        lock (this.sync)
+        //        {
+        //            this.falkorPort = value;
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Gets or sets the amount of time to wait for a number of characters.
         /// </summary>		
-        [DataMember]
-        public int ReadTimeout { get; set; }
+     //   [DataMember]
+      //  public int ReadTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the read write timeout between IO calls on the serial port
         /// </summary>
-        [DataMember]
-        public int ReadWriteTimeout { get; set; }
+   //     [DataMember]
+   //     public int ReadWriteTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the trigger type for starting a time Table
@@ -300,8 +314,8 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public string GetConfig()
         {
-            string ampsBoxData = string.Empty;
-            ampsBoxData += string.Format("\tDevice Settings\n");
+            string ampsBoxData  = string.Empty;
+            ampsBoxData         += string.Format("\tDevice Settings\n");
             foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(this.falkorPort.Port))
             {
                 ampsBoxData += string.Format(
@@ -1104,9 +1118,10 @@ namespace AmpsBoxSdk.Devices
         private void PortPinChanged(object sender, SerialPinChangedEventArgs e)
         {
         }
-
+        // Todo: problematic
         private async Task<string> Read(SerialPort port)
         {
+            // Emulate/copy readline, 
             byte[] buffer = new byte[1024];
             int actualLength = 0;
             string response = String.Empty;
