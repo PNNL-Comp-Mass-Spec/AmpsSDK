@@ -38,6 +38,13 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         Task<bool> IsValidCommunicationAsync(string response);
         /// <summary>
+        /// Parse a reply from the AmpsBox.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="shouldValidateResponse"></param>
+        /// <returns></returns>
+        Task<string> ParseResponseAsync(string response, bool shouldValidateResponse);
+        /// <summary>
         /// Open communication
         /// </summary>
         /// <returns>True on success.</returns>
@@ -50,6 +57,7 @@ namespace AmpsBoxSdk.Devices
         #endregion
 
         #region Properties
+        object Interface { get; }
         /// <summary>
         /// Get or set read timeout for commincator.
         /// </summary>
@@ -62,6 +70,10 @@ namespace AmpsBoxSdk.Devices
         /// Get or set whether we are emulating commincation or communicating.
         /// </summary>
         bool IsEmulated { get; set; }
+        /// <summary>
+        /// Gets whether the port is open.
+        /// </summary>
+        bool IsOpen { get; }
         #endregion
 
     }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -280,9 +281,95 @@ namespace AmpsBoxSdk.Devices
             }
             return this.falkorPort.IsOpen;
         }
+        /// <summary>
+        ///// Parses a response from the Amps Box.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="shouldValidateResponse"></param>
+        /// <returns></returns>
+        public async Task<string> ParseResponseAsync(string response, bool shouldValidateResponse)
+        {
+            if (string.IsNullOrEmpty(response))
+            {
+                return String.Empty;
+            }
+
+            string localStringData = response;
+            string dataToValidate = localStringData;
+            localStringData = localStringData.Replace("\n", string.Empty);
+            localStringData = localStringData.Replace("\0", string.Empty);
+            var newData = Regex.Replace(localStringData, @"\p{Cc}", a => string.Format("[{0:X2}]", (byte)a.Value[0]));
+            response = "\tAMPS>> " + newData;
+
+            newData = Regex.Replace(localStringData, @"\p{Cc}", string.Empty);
+            var values = newData.Split(new[] { "\0", "," }, StringSplitOptions.RemoveEmptyEntries);
+            if (values.Length > 0)
+            {
+                localStringData = values[values.Length - 1];
+            }
+            return localStringData;
+        }
+        /// <summary>
+        /// TODO The m_port_ error received.
+        /// </summary>
+        /// <param name="sender">
+        /// TODO The sender.
+        /// </param>
+        /// <param name="e">
+        /// TODO The e.
+        /// </param>
+        /// <exception cref="IOException">
+        /// </exception>
+        private void PortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            if (e.EventType == SerialError.Frame)
+            {
+                throw new IOException("IO Frame Error");
+            }
+
+            if (e.EventType == SerialError.Overrun)
+            {
+                throw new IOException("IO Overrun Error");
+            }
+
+            if (e.EventType == SerialError.RXOver)
+            {
+                throw new IOException("IO RXOver Error");
+            }
+
+            if (e.EventType == SerialError.RXParity)
+            {
+                throw new IOException("IO RXParity Error");
+            }
+
+            if (e.EventType == SerialError.TXFull)
+            {
+                throw new IOException("IO TXFull Error");
+            }
+        }
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Gets port open status.
+        /// </summary>
+        public bool IsOpen
+        {
+            get
+            {
+                return Port.IsOpen;
+            }
+        }
+        /// <summary>
+        /// Gets the interface communicating with the AmpsBox.
+        /// </summary>
+        public object Interface
+        {
+            get
+            {
+                return Port;
+            }
+        }
         /// <summary>
         /// Gets the serial port
         /// </summary>
