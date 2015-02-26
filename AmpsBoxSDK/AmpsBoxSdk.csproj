@@ -131,11 +131,13 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\AmpsCOMCommandFormatter.cs" />
     <Compile Include="Commands\AmpsCommand.cs" />
     <Compile Include="Commands\AmpsCommandFactory.cs" />
     <Compile Include="Commands\AmpsCommandNotSupported.cs" />
     <Compile Include="Commands\AmpsCommandType.cs" />
     <Compile Include="Commands\GammaCommandProvider.cs" />
+    <Compile Include="Commands\IAmpsBoxFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />

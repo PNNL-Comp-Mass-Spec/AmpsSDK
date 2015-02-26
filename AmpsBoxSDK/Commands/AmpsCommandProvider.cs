@@ -72,17 +72,15 @@ namespace AmpsBoxSdk.Commands
         /// </summary>
         protected AmpsCommandProvider()
         {
-            this.m_commands = new Dictionary<AmpsCommandType, AmpsCommand>();
-            this.encoding = new ASCIIEncoding();
-            this.ErrorResponse = 0x15;
-
-            this.InternalClock = DefaultInternalClock;
-            this.EndOfLine = END_OF_LINE;
-            this.OkResponse = 0x06;
-            this.BadResponse = 0x15;
-            this.CommandSeparator = CommandParameterSeparator;
-            this.NumberOfPaddingCharacters = ConstNumCharEndPadding;
-            this.TableResponse = TableFinishResponse;
+            this.m_commands                 = new Dictionary<AmpsCommandType, AmpsCommand>();
+            this.encoding                   = new ASCIIEncoding();
+            this.ErrorResponse              = 0x15;
+            this.InternalClock              = DefaultInternalClock;
+            this.EndOfLine                  = END_OF_LINE;
+            this.OkResponse                 = 0x06;
+            this.CommandSeparator           = CommandParameterSeparator;
+            this.NumberOfPaddingCharacters  = ConstNumCharEndPadding;
+            this.TableResponse              = TableFinishResponse;
 
             this.GenerateCommands();
         }
@@ -90,16 +88,6 @@ namespace AmpsBoxSdk.Commands
         #endregion
 
         #region Public Properties
-
-        /// <summary>
-        /// Gets or sets the bad response.
-        /// </summary>
-        public int BadResponse { get; protected set; }
-
-        /// <summary>
-        /// Gets or sets the BUSY response from the device
-        /// </summary>
-        public string BusyResponse { get; protected set; }
 
         /// <summary>
         /// Gets or sets the command separator.

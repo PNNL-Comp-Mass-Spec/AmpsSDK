@@ -61,6 +61,7 @@ namespace AmpsBoxSdk.Devices
             this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
             this.boxVersion         = ConstDefaultBoxVersion;
             this.IsEmulated         = false;
+            Port                    = null;
         }
 
         #endregion

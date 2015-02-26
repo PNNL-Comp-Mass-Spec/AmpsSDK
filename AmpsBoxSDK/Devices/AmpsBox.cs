@@ -114,20 +114,20 @@ namespace AmpsBoxSdk.Devices
         {
             this.boxVersion         = ConstDefaultBoxVersion;
             this.sync               = new object();
-          // this.ReadTimeout        = ConstReadTimeout;
             this.ClockType          = ClockType.Internal;
             this.TriggerType        = StartTriggerTypes.SW;
             this.Emulated           = false;
             this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
             this.ClockFrequency     = this.commandProvider.InternalClock;
-            //this.ReadWriteTimeout   = ConstSleepTime;
-            //this.WhenAnyValue(x => x.Port.Port).Subscribe(this.OnNext);
         }
 
         #endregion
 
         #region Public Properties
 
+        /// <summary>
+        /// Gets or sets the object responsible for communicating directly with the Amps Box.
+        /// </summary>
         public IAmpsBoxCommunicator Communicator
         {
             get
@@ -140,6 +140,12 @@ namespace AmpsBoxSdk.Devices
                 ampsCom = value;
             }
         }
+
+        /// <summary>
+        /// Gets or sets the formatter for the communicator.
+        /// </summary>
+        public IAmpsBoxFormatter Formatter
+        { get; set; }
 
         /// <summary>
         /// Gets or sets the clock frequency of the AMPS Box.
@@ -216,11 +222,12 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task AbortTimeTableAsync()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableAbort);
-
             try
             {
-                var response = await this.Communicator.WriteAsync(command.Value);
+                var response = await this.Communicator.WriteAsync(
+                                    Formatter.BuildCommunicatorCommand(
+                                        AmpsCommandType.TimeTableAbort,
+                                        null));
             }
             catch (Exception ex)
             {
@@ -271,8 +278,10 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<string> GetDcGuardStateAsync()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetGuardOffset);
-            var stringToReturn  = await this.Communicator.WriteAsync(string.Format("{0}", command.Value));
+            var stringToReturn  = await this.Communicator.WriteAsync(
+                                                Formatter.BuildCommunicatorCommand(
+                                                    AmpsCommandType.GetGuardOffset,
+                                                    null));
             return stringToReturn;
         }
 
@@ -287,19 +296,17 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<int> GetDriveLevel(int channel)
         {
-            var response =
-                await
-                    this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{2}",
-                            this.commandProvider.CommandSeparator,
-                            this.commandProvider.GetCommand(AmpsCommandType.GetDriveLevel).Value,
-                            channel));
-
             if (this.Emulated)
             {
                 return EmulatedOutput; // This is a magic number but also dummy.
             }
+            var response =
+                await
+                    this.Communicator.WriteAsync(
+                       Formatter.BuildCommunicatorCommand(
+                                            AmpsCommandType.GetDriveLevel,
+                                            channel));
+           
             int driveLevel = 0;
             int.TryParse(response, out driveLevel);
             return driveLevel;
@@ -313,11 +320,12 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<ErrorCodes> GetError()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetError);
-            string response = await this.Communicator.WriteAsync(command.Value);
+            string response = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                                    AmpsCommandType.GetError,
+                                                                    null));
             int responseCode;
             int.TryParse(response, out responseCode);
-            var code = (ErrorCodes)Enum.ToObject(typeof(ErrorCodes), responseCode);
+            var code            = (ErrorCodes)Enum.ToObject(typeof(ErrorCodes), responseCode);
             return code;
         }
 
@@ -329,10 +337,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<double> GetHeaterTemperature()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetHeaterTemperature);
             var response =
                 await
-                this.Communicator.WriteAsync(string.Format("{1}{0}", this.commandProvider.CommandSeparator, command.Value));
+                this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                AmpsCommandType.GetHeaterTemperature,
+                                                null));
             var splitResponse = response.Split(new[] { ']' });
             double temperature;
             double.TryParse(splitResponse[1], out temperature);
@@ -352,10 +361,12 @@ namespace AmpsBoxSdk.Devices
                 return EmulatedChannelCount;
             }
 
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.GetHighVoltageChannels);
             string response     = string.Empty;
 
-            response            = await this.Communicator.WriteAsync(command.Value);
+            response            = await this.Communicator.WriteAsync(
+                                    Formatter.BuildCommunicatorCommand(
+                                                AmpsCommandType.GetHighVoltageChannels,
+                                                null));
 
             int channels;
             int.TryParse(response, out channels);
@@ -375,11 +386,8 @@ namespace AmpsBoxSdk.Devices
             string response =
                 await
                     this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{2}",
-                            this.commandProvider.CommandSeparator,
-                            this.commandProvider.GetCommand(AmpsCommandType.GetDcBias).Value,
-                            channel));
+                        Formatter.BuildCommunicatorCommand( AmpsCommandType.GetDcBias,
+                                                            channel));
 
             if (this.Emulated)
             {
@@ -407,12 +415,8 @@ namespace AmpsBoxSdk.Devices
         {
             var response =
                 await
-                    this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{2}",
-                            this.commandProvider.CommandSeparator,
-                            this.commandProvider.GetCommand(AmpsCommandType.GetRfVoltage).Value,
-                            channel));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetRfChannels, 
+                                                                                    channel));
 
             if (this.Emulated)
             {
@@ -432,17 +436,17 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<int> GetRfChannelCount()
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.GetRfChannels);
+        
             string response = string.Empty;
             try
             {
-                response = await this.Communicator.WriteAsync(command.Value);
-
                 if (this.Emulated)
                 {
                     return EmulatedChannelCount; // This is a magic number but also dummy.
                 }
 
+                response = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetRfChannels, null));
+                               
                 // var data = response.Split(new[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
                 int result;
                 int.TryParse(response, out result);
@@ -466,11 +470,9 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<int> GetRfFrequency(int channel)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.GetRfFrequency);
                 var response =
                     await
-                    this.Communicator.WriteAsync(
-                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, channel));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetRfFrequency, channel));
 
                 if (this.Emulated)
                 {
@@ -498,10 +500,9 @@ namespace AmpsBoxSdk.Devices
         {
             string data = null;
 
-            var command = this.commandProvider.GetCommand(AmpsCommandType.GetVersion);
             try
             {
-                data = await this.Communicator.WriteAsync(command.Value);
+                data = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetVersion, null));
                 this.boxVersion = data;
             }
             catch (Exception ex)
@@ -553,15 +554,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task PulseDigitalOutput(string channel)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.SetDigitalIo);
             await
                     this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{2}{0}{3}",
-                            this.commandProvider.CommandSeparator,
-                            command.Value,
-                            channel,
-                            "P"));
+                        Formatter.BuildCommunicatorCommand(
+                            AmpsCommandType.SetDigitalIo, 
+                            new Tuple<string,string>(channel,"P")));
         }
 
         /// <summary>
@@ -572,8 +569,10 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SaveParameters()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.Save);
-            await this.Communicator.WriteAsync(command.Value);
+            await this.Communicator.WriteAsync( 
+                Formatter.BuildCommunicatorCommand(
+                    AmpsCommandType.Save, 
+                    null));
         }
 
         /// <summary>
@@ -591,8 +590,10 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task Reset()
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.Reset);
-            await this.Communicator.WriteAsync(command.Value);
+            await this.Communicator.WriteAsync(
+                Formatter.BuildCommunicatorCommand(
+                    AmpsCommandType.Reset, 
+                    null));
         }
 
         /// <summary>
@@ -601,8 +602,9 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task Test()
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.Test);
-            await this.Communicator.WriteAsync(command.Value);
+            await this.Communicator.WriteAsync(
+                Formatter.BuildCommunicatorCommand( AmpsCommandType.Reset,
+                                                    null));
         }
 
         /// <summary>
@@ -632,17 +634,14 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetDcBias(int channel, int voltage)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetDcBias);
+            //Todo, what do we do with this exception?
             try
             {
                 await
                         this.Communicator.WriteAsync(
-                            string.Format(
-                                "{1}{0}{3}{0}{2:000}",
-                                this.commandProvider.CommandSeparator,
-                                command.Value,
-                                voltage,
-                                channel));
+                            Formatter.BuildCommunicatorCommand(
+                                AmpsCommandType.SetDcBias,
+                                new Tuple<int,int>(channel,voltage)));
             }
             catch (Exception ex)
             {
@@ -660,8 +659,10 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetDcGuardStateAsync(string state)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetGuardOffset);
-            await this.Communicator.WriteAsync(string.Format("{0},{1}", command.Value, state));
+            await this.Communicator.WriteAsync(
+                Formatter.BuildCommunicatorCommand(
+                    AmpsCommandType.SetGuardOffset, 
+                    state));
         }
 
         /// <summary>
@@ -675,45 +676,35 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetHeaterSetpoint(int temperature)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetHeaterSetpoint);
             await
-                    this.Communicator.WriteAsync(
-                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, temperature));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                    AmpsCommandType.SetGuardOffset,
+                                                    temperature));
         }
 
         /// <summary>
-        /// TODO The set negative hv.
+        /// Set the high voltage.
         /// </summary>
-        /// <param name="voltage">
-        /// TODO The voltage.
-        /// </param>
-        public async void SetNegativeHV(int voltage)
-        {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetNegativeHV);
-
-            await
-                    this.Communicator.WriteAsync(
-                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage));
+        /// <param name="voltage">      The voltage to set.</param>
+        /// <param name="isNegative">   Are we setting the positive or negative HV? Should this be removed and we just determin based on positive/negative numbers?</param>
+        public async void SetHV(int voltage, bool isNegative)
+        {            
+            if (isNegative)
+            {
+                await
+                        this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetNegativeHV,
+                                                        voltage));
+            }
+            else
+            {
+                await
+                        this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetPositiveHV,
+                                                        voltage));
+            }
         }
-
-        /// <summary>
-        /// TODO The set positive hv.
-        /// </summary>
-        /// <param name="voltage">
-        /// TODO The voltage.
-        /// </param>
-        /// <returns>
-        /// The <see cref="Task"/>.
-        /// </returns>
-        public async Task SetPositiveHV(int voltage)
-        {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetPositiveHV);
-
-            await
-                    this.Communicator.WriteAsync(
-                        string.Format("{1}{0}{2:000}", this.commandProvider.CommandSeparator, command.Value, voltage));
-        }
-
+        
         /// <summary>
         /// TODO The set radio frequency drive level.
         /// </summary>
@@ -728,17 +719,12 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetRadioFrequencyDriveLevel(int channel, int voltage)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetOutputDriveLevel);
             try
             {
                 await
-                        this.Communicator.WriteAsync(
-                            string.Format(
-                                "{1}{0}{3}{0}{2:000}",
-                                this.commandProvider.CommandSeparator,
-                                command.Value,
-                                voltage,
-                                channel));
+                        this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetOutputDriveLevel,
+                                                        new Tuple<int, int>(voltage, channel)));
             }
             catch (Exception ex)
             {
@@ -757,17 +743,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetRadioFrequencyFrequency(int channel, int frequency)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.SetRfFrequency);
             try
             {
-                await
-                        this.Communicator.WriteAsync(
-                            string.Format(
-                                "{1}{0}{3}{0}{2:000}",
-                                this.commandProvider.CommandSeparator,
-                                command.Value,
-                                frequency,
-                                channel));
+                await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetOutputDriveLevel,
+                                                        new Tuple<int, int>(channel, frequency)));
             }
             catch (Exception ex)
             {
@@ -788,16 +768,10 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetRadioFrequencyOutputVoltage(int channel, int voltage)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetRfVoltage);
-
             await
-                    this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{3}{0}{2:000}",
-                            this.commandProvider.CommandSeparator,
-                            command.Value,
-                            voltage,
-                            channel));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetRfVoltage,
+                                                        new Tuple<int, int>(channel, voltage)));
         }
 
         /// <summary>
@@ -808,8 +782,8 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetRealTimeOff()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.SetRTOff);
-            await this.Communicator.WriteAsync(command.Value);
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetRTOff, null));
         }
 
         /// <summary>
@@ -822,12 +796,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<IList<string>> StartTimeTableAsync(SignalTable table)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableStart);
-
             IList<string> list = new List<string>();
 
             list.Add("\tStarting time table.");
-            await this.Communicator.WriteAsync(string.Format("{0}", command.Value));
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.TimeTableStart,null));
 
             this.lastTable = table.Name;
 
@@ -848,17 +821,13 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task ToggleDigitalDirection(string channel, string direction)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.SetDigitalIoDirection);
             try
             {
                 await
-                        this.Communicator.WriteAsync(
-                            string.Format(
-                                "{0}{1}{0}{2}{0}{3}",
-                                this.commandProvider.CommandSeparator,
-                                command.Value,
-                                channel,
-                                direction));
+                        this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetDigitalIoDirection,
+                                                        new Tuple<string, string>(channel, direction)));
+
             }
             catch (Exception ex)
             {
@@ -879,15 +848,10 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task ToggleDigitalOutput(string channel, bool state)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.SetDigitalIo);
             await
-                    this.Communicator.WriteAsync(
-                        string.Format(
-                            "{1}{0}{2}{0}{3}",
-                            this.commandProvider.CommandSeparator,
-                            command.Value,
-                            channel,
-                            Convert.ToInt32(state)));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                        AmpsCommandType.SetDigitalIo,
+                                                        new Tuple<string, string>(channel, Convert.ToInt32(state).ToString())));
         }
 
         /// <summary>
@@ -899,9 +863,10 @@ namespace AmpsBoxSdk.Devices
         [Obsolete("This method returns before the external function call has finished, use TogleHeaterAsync instead.")]
         public void ToggleHeater(State state)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.ToggleHeater);
 #pragma warning disable 4014
-            this.Communicator.WriteAsync(string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state));
+            this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                       AmpsCommandType.ToggleHeater,
+                                                       state));
 #pragma warning restore 4014
         }
 
@@ -916,10 +881,9 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task ToggleHeaterAsync(State state)
         {
-            var command = this.commandProvider.GetCommand(AmpsCommandType.ToggleHeater);
-            await
-                    this.Communicator.WriteAsync(
-                        string.Format("{1}{0}{2}", this.commandProvider.CommandSeparator, command.Value, state));
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
+                                                       AmpsCommandType.ToggleHeater,
+                                                       state));
         }
 
         #endregion
@@ -935,11 +899,13 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         private async Task LoadTimeTable(SignalTable table)
         {
-            AmpsClockConverter converter = new AmpsClockConverter(this.ClockFrequency);
-            ISignalTableFormatter<SignalTable, double> formatter = new AmpsBoxSignalTableCommandFormatter();
+            // Todo: this is not covered in AEF's IAmpsBoxFormatter. Spence, your thoughts?
 
-            string command = formatter.FormatTable(table, converter);
-            this.LastTable = command;
+            AmpsClockConverter converter                            = new AmpsClockConverter(this.ClockFrequency);
+            ISignalTableFormatter<SignalTable, double> formatter    = new AmpsBoxSignalTableCommandFormatter();
+
+            string command                                          = formatter.FormatTable(table, converter);
+            this.LastTable                                          = command;
 
             await this.Communicator.WriteAsync(command);
         }
@@ -953,17 +919,14 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         private async Task SetClock(ClockType clockType)
         {
-            AmpsCommand command;
             switch (clockType)
             {
                 case ClockType.External:
-                    command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableClockSyncExternal);
-                    await this.Communicator.WriteAsync(command.Value);
+                    await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.TimeTableClockSyncExternal, null));
                     break;
 
                 case ClockType.Internal:
-                    command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableClockSycnInternal);
-                    await this.Communicator.WriteAsync(command.Value);
+                    await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.TimeTableClockSyncExternal, null));
                     break;
             }
         }
@@ -974,9 +937,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         private async Task SetTrigger(StartTriggerTypes startTriggerType)
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.CommandSetTrigger);
-            var commandString = string.Format("{0},{1}", command.Value, startTriggerType);
-            await this.Communicator.WriteAsync(commandString);
+            await this.Communicator.WriteAsync((Formatter.BuildCommunicatorCommand(AmpsCommandType.TimeTableClockSyncExternal, startTriggerType)));
         }
         /// <summary>
         /// Tells the AMPS Box how to repeat (if at all) 
@@ -988,8 +949,7 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task SetMode()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.Mode);
-            await this.Communicator.WriteAsync(string.Format("{0}", command.Value));
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.Mode, null));
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -997,8 +957,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task StopTable()
         {
-            AmpsCommand command = this.commandProvider.GetCommand(AmpsCommandType.TimeTableStop);
-            await this.Communicator.WriteAsync(string.Format("{0}", command.Value));
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.TimeTableStop, null));
         }
         #endregion
     }
