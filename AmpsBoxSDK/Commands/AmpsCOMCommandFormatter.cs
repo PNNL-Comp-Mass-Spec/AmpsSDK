@@ -29,15 +29,13 @@ namespace AmpsBoxSdk.Commands
         #region Methods
 
         /// <summary>
-        /// 
+        /// Create a properly formatted RS232 command for the command type and command data provided.
         /// </summary>
-        /// <param name="commandType"></param>
-        /// <param name="commandData"></param>
+        /// <param name="commandType">Enum command type to be created.</param>
+        /// <param name="commandData">Command specific data (null, string, int, or Tuple) depending on command type param.</param>
         /// <returns></returns>
         public string BuildCommunicatorCommand(AmpsCommandType commandType, object commandData)
         {
-            throw new NotImplementedException();
-
             AmpsCommand command             = this.commandProvider.GetCommand(commandType);
             string      communicatorCommand = "";
 
@@ -171,10 +169,10 @@ namespace AmpsBoxSdk.Commands
                     break;
 
                 /// <summary>
-                /// TODO The set drive level.
+                /// TODO Is this used? The set drive level.
                 /// </summary>
-                case AmpsCommandType.SetDriveLevel:
-                    break;
+                //case AmpsCommandType.SetDriveLevel:
+                //    break;
 
                 /// <summary>
                 /// TODO The get drive level.
@@ -185,7 +183,7 @@ namespace AmpsBoxSdk.Commands
                                                 "{1}{0}{2}",
                                                 this.commandProvider.CommandSeparator,
                                                 this.commandProvider.GetCommand(AmpsCommandType.GetDriveLevel).Value,
-                                                channel);
+                                                driveLevelChannel);
                     break;
 
                 /// <summary>
@@ -287,24 +285,24 @@ namespace AmpsBoxSdk.Commands
                     break; 
 
                 /// <summary>
-                /// TODO The read positive hv.
+                /// TODO Is this used? The read positive hv.
                 /// </summary>
-                case AmpsCommandType.ReadPositiveHV: break; 
+                //case AmpsCommandType.ReadPositiveHV: break; 
 
-                /// <summary>
-                /// TODO The read negative hv.
-                /// </summary>
-                case AmpsCommandType.ReadNegativeHV: break; 
+                ///// <summary>
+                ///// TODO Is this used? The read negative hv.
+                ///// </summary>
+                //case AmpsCommandType.ReadNegativeHV: break; 
 
-                /// <summary>
-                /// TODO The set loop gain.
-                /// </summary>
-                case AmpsCommandType.SetLoopGain: break; 
+                ///// <summary>
+                ///// TODO Is this used? The set loop gain.
+                ///// </summary>
+                //case AmpsCommandType.SetLoopGain: break; 
 
-                /// <summary>
-                /// TODO The set loop status.
-                /// </summary>
-                case AmpsCommandType.SetLoopStatus: break; 
+                ///// <summary>
+                ///// TODO Is this used? The set loop status.
+                ///// </summary>
+                //case AmpsCommandType.SetLoopStatus: break; 
 
                 /// <summary>
                 /// TODO The set digital io.
@@ -319,9 +317,9 @@ namespace AmpsBoxSdk.Commands
                     break; 
 
                 /// <summary>
-                /// TODO The get digital io.
+                /// TODO Is this used? The get digital io.
                 /// </summary>
-                case AmpsCommandType.GetDigitalIo: break; 
+                //case AmpsCommandType.GetDigitalIo: break; 
 
                 /// <summary>
                 /// TODO The set digital io direction.
@@ -336,15 +334,15 @@ namespace AmpsBoxSdk.Commands
                     break; 
 
                 /// <summary>
-                /// TODO The get digital io direction.
+                /// TODO Is this used? The get digital io direction.
                 /// </summary>
-                case AmpsCommandType.GetDigitalIoDirection: 
-                    break; 
+                //case AmpsCommandType.GetDigitalIoDirection: 
+                //    break; 
 
                 /// <summary>
-                /// TODO The get number dc bias channels.
+                /// TODO Is this used?  The get number dc bias channels.
                 /// </summary>
-                case AmpsCommandType.GetNumberDcBiasChannels: break; 
+               // case AmpsCommandType.GetNumberDcBiasChannels: break; 
 
                 /// <summary>
                 /// TODO The get error.
@@ -368,23 +366,32 @@ namespace AmpsBoxSdk.Commands
                     communicatorCommand = string.Format("{0}", command.Value);
                     break;
 
+                /// <summary>
+                /// Reset the AMPS Box.
+                /// </summary>
                 case AmpsCommandType.Reset:
                     communicatorCommand     = command.Value;
                     break;
 
+                /// <summary>
+                /// Test the AMPS Box.
+                /// </summary>
                 case AmpsCommandType.Test:
                     communicatorCommand = command.Value;
                     break;
+
+                /// <summary>
+                /// Someone passed something we can't handle.
+                /// </summary>
+                default:
+                    throw new NotSupportedException("Unsupported AmpsCommandType passed to AmpsCOMCommandFormatter.BuildCommunicatorCommand");
             }
             return communicatorCommand;
         }
-
         #endregion
 
         #region Properties
 
-        #endregion
-
-        
+        #endregion        
     }
 }
