@@ -13,9 +13,9 @@ namespace AmpsBoxSdk.Devices
 		/// </summary>
 		public AmpsBoxRfData()
 		{
-			this.RfFrequency = new AmpsBoxChannelData();
-			this.DriveLevel = new AmpsBoxChannelData();
-			this.OutputVoltage = new AmpsBoxChannelData();
+			this.RfFrequency = new ChannelData();
+			this.DriveLevel = new ChannelData();
+			this.OutputVoltage = new ChannelData();
 		}
 
 		#endregion
@@ -23,24 +23,19 @@ namespace AmpsBoxSdk.Devices
 		#region Public Properties
 
 		/// <summary>
-		/// Gets or sets the channel.
-		/// </summary>
-		public int Channel { get; set; }
-
-		/// <summary>
 		/// Gets or sets the drive level.
 		/// </summary>
-		public AmpsBoxChannelData DriveLevel { get; set; }
+		public ChannelData DriveLevel { get; set; }
 
 		/// <summary>
 		/// Gets or sets the output voltage.
 		/// </summary>
-		public AmpsBoxChannelData OutputVoltage { get; set; }
+		public ChannelData OutputVoltage { get; set; }
 
 		/// <summary>
 		/// Gets or sets the RF Frequency
 		/// </summary>
-		public AmpsBoxChannelData RfFrequency { get; set; }
+		public ChannelData RfFrequency { get; set; }
 
 		#endregion
 	}

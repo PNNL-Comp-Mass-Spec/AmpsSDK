@@ -77,7 +77,7 @@ namespace AmpsBoxSdk.Data
                 }
 
                 timeBuilder.AppendFormat("{0:F0}:", intTime);
-                var analogStepEvents = signals.OfType<AnalogStepEvent>();
+                var analogStepEvents = signals.OfType<AnalogStepElement>();
 
                 foreach (var signal in analogStepEvents)
                 {
@@ -85,11 +85,11 @@ namespace AmpsBoxSdk.Data
                 }
 
                 char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
-                var digitalStepEvents = signals.OfType<DigitalStepEvent>();
+                var digitalStepEvents = signals.OfType<DigitalStepElement>();
                 foreach (var digitalStepEvent in digitalStepEvents)
                 {
                     var state = Convert.ToInt32(digitalStepEvent.Value);
-					timeBuilder.AppendFormat("{0}:{1}:", ap[digitalStepEvent.Channel], state);
+					timeBuilder.AppendFormat("{0}:{1}:", ap[int.Parse(digitalStepEvent.Channel.Address.ChannelIdentifier)], state);
                 }
 
                 string events = timeBuilder.ToString().TrimEnd(':');
@@ -99,7 +99,7 @@ namespace AmpsBoxSdk.Data
 
             eventData = eventData.Trim(',');
 
-            var iterationData = "1:" + table.Iterations + ",";
+            var iterationData = string.Format("{0}{1}{2}{3}", 1, ":", table.ExecutionData.Iterations, ",");
             var stringToReturn = string.Format(this.commandFormat, eventData, "0:[", "]", iterationData);
             return stringToReturn;
         }

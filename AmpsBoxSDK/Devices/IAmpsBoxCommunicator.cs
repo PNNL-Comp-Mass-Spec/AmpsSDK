@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Devices
 {
-    public interface IAmpsBoxCommunicator
+    using System.ComponentModel.Composition;
+
+    [InheritedExport]
+    public interface IAmpsBoxCommunicator<T>
     {
         #region Methods
         /// <summary>
@@ -57,7 +60,8 @@ namespace AmpsBoxSdk.Devices
         #endregion
 
         #region Properties
-        object Interface { get; }
+
+        T GetInterface();
         /// <summary>
         /// Get or set read timeout for commincator.
         /// </summary>

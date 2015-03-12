@@ -46,15 +46,15 @@ namespace AmpsBoxSdk.Data
 
             foreach (double time in times)
             {
-                IEnumerable<SignalEvent> signals = table.GetSignals(time);
+                IEnumerable<SignalElement> signals = table.GetSignals(time);
 
                 timeBuilder.AppendFormat("\t-----------------------------------------------\n");
 
-                foreach (SignalEvent signal in signals)
+                foreach (var signal in signals)
                 {
                     double xTime = converter.ConvertTo(table.TimeUnits, units, signal.Time);
 
-                    AnalogStepEvent output = signal as AnalogStepEvent;
+                    var output = signal as AnalogStepElement;
                     if (output != null)
                     {
                         timeBuilder.AppendFormat("\t{0}\t{1}\t{2:F0}\n", xTime, signal.Channel, output.Value);
@@ -66,7 +66,7 @@ namespace AmpsBoxSdk.Data
 
             return string.Format(
                 "Table: {0}\n\tLength:\t{1}\n\tTime Units:\t{2}\n{3}", 
-                table.Name, 
+                table.ExecutionData.Name, 
                 converter.ConvertTo(table.TimeUnits, units, table.Length), 
                 units, 
                 eventData);

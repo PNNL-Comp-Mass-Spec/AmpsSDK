@@ -11,6 +11,8 @@ namespace AmpsBoxSdk.Devices
 {
 	using System.Collections.Generic;
 
+	using FalkorSDK.Channel;
+
     /// <summary>
     /// Data for each device
     /// </summary>
@@ -32,15 +34,12 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public AmpsBoxDeviceData()
         {
-            this.HvData = new Dictionary<int, AmpsBoxChannelData>();
+            this.HvData = new Dictionary<int, ChannelData>();
             this.RfData = new Dictionary<int, AmpsBoxRfData>();
 
             for (int i = 1; i <= NUMBER_OF_MAX_CHANNELS; i++)
             {
-                this.HvData.Add(i, new AmpsBoxChannelData());
-                this.RfData.Add(i, new AmpsBoxRfData());
-                this.RfData[i].Channel = i;
-                this.HvData[i].Channel = i;
+
             }
         }
 
@@ -65,7 +64,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets or sets the high voltage data.
         /// </summary>
-        private Dictionary<int, AmpsBoxChannelData> HvData { get; set; }
+        private Dictionary<int, ChannelData> HvData { get; set; }
 
         /// <summary>
         /// Gets or sets the RF data.
@@ -92,9 +91,9 @@ namespace AmpsBoxSdk.Devices
         /// The channel.
         /// </param>
         /// <returns>
-        /// The <see cref="AmpsBoxChannelData"/>.
+        /// The <see cref="ChannelData"/>.
         /// </returns>
-        public AmpsBoxChannelData GetHvData(int channel)
+        public ChannelData GetHvData(int channel)
         {
             if (channel > this.NumberHvChannels)
             {

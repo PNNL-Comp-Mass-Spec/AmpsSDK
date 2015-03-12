@@ -77,14 +77,14 @@ namespace AmpsBoxSdk.Data
             TimeUnits units = TimeUnits.Ticks;
             foreach (double time in times)
             {
-                IEnumerable<SignalEvent> signals = table.GetSignals(time);
+                IEnumerable<SignalElement> signals = table.GetSignals(time);
                 StringBuilder timeBuilder = new StringBuilder();
 
                 timeBuilder.AppendFormat("\tTime\t{0:F0}\n", converter.ConvertTo(table.TimeUnits, units, time));
 
-                foreach (SignalEvent signal in signals)
+                foreach (var signal in signals)
                 {
-                    AnalogStepEvent output = signal as AnalogStepEvent;
+                    var output = signal as AnalogStepElement;
                     if (output != null)
                     {
                         timeBuilder.AppendFormat(

@@ -35,6 +35,9 @@ namespace AmpsBoxSdk.Devices
     using FalkorSDK.IO.Signals;
 
     using System.Reactive;
+
+    using Infrastructure.Domain.Shared;
+
     using ReactiveUI;
 
     using Timer = System.Timers.Timer;
@@ -46,7 +49,7 @@ namespace AmpsBoxSdk.Devices
     [Export]
     [PartCreationPolicy(CreationPolicy.NonShared)]
     [DataContract]
-    public sealed class AmpsBox : ReactiveObject
+    public sealed class AmpsBox : ReactiveObject, IEntity<AmpsBox>
     {
         #region Constants
 
@@ -94,7 +97,6 @@ namespace AmpsBoxSdk.Devices
 
         private StartTriggerTypes triggerType;
 
-        private IAmpsBoxCommunicator ampsCom;
         #endregion
 
         #region Constructors and Destructors
@@ -110,7 +112,7 @@ namespace AmpsBoxSdk.Devices
         /// The falkor Serial Port.
         /// </param>
         [ImportingConstructor]
-        public AmpsBox()
+        public AmpsBox(IAmpsBoxCommunicator<FalkorSerialPort> ampsBoxCommunicator)
         {
             this.boxVersion         = ConstDefaultBoxVersion;
             this.sync               = new object();
@@ -119,6 +121,8 @@ namespace AmpsBoxSdk.Devices
             this.Emulated           = false;
             this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
             this.ClockFrequency     = this.commandProvider.InternalClock;
+            this.Communicator = ampsBoxCommunicator;
+            this.Id = Guid.NewGuid();
         }
 
         #endregion
@@ -128,24 +132,12 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets or sets the object responsible for communicating directly with the Amps Box.
         /// </summary>
-        public IAmpsBoxCommunicator Communicator
-        {
-            get
-            {
-                return ampsCom;
-            }
-
-            set
-            {
-                ampsCom = value;
-            }
-        }
+        public IAmpsBoxCommunicator<FalkorSerialPort> Communicator { get; private set; }
 
         /// <summary>
         /// Gets or sets the formatter for the communicator.
         /// </summary>
-        public IAmpsBoxFormatter Formatter
-        { get; set; }
+        public IAmpsBoxFormatter Formatter { get; set; }
 
         /// <summary>
         /// Gets or sets the clock frequency of the AMPS Box.
@@ -191,7 +183,7 @@ namespace AmpsBoxSdk.Devices
         /// Gets or sets the ID of this device.
         /// </summary>
         [DataMember]
-        public int Id { get; set; }
+        public Guid Id { get; private set; }
 
         /// <summary>
         /// Gets or sets the trigger type for starting a time Table
@@ -252,12 +244,12 @@ namespace AmpsBoxSdk.Devices
         {
             string ampsBoxData  = string.Empty;
             ampsBoxData         += string.Format("\tDevice Settings\n");
-            foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(this.Communicator.Interface))
+            foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(this.Communicator.GetInterface()))
             {
                 ampsBoxData += string.Format(
                     "\t\t{0}:        {1}\n",
                     propertyDescriptor.DisplayName,
-                    propertyDescriptor.GetValue(this.Communicator.Interface));
+                    propertyDescriptor.GetValue(this.Communicator.GetInterface()));
             }
 
             ampsBoxData += "\n";
@@ -538,8 +530,6 @@ namespace AmpsBoxSdk.Devices
             list.Add("\tSetting mode.");
             await this.SetMode();
 
-            this.lastTable = table.Name;
-
             return list;
         }
 
@@ -802,7 +792,7 @@ namespace AmpsBoxSdk.Devices
             await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
                                                         AmpsCommandType.TimeTableStart,null));
 
-            this.lastTable = table.Name;
+            this.lastTable = table.ExecutionData.Name;
 
             return list;
         }
@@ -960,5 +950,29 @@ namespace AmpsBoxSdk.Devices
             await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.TimeTableStop, null));
         }
         #endregion
+
+        public bool SameIdentityAs(AmpsBox other)
+        {
+            return other != null && Id.Equals(other.Id);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+            var other = (AmpsBox)obj;
+            return this.SameIdentityAs(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
 }

@@ -14,7 +14,8 @@ using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Devices
 {
-    public class AmpsBoxCOMReader : IAmpsBoxCommunicator
+    [PartCreationPolicy(CreationPolicy.NonShared)]
+    public class AmpsBoxCOMReader : IAmpsBoxCommunicator<FalkorSerialPort>
     {
         #region Constants
         /// <summary>
@@ -55,13 +56,13 @@ namespace AmpsBoxSdk.Devices
         /// Default constuctor.
         /// </summary>
         [ImportingConstructor]
-        public AmpsBoxCOMReader()
+        public AmpsBoxCOMReader(FalkorSerialPort port)
         {
             this.sync               = new object();
-            this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
+            this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(ConstDefaultBoxVersion);
             this.boxVersion         = ConstDefaultBoxVersion;
             this.IsEmulated         = false;
-            Port                    = null;
+            Port                    = port;
         }
 
         #endregion
@@ -282,6 +283,12 @@ namespace AmpsBoxSdk.Devices
             }
             return this.falkorPort.IsOpen;
         }
+
+        public FalkorSerialPort GetInterface()
+        {
+            return this.Port;
+        }
+
         /// <summary>
         ///// Parses a response from the Amps Box.
         /// </summary>
@@ -359,16 +366,6 @@ namespace AmpsBoxSdk.Devices
             get
             {
                 return Port.IsOpen;
-            }
-        }
-        /// <summary>
-        /// Gets the interface communicating with the AmpsBox.
-        /// </summary>
-        public object Interface
-        {
-            get
-            {
-                return Port;
             }
         }
         /// <summary>
