@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Commands
 {
+    using System.ComponentModel.Composition;
+
+    [PartCreationPolicy(CreationPolicy.NonShared)]
     public class AmpsCOMCommandFormatter : IAmpsBoxFormatter
     {
         #region Members
@@ -23,6 +26,12 @@ namespace AmpsBoxSdk.Commands
         public AmpsCOMCommandFormatter(string boxVersion)
         {
             this.commandProvider = AmpsCommandFactory.CreateCommandProvider(boxVersion);
+        }
+
+        [ImportingConstructor]
+        public AmpsCOMCommandFormatter()
+        {
+            this.commandProvider = AmpsCommandFactory.CreateCommandProvider("2.0b");
         }
         #endregion
 

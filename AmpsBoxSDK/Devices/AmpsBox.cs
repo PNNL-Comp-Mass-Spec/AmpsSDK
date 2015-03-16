@@ -14,6 +14,7 @@ namespace AmpsBoxSdk.Devices
     using System.ComponentModel;
     using System.ComponentModel.Composition;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
     using System.IO;
     using System.IO.Ports;
     using System.Linq;
@@ -112,16 +113,20 @@ namespace AmpsBoxSdk.Devices
         /// The falkor Serial Port.
         /// </param>
         [ImportingConstructor]
-        public AmpsBox(IAmpsBoxCommunicator<FalkorSerialPort> ampsBoxCommunicator)
+        public AmpsBox(IAmpsBoxCommunicator<FalkorSerialPort> ampsBoxCommunicator, IAmpsBoxFormatter formatter)
         {
+            Contract.Assert(ampsBoxCommunicator != null && formatter != null);
             this.boxVersion         = ConstDefaultBoxVersion;
             this.sync               = new object();
             this.ClockType          = ClockType.Internal;
             this.TriggerType        = StartTriggerTypes.SW;
             this.Emulated           = false;
+            this.LatestWrite = string.Empty;
+            this.LatestResponse = string.Empty;
             this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(this.boxVersion);
             this.ClockFrequency     = this.commandProvider.InternalClock;
             this.Communicator = ampsBoxCommunicator;
+            this.Formatter = formatter;
             this.Id = Guid.NewGuid();
         }
 
@@ -137,7 +142,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets or sets the formatter for the communicator.
         /// </summary>
-        public IAmpsBoxFormatter Formatter { get; set; }
+        public IAmpsBoxFormatter Formatter { get; private set; }
 
         /// <summary>
         /// Gets or sets the clock frequency of the AMPS Box.
@@ -490,17 +495,8 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<string> GetVersion()
         {
-            string data = null;
-
-            try
-            {
-                data = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetVersion, null));
-                this.boxVersion = data;
-            }
-            catch (Exception ex)
-            {
-                data += ex.Message;
-            }
+           string data = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetVersion, null));
+           this.boxVersion = data;
 
             return data;
         }

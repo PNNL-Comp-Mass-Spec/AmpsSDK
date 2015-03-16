@@ -87,8 +87,9 @@
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.6.4.0.1\lib\Net45\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.6.0\lib\Net45\Splat.dll</HintPath>
+    <Reference Include="Splat, Version=1.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.6.1\lib\Net45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.1\System.dll</HintPath>
@@ -138,6 +139,7 @@
     <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
     <Compile Include="Devices\AmpsBox.cs" />
+    <Compile Include="Devices\AmpsBoxVersion.cs" />
     <Compile Include="Devices\ChannelData.cs" />
     <Compile Include="Devices\AmpsBoxCOMReader.cs" />
     <Compile Include="Devices\AmpsBoxDeviceData.cs" />

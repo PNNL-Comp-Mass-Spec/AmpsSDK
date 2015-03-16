@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Commands
 {
+    using System.ComponentModel.Composition;
+
+    [InheritedExport]
     public interface IAmpsBoxFormatter
     {
         #region Methods
