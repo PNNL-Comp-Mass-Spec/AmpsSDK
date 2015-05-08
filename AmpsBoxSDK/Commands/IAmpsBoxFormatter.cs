@@ -19,8 +19,10 @@ namespace AmpsBoxSdk.Commands
         /// <param name="commandData">Data to be contained in the command.</param>
         /// <returns></returns>
         string BuildCommunicatorCommand(AmpsCommandType commandType, object commandData);
+
+        string BuildCommunicatorCommand(AmpsCommandType commandType);
         #endregion
-        
+
         #region Properties
 
         #endregion

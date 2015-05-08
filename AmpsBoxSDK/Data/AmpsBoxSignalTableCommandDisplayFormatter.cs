@@ -71,7 +71,7 @@ namespace AmpsBoxSdk.Data
         public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
         {
             string eventData = string.Empty;
-            IEnumerable<double> times = table.GetTimes();
+            IEnumerable<double> times = table.StartTimes;
             times = times.OrderBy(x => x);
 
             TimeUnits units = TimeUnits.Ticks;
@@ -80,7 +80,7 @@ namespace AmpsBoxSdk.Data
                 IEnumerable<SignalElement> signals = table.GetSignals(time);
                 StringBuilder timeBuilder = new StringBuilder();
 
-                timeBuilder.AppendFormat("\tTime\t{0:F0}\n", converter.ConvertTo(table.TimeUnits, units, time));
+                timeBuilder.AppendFormat("\tTime\t{0:F0}\n", converter.ConvertTo(table.ExecutionData.TimeUnits, units, time));
 
                 foreach (var signal in signals)
                 {
@@ -102,7 +102,7 @@ namespace AmpsBoxSdk.Data
 
             return string.Format(
                 this.m_commandFormat, 
-                converter.ConvertTo(table.TimeUnits, units, table.Length), 
+                converter.ConvertTo(table.ExecutionData.TimeUnits, units, table.Length), 
                 eventData);
         }
 

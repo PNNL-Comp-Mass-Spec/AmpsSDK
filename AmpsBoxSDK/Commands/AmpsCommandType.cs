@@ -210,6 +210,10 @@ namespace AmpsBoxSdk.Commands
 
         Reset,
 
-        Test
+        Test,
+
+        SetName,
+
+        GetName
     }
 }

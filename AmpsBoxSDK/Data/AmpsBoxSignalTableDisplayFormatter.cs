@@ -38,7 +38,7 @@ namespace AmpsBoxSdk.Data
         /// </returns>
         public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
         {
-            IEnumerable<double> times = table.GetTimes();
+            IEnumerable<double> times = table.StartTimes;
             times = times.OrderBy(x => x);
             StringBuilder timeBuilder = new StringBuilder();
 
@@ -52,7 +52,7 @@ namespace AmpsBoxSdk.Data
 
                 foreach (var signal in signals)
                 {
-                    double xTime = converter.ConvertTo(table.TimeUnits, units, signal.Time);
+                    double xTime = converter.ConvertTo(table.ExecutionData.TimeUnits, units, signal.StartTime);
 
                     var output = signal as AnalogStepElement;
                     if (output != null)
@@ -67,7 +67,7 @@ namespace AmpsBoxSdk.Data
             return string.Format(
                 "Table: {0}\n\tLength:\t{1}\n\tTime Units:\t{2}\n{3}", 
                 table.ExecutionData.Name, 
-                converter.ConvertTo(table.TimeUnits, units, table.Length), 
+                converter.ConvertTo(table.ExecutionData.TimeUnits, units, table.Length), 
                 units, 
                 eventData);
         }

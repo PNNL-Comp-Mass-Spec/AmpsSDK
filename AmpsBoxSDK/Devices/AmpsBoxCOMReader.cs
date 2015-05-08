@@ -106,7 +106,7 @@ namespace AmpsBoxSdk.Devices
             {
                 var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
 
-                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Count());
+                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Length);
 
                 string response = await Read();
 
@@ -138,15 +138,14 @@ namespace AmpsBoxSdk.Devices
         public async Task<string> Read()
         {
             // Emulate/copy readline, 
-            byte[] buffer           = new byte[1024];
+            byte[] buffer           = new byte[4096];
             int actualLength        = 0;
             string response         = String.Empty;
             string stringToReturn   = String.Empty;
             try
             {
                 const int Offset    = 0;
-                Stopwatch watch     = new Stopwatch();
-                watch.Start();
+                Stopwatch watch     = Stopwatch.StartNew();
               
                 while (!stringToReturn.Contains("\r\n") && watch.ElapsedMilliseconds < 1000)
                 {

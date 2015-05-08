@@ -60,17 +60,45 @@ namespace AmpsBoxSdk.Data
         /// </returns>
         public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
         {
+            var childrenCount = table.ChildNodes.Count();
+            var rootTable = table.Root as SignalTable;
+            var listOfNodes = rootTable.BreadthFirstCollection;
+
             string eventData = string.Empty;
-            IEnumerable<double> times = table.GetTimes();
-            times = times.OrderBy(x => x);
+
+            var depthDictionary = new Dictionary<int, List<SignalTable>>();
+
+            foreach (var node in listOfNodes)
+            {
+                if (!depthDictionary.ContainsKey(node.Depth))
+                {
+                    depthDictionary.Add(node.Depth, new List<SignalTable>() { (SignalTable)node });
+                }
+                else
+                {
+                    depthDictionary[node.Depth].Add((SignalTable)node);
+                }
+            }
+
+            foreach (var key in depthDictionary.Keys)
+            {
+                var tableNodes = depthDictionary[key];
+                
+            }
+
+            List<double> times = rootTable.StartTimes.ToList();
+
+            times = times.OrderBy(x => x).ToList();
+
             int maxTime = 0;
 
             foreach (double time in times)
             {
                 var signals = table.GetSignals(time).ToList();
+
                 var timeBuilder = new StringBuilder();
 
-                int intTime = Convert.ToInt32(converter.ConvertTo(table.TimeUnits, TimeUnits.Ticks, time));
+                int intTime = Convert.ToInt32(converter.ConvertTo(table.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
                 if (intTime > maxTime)
                 {
                     maxTime = intTime;
@@ -89,7 +117,7 @@ namespace AmpsBoxSdk.Data
                 foreach (var digitalStepEvent in digitalStepEvents)
                 {
                     var state = Convert.ToInt32(digitalStepEvent.Value);
-					timeBuilder.AppendFormat("{0}:{1}:", ap[int.Parse(digitalStepEvent.Channel.Address.ChannelIdentifier)], state);
+                    timeBuilder.AppendFormat("{0}:{1}:", ap[int.Parse(digitalStepEvent.Channel.ChannelIdentifier)], state);
                 }
 
                 string events = timeBuilder.ToString().TrimEnd(':');
@@ -100,7 +128,9 @@ namespace AmpsBoxSdk.Data
             eventData = eventData.Trim(',');
 
             var iterationData = string.Format("{0}{1}{2}{3}", 1, ":", table.ExecutionData.Iterations, ",");
-            var stringToReturn = string.Format(this.commandFormat, eventData, "0:[", "]", iterationData);
+          
+            var startTime = rootTable.ExecutionData.StartTime;
+            var stringToReturn = string.Format(this.commandFormat, eventData, startTime + ":[", "]", iterationData);
             return stringToReturn;
         }
 

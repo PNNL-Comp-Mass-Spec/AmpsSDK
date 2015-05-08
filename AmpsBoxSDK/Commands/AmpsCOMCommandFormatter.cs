@@ -9,6 +9,8 @@ namespace AmpsBoxSdk.Commands
 {
     using System.ComponentModel.Composition;
 
+    using FalkorSDK.Channel;
+
     [PartCreationPolicy(CreationPolicy.NonShared)]
     public class AmpsCOMCommandFormatter : IAmpsBoxFormatter
     {
@@ -43,10 +45,10 @@ namespace AmpsBoxSdk.Commands
         /// <param name="commandType">Enum command type to be created.</param>
         /// <param name="commandData">Command specific data (null, string, int, or Tuple) depending on command type param.</param>
         /// <returns></returns>
-        public string BuildCommunicatorCommand(AmpsCommandType commandType, object commandData)
+        public string BuildCommunicatorCommand(AmpsCommandType commandType, object commandData=null)
         {
             AmpsCommand command             = this.commandProvider.GetCommand(commandType);
-            string      communicatorCommand = "";
+            string      communicatorCommand = string.Empty;
 
             switch (commandType)
             {
@@ -79,10 +81,11 @@ namespace AmpsBoxSdk.Commands
                 /// Command for setting the start trigger type.
                 /// </summary>
 		        case AmpsCommandType.CommandSetTrigger:
-                    StartTriggerTypes startTriggerType      = (StartTriggerTypes)commandData;
-                    communicatorCommand                     = string.Format("{0},{1}", 
+                    var startTriggerType      = (StartTriggerTypes)commandData;
+                    communicatorCommand                     = string.Format("{0}{2}{1}", 
                                                                             command.Value, 
-                                                                            startTriggerType);
+                                                                            startTriggerType,
+                                                                            commandProvider.CommandSeparator);
                     break;
 
 		        /// <summary>
@@ -101,6 +104,19 @@ namespace AmpsBoxSdk.Commands
                 /// </summary>
                 case AmpsCommandType.GetVersion:
                     communicatorCommand                     = command.Value;
+                    break;
+
+                case AmpsCommandType.GetName:
+                    communicatorCommand = command.Value;
+                    break;
+
+                case AmpsCommandType.SetName:
+                    var name = commandData as string;
+                    communicatorCommand = string.Format(
+                        "{0}{1}{2}",
+                        command.Value,
+                        commandProvider.CommandSeparator,
+                        name);
                     break;
 
                 /// <summary>
@@ -152,11 +168,11 @@ namespace AmpsBoxSdk.Commands
                 /// TODO The get RadioFrequency frequency.
                 /// </summary>
                 case AmpsCommandType.GetRfFrequency:
-                    int channel             = (int)commandData;
+                    var channel             = (ChannelAddress)commandData;
                     communicatorCommand     = string.Format("{1}{0}{2}", 
                                                             commandProvider.CommandSeparator, 
                                                             command.Value, 
-                                                            channel);
+                                                            channel.Address);
                     break;
 
                 /// <summary>
@@ -397,6 +413,17 @@ namespace AmpsBoxSdk.Commands
             }
             return communicatorCommand;
         }
+
+        /// <summary>
+        /// This method supports get-only commands.
+        /// </summary>
+        /// <param name="commandType"></param>
+        /// <returns></returns>
+        public string BuildCommunicatorCommand(AmpsCommandType commandType)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Properties

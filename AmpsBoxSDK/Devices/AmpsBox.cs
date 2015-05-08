@@ -37,6 +37,8 @@ namespace AmpsBoxSdk.Devices
 
     using System.Reactive;
 
+    using FalkorSDK.Channel;
+
     using Infrastructure.Domain.Shared;
 
     using ReactiveUI;
@@ -465,7 +467,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="int"/>.
         /// </returns>
-        public async Task<int> GetRfFrequency(int channel)
+        public async Task<int> GetRfFrequency(ChannelAddress channel)
         {
                 var response =
                     await
@@ -484,7 +486,6 @@ namespace AmpsBoxSdk.Devices
                 }
 
                 return frequency;
-            
         }
 
         /// <summary>
@@ -493,12 +494,23 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public async Task<string> GetVersion()
+        public async Task<string> GetVersionAsync()
         {
            string data = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetVersion, null));
            this.boxVersion = data;
 
             return data;
+        }
+
+        public async Task<string> GetNameAsync()
+        {
+            var data = await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetName, null));
+            return data;
+        }
+
+        public async Task SetNameAsync(string name)
+        {
+            await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.SetName, name));
         }
 
         /// <summary>
@@ -510,9 +522,9 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public async Task<IList<string>> LoadTimeTableAsync(SignalTable table)
+        public async Task<IReadOnlyList<string>> LoadTimeTableAsync(SignalTable table)
         {
-            IList<string> list = new List<string>();
+            List<string> list = new List<string>();
 
             list.Add("\tSending Time Table Data.");
             await this.LoadTimeTable(table);
@@ -526,7 +538,7 @@ namespace AmpsBoxSdk.Devices
             list.Add("\tSetting mode.");
             await this.SetMode();
 
-            return list;
+            return list.AsReadOnly();
         }
 
         /// <summary>

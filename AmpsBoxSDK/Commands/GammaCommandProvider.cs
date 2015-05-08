@@ -208,6 +208,10 @@ namespace AmpsBoxSdk.Commands
 
         private const string Test = "TEST,OUT";
 
+        private const string GetName = "GNAME";
+
+        private const string SetName = "SNAME";
+
         #endregion
 
         // DIO Commands
@@ -293,6 +297,10 @@ namespace AmpsBoxSdk.Commands
 
             this.AddCommand(AmpsCommandType.Reset, Reset);
             this.AddCommand(AmpsCommandType.Test, Test);
+
+            this.AddCommand(AmpsCommandType.SetName, SetName);
+
+            this.AddCommand(AmpsCommandType.GetName, GetName);
         }
 
         #endregion
