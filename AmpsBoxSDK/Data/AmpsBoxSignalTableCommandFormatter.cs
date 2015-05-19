@@ -116,114 +116,80 @@ namespace AmpsBoxSdk.Data
                 {
                     if (waveformTimes.Peek() < childrenStartTimes.Peek())
                     {
-                        var time = waveformTimes.Dequeue();
-                        int maxTime = 0;
-
-                        var signals = node.GetSignals(time).ToList();
-
-                        int intTime =
-                            Convert.ToInt32(
-                                converter.ConvertTo(node.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-                        if (intTime > maxTime)
-                        {
-                            maxTime = intTime;
-                        }
-
-                        timeBuilder.AppendFormat("{0:F0}:", intTime);
-                        var analogStepEvents = signals.OfType<AnalogStepElement>();
-
-                        foreach (var signal in analogStepEvents)
-                        {
-                            timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.Value);
-                        }
-
-                        char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
-                        var digitalStepEvents = signals.OfType<DigitalStepElement>();
-                        foreach (var digitalStepEvent in digitalStepEvents)
-                        {
-                            var state = Convert.ToInt32(digitalStepEvent.Value);
-                            timeBuilder.AppendFormat(
-                                "{0}:{1}:",
-                                ap[int.Parse(digitalStepEvent.Channel.ChannelIdentifier)],
-                                state);
-                        }
-
-                        string events = timeBuilder.ToString().TrimEnd(':');
-                        eventData += events;
-                        eventData += ",";
+                        AppendWaveform(waveformTimes, node, converter, timeBuilder);
                     }
                     else if (childrenStartTimes.Peek() < waveformTimes.Peek())
                     {
-                        var time = childrenStartTimes.Dequeue();
-                        var signalTable =
-                            node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
-
-                        int intTime =
-                          Convert.ToInt32(
-                              converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-                        tableName++;
-                        timeBuilder.AppendFormat("{0}:[{1}:", intTime, tableName);
-                        eventData += timeBuilder.ToString();
-                        Process(signalTable, converter);
+                        AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
                     }
                 }
                 else if (waveformTimes.Any())
                 {
-                    var time = waveformTimes.Dequeue();
-                    int maxTime = 0;
-
-                    var signals = node.GetSignals(time).ToList();
-
-                    int intTime =
-                        Convert.ToInt32(
-                            converter.ConvertTo(node.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-                    if (intTime > maxTime)
-                    {
-                        maxTime = intTime;
-                    }
-
-                    timeBuilder.AppendFormat("{0:F0}:", intTime);
-                    var analogStepEvents = signals.OfType<AnalogStepElement>();
-
-                    foreach (var signal in analogStepEvents)
-                    {
-                        timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.Value);
-                    }
-
-                    char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
-                    var digitalStepEvents = signals.OfType<DigitalStepElement>();
-                    foreach (var digitalStepEvent in digitalStepEvents)
-                    {
-                        var state = Convert.ToInt32(digitalStepEvent.Value);
-                        timeBuilder.AppendFormat(
-                            "{0}:{1}:",
-                            ap[int.Parse(digitalStepEvent.Channel.ChannelIdentifier)],
-                            state);
-                    }
-
-                    string events = timeBuilder.ToString().TrimEnd(':');
-                    eventData += events;
-                    eventData += ",";
+                    AppendWaveform(waveformTimes, node, converter, timeBuilder);
                 }
 
                 else if (childrenStartTimes.Any())
                 {
-                    var time = childrenStartTimes.Dequeue();
-                    var signalTable =
-                        node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
-
-                    int intTime =
-                      Convert.ToInt32(
-                          converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-                    tableName++;
-                    timeBuilder.AppendFormat("{0}:[{1}:", intTime, tableName);
-                    eventData += timeBuilder.ToString();
-                    Process(signalTable, converter);
+                    AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
                 }
             }
            eventData = eventData.Trim(',');
-            eventData += "],";
+           eventData += "],";
 
+        }
+
+        private void AppendWaveform(Queue<double> waveformTimes, SignalTable node, ITimeUnitConverter<double> converter, StringBuilder timeBuilder)
+        {
+            var time = waveformTimes.Dequeue();
+            int maxTime = 0;
+
+            var signals = node.GetSignals(time).ToList();
+
+            int intTime =
+                Convert.ToInt32(
+                    converter.ConvertTo(node.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
+            if (intTime > maxTime)
+            {
+                maxTime = intTime;
+            }
+
+            timeBuilder.AppendFormat("{0:F0}:", intTime);
+            var analogStepEvents = signals.OfType<AnalogStepElement>();
+
+            foreach (var signal in analogStepEvents)
+            {
+                timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.Value);
+            }
+
+            char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
+            var digitalStepEvents = signals.OfType<DigitalStepElement>();
+            foreach (var digitalStepEvent in digitalStepEvents)
+            {
+                var state = Convert.ToInt32(digitalStepEvent.Value);
+                timeBuilder.AppendFormat(
+                    "{0}:{1}:",
+                    ap[int.Parse(digitalStepEvent.Channel.ChannelIdentifier)],
+                    state);
+            }
+
+            string events = timeBuilder.ToString().TrimEnd(':');
+            eventData += events;
+            eventData += ",";
+        }
+
+        private void AppendSignalTable(Queue<double> childrenStartTimes, SignalTable node, ITimeUnitConverter<double> converter, StringBuilder timeBuilder)
+        {
+            var time = childrenStartTimes.Dequeue();
+            var signalTable =
+                node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
+
+            int intTime =
+              Convert.ToInt32(
+                  converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
+            tableName++;
+            timeBuilder.AppendFormat("{0}:[{1}:", intTime, tableName);
+            eventData += timeBuilder.ToString();
+            Process(signalTable, converter);
         }
     }
 }

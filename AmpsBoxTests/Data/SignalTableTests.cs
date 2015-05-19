@@ -1,5 +1,7 @@
 ﻿namespace AmpsBoxTests.Data
 {
+    using System;
+
     using AmpsBoxSdk.Data;
     using AmpsBoxSdk.Devices;
 
@@ -27,17 +29,17 @@
         [Test]
         public void NestedSignalTableTest()
         {
-            SignalTable table = new SignalTable(new Waveform(new ChannelAddress("1"), 0).AddSignalElement(new AnalogStepElement(new ChannelAddress("1"), new Voltage(0.5), 15)));
+            SignalTable table = new SignalTable(new Waveform(new ChannelAddress("1"), 0).AddSignalElement(new AnalogStepElement(new ChannelAddress("1"), new Voltage(0.5), 1500)));
             table.UpdateExecutionData(new SignalTableExecutionData("test", "", 1, 0.0, TimeUnits.Microseconds));
             table.Children.Add(
                 new SignalTable(
                     new Waveform(new ChannelAddress("1"), 0).AddSignalElement(
-                        new AnalogStepElement(new ChannelAddress("2"), new Voltage(10), 10))).UpdateExecutionData(new SignalTableExecutionData("test1", "desc", 2, 100, TimeUnits.Microseconds)));
+                        new AnalogStepElement(new ChannelAddress("2"), new Voltage(10), 1000))).UpdateExecutionData(new SignalTableExecutionData("test1", "desc", 2, 500, TimeUnits.Microseconds)));
           
 
             var formater = new AmpsBoxSignalTableCommandFormatter();
-            var data = formater.FormatTable(table, new AmpsClockConverter(5000));
-
+            var data = formater.FormatTable(table, new AmpsClockConverter(16000000));
+            Console.WriteLine(data);
         }
     }
 }
