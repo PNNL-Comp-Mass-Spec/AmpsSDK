@@ -906,6 +906,8 @@ namespace AmpsBoxSdk.Devices
             this.LastTable                                          = command;
 
             await this.Communicator.WriteAsync(command);
+
+            var error = await this.GetError();
         }
         /// <summary>
         /// Tells the AMPS box which clock to use: external or internal

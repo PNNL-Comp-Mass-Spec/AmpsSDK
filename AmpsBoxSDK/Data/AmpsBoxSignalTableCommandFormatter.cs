@@ -45,7 +45,7 @@ namespace AmpsBoxSdk.Data
         public AmpsBoxSignalTableCommandFormatter()
         {
             this.commandFormat = "STBLDAT;{1}{3}{0}{2};";
-            this.tableName = 0;
+            this.tableName = 1;
         }
 
         #endregion
@@ -187,7 +187,7 @@ namespace AmpsBoxSdk.Data
               Convert.ToInt32(
                   converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
             tableName++;
-            timeBuilder.AppendFormat("{0}:[{1}:", intTime, tableName);
+            timeBuilder.AppendFormat("{0}:[{1}:{2},", intTime, tableName, signalTable.ExecutionData.Iterations);
             eventData += timeBuilder.ToString();
             Process(signalTable, converter);
         }
