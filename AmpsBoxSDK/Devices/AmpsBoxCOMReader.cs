@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Devices
 {
+    using FalkorSDKInterop;
+
     [PartCreationPolicy(CreationPolicy.NonShared)]
     public class AmpsBoxCOMReader : IAmpsBoxCommunicator<FalkorSerialPort>
     {
@@ -37,6 +39,8 @@ namespace AmpsBoxSdk.Devices
         /// Serial port used. 
         /// </summary>
         private FalkorSerialPort                falkorPort;
+
+        private TimeoutSerialPort com;
         /// <summary>
         /// Synchronization object.
         /// </summary>
@@ -63,6 +67,8 @@ namespace AmpsBoxSdk.Devices
             this.boxVersion         = ConstDefaultBoxVersion;
             this.IsEmulated         = false;
             Port                    = port;
+            this.com = new TimeoutSerialPort();
+            this.com.SetTimeout(1);
         }
 
         #endregion
@@ -82,7 +88,6 @@ namespace AmpsBoxSdk.Devices
             string localStringData  = response;
             string dataToValidate   = localStringData;
             localStringData         = localStringData.Replace("\n", string.Empty);
-            localStringData         = localStringData.Replace("\0", string.Empty);
             var newData             = Regex.Replace(localStringData, @"\p{Cc}", a => string.Format("[{0:X2}]", (byte)a.Value[0]));
             response                = "\tAMPS>> " + newData;
 
@@ -94,6 +99,7 @@ namespace AmpsBoxSdk.Devices
             }
             return localStringData;
         }
+
         /// <summary>
         /// Write to the device asynchronously.
         /// </summary>
@@ -102,17 +108,15 @@ namespace AmpsBoxSdk.Devices
         public async Task<string> WriteAsync(string command)
         {
             LatestWrite = command;
+ 
             try
             {
-                var buffer = System.Text.Encoding.ASCII.GetBytes(command + this.commandProvider.EndOfLine);
+                var commandToWrite = command + "\r\n";
+               
+               var response = com.Write(commandToWrite);
 
-                await this.falkorPort.Port.BaseStream.WriteAsync(buffer, 0, buffer.Length);
+                return response;
 
-                string response = await Read();
-
-                LatestResponse = await ReadAsync(response);
-
-                return LatestResponse;
             }
             catch (IOException ioException)
             {
@@ -253,14 +257,15 @@ namespace AmpsBoxSdk.Devices
 
             lock (this.sync)
             {
-                if (!this.falkorPort.IsOpen)
+                if (!this.com.IsOpen)
                 {
-                    this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
-                    this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
-                    this.falkorPort.Open();
+                 //   this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
+                 //   this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
+                 //   this.falkorPort.Open();
+                 this.com.Open(this.Port.Port.PortName, this.Port.BaudRate, this.Port.Parity, this.Port.StopBits, this.Port.Handshake, this.Port.DataBits);
                 }
             }
-            return this.falkorPort.IsOpen;
+            return this.com.IsOpen;
         }
         /// <summary>
         /// Close communication
@@ -275,12 +280,12 @@ namespace AmpsBoxSdk.Devices
 
             lock(this.sync) 
             {
-                if (this.falkorPort.IsOpen)
+                if (this.com.IsOpen)
                 {
-                    this.falkorPort.Close();
+                    this.com.Close();
                 }
             }
-            return this.falkorPort.IsOpen;
+            return this.com.IsOpen;
         }
 
         public FalkorSerialPort GetInterface()
@@ -316,44 +321,6 @@ namespace AmpsBoxSdk.Devices
             }
             return localStringData;
         }
-        /// <summary>
-        /// TODO The m_port_ error received.
-        /// </summary>
-        /// <param name="sender">
-        /// TODO The sender.
-        /// </param>
-        /// <param name="e">
-        /// TODO The e.
-        /// </param>
-        /// <exception cref="IOException">
-        /// </exception>
-        private void PortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            if (e.EventType == SerialError.Frame)
-            {
-                throw new IOException("IO Frame Error");
-            }
-
-            if (e.EventType == SerialError.Overrun)
-            {
-                throw new IOException("IO Overrun Error");
-            }
-
-            if (e.EventType == SerialError.RXOver)
-            {
-                throw new IOException("IO RXOver Error");
-            }
-
-            if (e.EventType == SerialError.RXParity)
-            {
-                throw new IOException("IO RXParity Error");
-            }
-
-            if (e.EventType == SerialError.TXFull)
-            {
-                throw new IOException("IO TXFull Error");
-            }
-        }
         #endregion
 
         #region Properties
@@ -364,7 +331,7 @@ namespace AmpsBoxSdk.Devices
         {
             get
             {
-                return Port.IsOpen;
+                return com.IsOpen;
             }
         }
         /// <summary>

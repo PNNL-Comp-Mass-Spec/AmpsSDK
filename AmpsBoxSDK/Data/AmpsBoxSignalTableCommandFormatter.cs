@@ -15,7 +15,7 @@ namespace AmpsBoxSdk.Data
     using System.Text;
 
     using FalkorSDK.Data;
-    using FalkorSDK.Data.Events;
+    using FalkorSDK.Data.Elements;
     using FalkorSDK.Data.Signals;
     using FalkorSDK.IO.Signals;
 
@@ -65,11 +65,8 @@ namespace AmpsBoxSdk.Data
         /// </returns>
         public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
         {
-            var childrenCount = table.ChildNodes.Count();
-            var rootTable = table.Root as SignalTable;
-            var listOfNodes = rootTable.BreadthFirstCollection;
-         
-            Process(rootTable, converter);
+          // var waveformTables = 
+          //  Process(rootTable, converter);
             eventData = eventData.Trim(',');
 
             int count = 0;
@@ -88,9 +85,9 @@ namespace AmpsBoxSdk.Data
 
             var iterationData = string.Format("{0}{1}{2}{3}", 0, ":", table.ExecutionData.Iterations, ",");
             
-            var startTime = rootTable.ExecutionData.StartTime;
-            var stringToReturn = string.Format(this.commandFormat, eventData, startTime + ":[", "]", iterationData);
-            return stringToReturn;
+          //  var startTime = rootTable.ExecutionData.StartTime;
+         //   var stringToReturn = string.Format(this.commandFormat, eventData, startTime + ":[", "]", iterationData);
+            return string.Empty;
         }
 
         #endregion
@@ -102,39 +99,39 @@ namespace AmpsBoxSdk.Data
         /// <param name="converter"></param>
         private void Process(SignalTable node, ITimeUnitConverter<double> converter)
         {
-            var waveformTimes = new Queue<double>(node.StartTimes.OrderBy(x => x)); // Generate queue based on start times.
-            var children = node.Children.Select(x => ((SignalTable)x).ExecutionData.StartTime).OrderBy(x => x);
-            var childrenStartTimes = new Queue<double>(children); // Generate queue based on start times of children.
+            //var waveformTimes = new Queue<double>(node.StartTimes.OrderBy(x => x)); // Generate queue based on start times.
+            //var children = node.Children.Select(x => ((SignalTable)x).ExecutionData.StartTime).OrderBy(x => x);
+            //var childrenStartTimes = new Queue<double>(children); // Generate queue based on start times of children.
             
 
-            // Loop that checks between the waveform start times and the children signal table start times. If the waveform time is less, then that branch is selected.
-            // If the children start time is less, then the branch to handle that is taken. This may require some degree of recursion.
-            while (waveformTimes.Any() || childrenStartTimes.Any())
-            {
-                var timeBuilder = new StringBuilder();
-                if (childrenStartTimes.Any() && waveformTimes.Any())
-                {
-                    if (waveformTimes.Peek() < childrenStartTimes.Peek())
-                    {
-                        AppendWaveform(waveformTimes, node, converter, timeBuilder);
-                    }
-                    else if (childrenStartTimes.Peek() < waveformTimes.Peek())
-                    {
-                        AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
-                    }
-                }
-                else if (waveformTimes.Any())
-                {
-                    AppendWaveform(waveformTimes, node, converter, timeBuilder);
-                }
+           // // Loop that checks between the waveform start times and the children signal table start times. If the waveform time is less, then that branch is selected.
+           // // If the children start time is less, then the branch to handle that is taken. This may require some degree of recursion.
+           // while (waveformTimes.Any() || childrenStartTimes.Any())
+           // {
+           //     var timeBuilder = new StringBuilder();
+           //     if (childrenStartTimes.Any() && waveformTimes.Any())
+           //     {
+           //         if (waveformTimes.Peek() < childrenStartTimes.Peek())
+           //         {
+           //             AppendWaveform(waveformTimes, node, converter, timeBuilder);
+           //         }
+           //         else if (childrenStartTimes.Peek() < waveformTimes.Peek())
+           //         {
+           //             AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
+           //         }
+           //     }
+           //     else if (waveformTimes.Any())
+           //     {
+           //         AppendWaveform(waveformTimes, node, converter, timeBuilder);
+           //     }
 
-                else if (childrenStartTimes.Any())
-                {
-                    AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
-                }
-            }
-           eventData = eventData.Trim(',');
-           eventData += "],";
+           //     else if (childrenStartTimes.Any())
+           //     {
+           //         AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
+           //     }
+           // }
+           //eventData = eventData.Trim(',');
+           //eventData += "],";
 
         }
 
@@ -154,11 +151,11 @@ namespace AmpsBoxSdk.Data
             }
 
             timeBuilder.AppendFormat("{0:F0}:", intTime);
-            var analogStepEvents = signals.OfType<AnalogStepElement>();
+            var analogStepEvents = signals.OfType<RampElement>();
 
             foreach (var signal in analogStepEvents)
             {
-                timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.Value);
+                timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.EndValue);
             }
 
             char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
@@ -179,17 +176,17 @@ namespace AmpsBoxSdk.Data
 
         private void AppendSignalTable(Queue<double> childrenStartTimes, SignalTable node, ITimeUnitConverter<double> converter, StringBuilder timeBuilder)
         {
-            var time = childrenStartTimes.Dequeue();
-            var signalTable =
-                node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
+            //var time = childrenStartTimes.Dequeue();
+            //var signalTable =
+            //    node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
 
-            int intTime =
-              Convert.ToInt32(
-                  converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-            tableName++;
-            timeBuilder.AppendFormat("{0}:[{1}:{2},", intTime, tableName, signalTable.ExecutionData.Iterations);
-            eventData += timeBuilder.ToString();
-            Process(signalTable, converter);
+            //int intTime =
+            //  Convert.ToInt32(
+            //      converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
+            //tableName++;
+            //timeBuilder.AppendFormat("{0}:[{1}:{2},", intTime, tableName, signalTable.ExecutionData.Iterations);
+            //eventData += timeBuilder.ToString();
+            //Process(signalTable, converter);
         }
     }
 }

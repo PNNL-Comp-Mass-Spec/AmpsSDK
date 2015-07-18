@@ -471,7 +471,7 @@ namespace AmpsBoxSdk.Devices
         {
                 var response =
                     await
-                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetRfFrequency, channel));
+                    this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(AmpsCommandType.GetRfFrequency, channel.Address));
 
                 if (this.Emulated)
                 {
@@ -603,21 +603,6 @@ namespace AmpsBoxSdk.Devices
             await this.Communicator.WriteAsync(
                 Formatter.BuildCommunicatorCommand( AmpsCommandType.Reset,
                                                     null));
-        }
-
-        /// <summary>
-        /// Sets the output DC/HV voltage.
-        /// </summary>
-        /// <param name="channel">
-        /// </param>
-        /// <param name="voltage">
-        /// </param>
-        /// <returns>
-        /// The <see cref="Task"/>.
-        /// </returns>
-        public async Task SetDcBias(int channel, double voltage)
-        {
-            await this.SetDcBias(channel, Convert.ToInt32(voltage));
         }
 
         /// <summary>
@@ -817,14 +802,14 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public async Task ToggleDigitalDirection(string channel, string direction)
+        public async Task ToggleDigitalDirection(ChannelAddress channel, string direction)
         {
             try
             {
                 await
                         this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
                                                         AmpsCommandType.SetDigitalIoDirection,
-                                                        new Tuple<string, string>(channel, direction)));
+                                                        new Tuple<string, string>(channel.Address, direction)));
 
             }
             catch (Exception ex)

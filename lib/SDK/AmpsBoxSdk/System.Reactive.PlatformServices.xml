@@ -333,7 +333,7 @@
             <param name="action">Action to be executed, potentially updating the state.</param>
             <returns>The disposable object used to cancel the scheduled recurring action (best effort).</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="action"/> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="period"/> is less than or equal to zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="period"/> is less than zero.</exception>
         </member>
         <member name="P:System.Reactive.Concurrency.ThreadPoolScheduler.Instance">
             <summary>

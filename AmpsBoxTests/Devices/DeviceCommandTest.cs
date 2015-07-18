@@ -2,7 +2,7 @@
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 using FalkorSDK.Data.Signals;
-using FalkorSDK.Data.Events;
+using FalkorSDK.Data.Elements;
 ///
 namespace AmpsBoxTests.Devices
 {

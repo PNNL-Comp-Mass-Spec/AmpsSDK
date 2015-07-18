@@ -149,7 +149,7 @@
         </member>
         <member name="T:System.Reactive.Disposables.ICancelable">
             <summary>
-            Disposable resource with dipsosal state tracking.
+            Disposable resource with disposal state tracking.
             </summary>
         </member>
         <member name="P:System.Reactive.Disposables.ICancelable.IsDisposed">

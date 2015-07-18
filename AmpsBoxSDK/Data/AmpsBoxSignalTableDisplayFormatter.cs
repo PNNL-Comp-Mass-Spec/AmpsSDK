@@ -14,7 +14,7 @@ namespace AmpsBoxSdk.Data
     using System.Text;
 
     using FalkorSDK.Data;
-    using FalkorSDK.Data.Events;
+    using FalkorSDK.Data.Elements;
     using FalkorSDK.Data.Signals;
     using FalkorSDK.IO.Signals;
 

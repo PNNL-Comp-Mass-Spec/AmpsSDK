@@ -1084,6 +1084,11 @@
             destination scheduler to manage its queues etc.
             </summary>
         </member>
+        <member name="F:System.Reactive.Concurrency.LocalScheduler._gate">
+            <summary>
+            Gate to protect local scheduler queues.
+            </summary>
+        </member>
         <member name="F:System.Reactive.Concurrency.LocalScheduler.s_gate">
             <summary>
             Gate to protect queues and to synchronize scheduling decisions and system clock
@@ -1111,7 +1116,7 @@
             added to the queue).
             </summary>
         </member>
-        <member name="F:System.Reactive.Concurrency.LocalScheduler.s_shortTerm">
+        <member name="F:System.Reactive.Concurrency.LocalScheduler._shortTerm">
             <summary>
             Short term work queue. Contains work that's due soon, computed at the time of
             enqueueing or upon reevaluation of the long term queue causing migration of work
@@ -1119,7 +1124,7 @@
             to the long term queue in case a system clock change occurs.
             </summary>
         </member>
-        <member name="F:System.Reactive.Concurrency.LocalScheduler.s_shortTermWork">
+        <member name="F:System.Reactive.Concurrency.LocalScheduler._shortTermWork">
             <summary>
             Set of disposable handles to all of the current short term work Schedule calls,
             allowing those to be cancelled upon a system clock change.
@@ -1148,14 +1153,18 @@
         </member>
         <member name="F:System.Reactive.Concurrency.LocalScheduler.MAXSUPPORTEDTIMER">
             <summary>
-            Longest interval supported by <see cref="T:System.Threading.Timer"/>.
+            Longest interval supported by System.Threading.Timer.
             </summary>
         </member>
-        <member name="M:System.Reactive.Concurrency.LocalScheduler.Enqueue``1(System.Reactive.Concurrency.IScheduler,``0,System.DateTimeOffset,System.Func{System.Reactive.Concurrency.IScheduler,``0,System.IDisposable})">
+        <member name="M:System.Reactive.Concurrency.LocalScheduler.#ctor">
+            <summary>
+            Creates a new local scheduler.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Concurrency.LocalScheduler.Enqueue``1(``0,System.DateTimeOffset,System.Func{System.Reactive.Concurrency.IScheduler,``0,System.IDisposable})">
             <summary>
             Enqueues absolute time scheduled work in the timer queue or the short term work list.
             </summary>
-            <param name="scheduler">Scheduler to run the work on. Typically "this" from the caller's perspective (LocalScheduler.Schedule), but parameter kept because we have a single (static) timer queue across all of Rx local schedulers.</param>
             <param name="state">State to pass to the action.</param>
             <param name="dueTime">Absolute time to run the work on. The timer queue is responsible to execute the work close to the specified time, also accounting for system clock changes.</param>
             <param name="action">Action to run, potentially recursing into the scheduler.</param>
@@ -1777,6 +1786,43 @@
             Gets the singleton instance of the default scheduler.
             </summary>
         </member>
+        <member name="T:System.Reactive.Disposables.StableCompositeDisposable">
+            <summary>
+            Represents a group of disposable resources that are disposed together.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Disposables.StableCompositeDisposable.Create(System.IDisposable,System.IDisposable)">
+            <summary>
+            Creates a new group containing two disposable resources that are disposed together.
+            </summary>
+            <param name="disposable1">The first disposable resoruce to add to the group.</param>
+            <param name="disposable2">The second disposable resoruce to add to the group.</param>
+            <returns>Group of disposable resources that are disposed together.</returns>
+        </member>
+        <member name="M:System.Reactive.Disposables.StableCompositeDisposable.Create(System.IDisposable[])">
+            <summary>
+            Creates a new group of disposable resources that are disposed together.
+            </summary>
+            <param name="disposables">Disposable resources to add to the group.</param>
+            <returns>Group of disposable resources that are disposed together.</returns>
+        </member>
+        <member name="M:System.Reactive.Disposables.StableCompositeDisposable.Create(System.Collections.Generic.IEnumerable{System.IDisposable})">
+            <summary>
+            Creates a new group of disposable resources that are disposed together.
+            </summary>
+            <param name="disposables">Disposable resources to add to the group.</param>
+            <returns>Group of disposable resources that are disposed together.</returns>
+        </member>
+        <member name="M:System.Reactive.Disposables.StableCompositeDisposable.Dispose">
+            <summary>
+            Disposes all disposables in the group.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Disposables.StableCompositeDisposable.IsDisposed">
+            <summary>
+            Gets a value that indicates whether the object is disposed.
+            </summary>
+        </member>
         <member name="T:System.Reactive.Disposables.AnonymousDisposable">
             <summary>
             Represents an Action-based disposable.
@@ -1873,6 +1919,7 @@
             </summary>
             <param name="disposables">Disposables that will be disposed together.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="disposables"/> is null.</exception>
+            <exception cref="T:System.ArgumentException">Any of the disposables in the <paramref name="disposables"/> collection is null.</exception>
         </member>
         <member name="M:System.Reactive.Disposables.CompositeDisposable.#ctor(System.Collections.Generic.IEnumerable{System.IDisposable})">
             <summary>
@@ -1880,6 +1927,7 @@
             </summary>
             <param name="disposables">Disposables that will be disposed together.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="disposables"/> is null.</exception>
+            <exception cref="T:System.ArgumentException">Any of the disposables in the <paramref name="disposables"/> collection is null.</exception>
         </member>
         <member name="M:System.Reactive.Disposables.CompositeDisposable.Add(System.IDisposable)">
             <summary>
@@ -2151,6 +2199,24 @@
             </summary>
             <exception cref="T:System.InvalidOperationException">Thrown if the SingleAssignmentDisposable has already been assigned to.</exception>
         </member>
+        <member name="T:System.Reactive.PlatformServices.ITaskServices">
+            <summary>
+            (Infrastructure) Services to leverage evolving TPL Task APIs.
+            </summary>
+            <remarks>
+            This type is used by the Rx infrastructure and not meant for public consumption or implementation.
+            No guarantees are made about forward compatibility of the type's functionality and its usage.
+            </remarks>
+        </member>
+        <member name="M:System.Reactive.PlatformServices.ITaskServices.TrySetCanceled``1(System.Threading.Tasks.TaskCompletionSource{``0},System.Threading.CancellationToken)">
+            <summary>
+            Attempts to transition the underlying Task{T} into the Canceled state.
+            </summary>
+            <typeparam name="T">Type of the result of the underlying task.</typeparam>
+            <param name="tcs">Task completion source whose underlying task to transition into the Canceled state.</param>
+            <param name="token">Cancellation token that triggered the cancellation.</param>
+            <returns>True if the operation was successful; false if the operation was unsuccessful or the object has already been disposed.</returns>
+        </member>
         <member name="T:System.Reactive.PlatformServices.IExceptionServices">
             <summary>
             (Infrastructure) Services to rethrow exceptions.
@@ -2274,11 +2340,6 @@
         <member name="P:System.Reactive.PlatformServices.SystemClock.UtcNow">
             <summary>
             Gets the local system clock time.
-            </summary>
-        </member>
-        <member name="E:System.Reactive.PlatformServices.SystemClock.SystemClockChanged">
-            <summary>
-            Event that gets raised when a system clock change is detected, if there's any interest as indicated by AddRef calls.
             </summary>
         </member>
         <member name="T:System.Reactive.PlatformServices.ISystemClock">
@@ -2872,6 +2933,11 @@
         <member name="P:System.Reactive.Strings_Core.SCHEDULER_OPERATION_ALREADY_AWAITED">
             <summary>
               Looks up a localized string similar to This scheduler operation has already been awaited..
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Strings_Core.DISPOSABLES_CANT_CONTAIN_NULL">
+            <summary>
+              Looks up a localized string similar to Disposables collection can not contain null values..
             </summary>
         </member>
     </members>

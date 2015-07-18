@@ -778,6 +778,22 @@
             </list>
             </remarks>
         </member>
+        <member name="M:System.Reactive.Linq.Observable.StartAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Invokes the asynchronous function, surfacing the result through an observable sequence.
+            </summary>
+            <typeparam name="TResult">The type of the result returned by the asynchronous function.</typeparam>
+            <param name="functionAsync">Asynchronous function to run.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing the function's result value, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
+            <remarks>
+            <list type="bullet">
+            <item><description>The function is started immediately, not during the subscription of the resulting sequence.</description></item>
+            <item><description>Multiple subscriptions to the resulting sequence can observe the function's result.</description></item>
+            </list>
+            </remarks>
+        </member>
         <member name="M:System.Reactive.Linq.Observable.StartAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}})">
             <summary>
             Invokes the asynchronous function, surfacing the result through an observable sequence.
@@ -787,6 +803,30 @@
             <param name="functionAsync">Asynchronous function to run.</param>
             <returns>An observable sequence exposing the function's result value, or an exception.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null.</exception>
+            <remarks>
+            <list type="bullet">
+            <item><description>The function is started immediately, not during the subscription of the resulting sequence.</description></item>
+            <item><description>Multiple subscriptions to the resulting sequence can observe the function's result.</description></item>
+            <item><description>
+            If any subscription to the resulting sequence is disposed, the CancellationToken is set. The observer associated to the disposed
+            subscription won't see the TaskCanceledException, but other observers will. You can protect against this using the Catch operator.
+            Be careful when handing out the resulting sequence because of this behavior. The most common use is to have a single subscription
+            to the resulting sequence, which controls the CancellationToken state. Alternatively, you can control subscription behavior using
+            multicast operators.
+            </description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.Reactive.Linq.Observable.StartAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Invokes the asynchronous function, surfacing the result through an observable sequence.
+            The CancellationToken is shared by all subscriptions on the resulting observable sequence. See the remarks section for more information.
+            </summary>
+            <typeparam name="TResult">The type of the result returned by the asynchronous function.</typeparam>
+            <param name="functionAsync">Asynchronous function to run.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing the function's result value, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
             <remarks>
             <list type="bullet">
             <item><description>The function is started immediately, not during the subscription of the resulting sequence.</description></item>
@@ -844,6 +884,21 @@
             </list>
             </remarks>
         </member>
+        <member name="M:System.Reactive.Linq.Observable.StartAsync(System.Func{System.Threading.Tasks.Task},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Invokes the asynchronous action, surfacing the result through an observable sequence.
+            </summary>
+            <param name="actionAsync">Asynchronous action to run.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
+            <remarks>
+            <list type="bullet">
+            <item><description>The action is started immediately, not during the subscription of the resulting sequence.</description></item>
+            <item><description>Multiple subscriptions to the resulting sequence can observe the action's outcome.</description></item>
+            </list>
+            </remarks>
+        </member>
         <member name="M:System.Reactive.Linq.Observable.StartAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task})">
             <summary>
             Invokes the asynchronous action, surfacing the result through an observable sequence.
@@ -852,6 +907,29 @@
             <param name="actionAsync">Asynchronous action to run.</param>
             <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null.</exception>
+            <remarks>
+            <list type="bullet">
+            <item><description>The action is started immediately, not during the subscription of the resulting sequence.</description></item>
+            <item><description>Multiple subscriptions to the resulting sequence can observe the action's outcome.</description></item>
+            <item><description>
+            If any subscription to the resulting sequence is disposed, the CancellationToken is set. The observer associated to the disposed
+            subscription won't see the TaskCanceledException, but other observers will. You can protect against this using the Catch operator.
+            Be careful when handing out the resulting sequence because of this behavior. The most common use is to have a single subscription
+            to the resulting sequence, which controls the CancellationToken state. Alternatively, you can control subscription behavior using
+            multicast operators.
+            </description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.Reactive.Linq.Observable.StartAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Invokes the asynchronous action, surfacing the result through an observable sequence.
+            The CancellationToken is shared by all subscriptions on the resulting observable sequence. See the remarks section for more information.
+            </summary>
+            <param name="actionAsync">Asynchronous action to run.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
             <remarks>
             <list type="bullet">
             <item><description>The action is started immediately, not during the subscription of the resulting sequence.</description></item>
@@ -875,6 +953,16 @@
             <returns>An observable sequence exposing the result of invoking the function, or an exception.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null.</exception>
         </member>
+        <member name="M:System.Reactive.Linq.Observable.FromAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Converts to asynchronous function into an observable sequence. Each subscription to the resulting sequence causes the function to be started.
+            </summary>
+            <typeparam name="TResult">The type of the result returned by the asynchronous function.</typeparam>
+            <param name="functionAsync">Asynchronous function to convert.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing the result of invoking the function, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
+        </member>
         <member name="M:System.Reactive.Linq.Observable.FromAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}})">
             <summary>
             Converts to asynchronous function into an observable sequence. Each subscription to the resulting sequence causes the function to be started.
@@ -886,6 +974,18 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null.</exception>
             <remarks>When a subscription to the resulting sequence is disposed, the CancellationToken that was fed to the asynchronous function will be signaled.</remarks>
         </member>
+        <member name="M:System.Reactive.Linq.Observable.FromAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Converts to asynchronous function into an observable sequence. Each subscription to the resulting sequence causes the function to be started.
+            The CancellationToken passed to the asynchronous function is tied to the observable sequence's subscription that triggered the function's invocation and can be used for best-effort cancellation.
+            </summary>
+            <typeparam name="TResult">The type of the result returned by the asynchronous function.</typeparam>
+            <param name="functionAsync">Asynchronous function to convert.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing the result of invoking the function, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="functionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
+            <remarks>When a subscription to the resulting sequence is disposed, the CancellationToken that was fed to the asynchronous function will be signaled.</remarks>
+        </member>
         <member name="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.Tasks.Task})">
             <summary>
             Converts to asynchronous action into an observable sequence. Each subscription to the resulting sequence causes the action to be started.
@@ -893,6 +993,15 @@
             <param name="actionAsync">Asynchronous action to convert.</param>
             <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null.</exception>
+        </member>
+        <member name="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.Tasks.Task},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Converts to asynchronous action into an observable sequence. Each subscription to the resulting sequence causes the action to be started.
+            </summary>
+            <param name="actionAsync">Asynchronous action to convert.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
         </member>
         <member name="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task})">
             <summary>
@@ -903,6 +1012,17 @@
             <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
             <remarks>When a subscription to the resulting sequence is disposed, the CancellationToken that was fed to the asynchronous function will be signaled.</remarks>
             <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null.</exception>
+        </member>
+        <member name="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Converts to asynchronous action into an observable sequence. Each subscription to the resulting sequence causes the action to be started.
+            The CancellationToken passed to the asynchronous action is tied to the observable sequence's subscription that triggered the action's invocation and can be used for best-effort cancellation.
+            </summary>
+            <param name="actionAsync">Asynchronous action to convert.</param>
+            <param name="scheduler">Scheduler on which to notify observers.</param>
+            <returns>An observable sequence exposing a Unit value upon completion of the action, or an exception.</returns>
+            <remarks>When a subscription to the resulting sequence is disposed, the CancellationToken that was fed to the asynchronous function will be signaled.</remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="actionAsync"/> is null or <paramref name="scheduler"/> is null.</exception>
         </member>
         <member name="M:System.Reactive.Linq.Observable.ToAsync``1(System.Func{``0})">
             <summary>
@@ -5083,7 +5203,7 @@
         <member name="M:System.Reactive.Linq.Observable.Wait``1(System.IObservable{``0})">
             <summary>
             Waits for the observable sequence to complete and returns the last element of the sequence.
-            If the sequence terminates with an OnError notification, the exception is throw.
+            If the sequence terminates with an OnError notification, the exception is thrown.
             </summary>
             <typeparam name="TSource">The type of the elements in the source sequence.</typeparam>
             <param name="source">Source observable sequence.</param>
@@ -5305,7 +5425,7 @@
             The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
             </summary>
             <typeparam name="TResult">The type of the elements in the produced sequence.</typeparam>
-            <param name="subscribeAsync">Asynchronous method used to implemented the resulting sequence's Subscribe method.</param>
+            <param name="subscribeAsync">Asynchronous method used to implement the resulting sequence's Subscribe method.</param>
             <returns>The observable sequence with the specified implementation for the Subscribe method.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subscribeAsync"/> is null.</exception>
             <remarks>This operator is especially useful in conjunction with the asynchronous programming features introduced in C# 5.0 and Visual Basic 11.</remarks>
@@ -5316,7 +5436,7 @@
             Creates an observable sequence from a specified asynchronous Subscribe method.
             </summary>
             <typeparam name="TResult">The type of the elements in the produced sequence.</typeparam>
-            <param name="subscribeAsync">Asynchronous method used to implemented the resulting sequence's Subscribe method.</param>
+            <param name="subscribeAsync">Asynchronous method used to implement the resulting sequence's Subscribe method.</param>
             <returns>The observable sequence with the specified implementation for the Subscribe method.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subscribeAsync"/> is null.</exception>
             <remarks>This operator is especially useful in conjunction with the asynchronous programming features introduced in C# 5.0 and Visual Basic 11.</remarks>
@@ -5327,7 +5447,7 @@
             The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
             </summary>
             <typeparam name="TResult">The type of the elements in the produced sequence.</typeparam>
-            <param name="subscribeAsync">Asynchronous method used to implemented the resulting sequence's Subscribe method, returning an Action delegate that will be wrapped in an IDisposable.</param>
+            <param name="subscribeAsync">Asynchronous method used to implement the resulting sequence's Subscribe method, returning an Action delegate that will be wrapped in an IDisposable.</param>
             <returns>The observable sequence with the specified implementation for the Subscribe method.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subscribeAsync"/> is null.</exception>
             <remarks>This operator is especially useful in conjunction with the asynchronous programming features introduced in C# 5.0 and Visual Basic 11.</remarks>
@@ -5338,7 +5458,7 @@
             Creates an observable sequence from a specified asynchronous Subscribe method.
             </summary>
             <typeparam name="TResult">The type of the elements in the produced sequence.</typeparam>
-            <param name="subscribeAsync">Asynchronous method used to implemented the resulting sequence's Subscribe method, returning an Action delegate that will be wrapped in an IDisposable.</param>
+            <param name="subscribeAsync">Asynchronous method used to implement the resulting sequence's Subscribe method, returning an Action delegate that will be wrapped in an IDisposable.</param>
             <returns>The observable sequence with the specified implementation for the Subscribe method.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subscribeAsync"/> is null.</exception>
             <remarks>This operator is especially useful in conjunction with the asynchronous programming features introduced in C# 5.0 and Visual Basic 11.</remarks>
@@ -6436,6 +6556,19 @@
             <param name="windowBoundaries">Sequence of window boundary markers. The current window is closed and a new window is opened upon receiving a boundary marker.</param>
             <returns>An observable sequence of windows.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="source"/> or <paramref name="windowBoundaries"/> is null.</exception>
+        </member>
+        <member name="M:System.Reactive.Linq.Observable.WithLatestFrom``3(System.IObservable{``0},System.IObservable{``1},System.Func{``0,``1,``2})">
+            <summary>
+            Merges two observable sequences into one observable sequence by combining each element from the first source with the latest element from the second source, if any.
+            </summary>
+            <typeparam name="TFirst">The type of the elements in the first source sequence.</typeparam>
+            <typeparam name="TSecond">The type of the elements in the second source sequence.</typeparam>
+            <typeparam name="TResult">The type of the elements in the result sequence, returned by the selector function.</typeparam>
+            <param name="first">First observable source.</param>
+            <param name="second">Second observable source.</param>
+            <param name="resultSelector">Function to invoke for each element from the first source combined with the latest element from the second source, if any.</param>
+            <returns>An observable sequence containing the result of combining each element of the first source with the latest element from the second source, if any, using the specified result selector function.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="first"/> or <paramref name="second"/> or <paramref name="resultSelector"/> is null.</exception>
         </member>
         <member name="M:System.Reactive.Linq.Observable.Zip``3(System.IObservable{``0},System.IObservable{``1},System.Func{``0,``1,``2})">
             <summary>
@@ -9655,12 +9788,31 @@
             <returns>Subject implemented using the given observer and observable.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="observer"/> or <paramref name="observable"/> is null.</exception>
         </member>
+        <member name="M:System.Reactive.Subjects.Subject.Create``1(System.IObserver{``0},System.IObservable{``0})">
+            <summary>
+            Creates a subject from the specified observer and observable.
+            </summary>
+            <typeparam name="T">The type of the elements received by the observer and produced by the observable sequence.</typeparam>
+            <param name="observer">The observer used to send messages to the subject.</param>
+            <param name="observable">The observable used to subscribe to messages sent from the subject.</param>
+            <returns>Subject implemented using the given observer and observable.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="observer"/> or <paramref name="observable"/> is null.</exception>
+        </member>
         <member name="M:System.Reactive.Subjects.Subject.Synchronize``2(System.Reactive.Subjects.ISubject{``0,``1})">
             <summary>
             Synchronizes the messages sent to the subject.
             </summary>
             <typeparam name="TSource">The type of the elements received by the subject.</typeparam>
             <typeparam name="TResult">The type of the elements produced by the subject.</typeparam>
+            <param name="subject">The subject to synchronize.</param>
+            <returns>Subject whose messages are synchronized.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="subject"/> is null.</exception>
+        </member>
+        <member name="M:System.Reactive.Subjects.Subject.Synchronize``1(System.Reactive.Subjects.ISubject{``0})">
+            <summary>
+            Synchronizes the messages sent to the subject.
+            </summary>
+            <typeparam name="TSource">The type of the elements received and produced by the subject.</typeparam>
             <param name="subject">The subject to synchronize.</param>
             <returns>Subject whose messages are synchronized.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subject"/> is null.</exception>
@@ -9676,12 +9828,69 @@
             <returns>Subject whose messages are synchronized and whose observers are notified on the given scheduler.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="subject"/> or <paramref name="scheduler"/> is null.</exception>
         </member>
+        <member name="M:System.Reactive.Subjects.Subject.Synchronize``1(System.Reactive.Subjects.ISubject{``0},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Synchronizes the messages sent to the subject and notifies observers on the specified scheduler.
+            </summary>
+            <typeparam name="TSource">The type of the elements received and produced by the subject.</typeparam>
+            <param name="subject">The subject to synchronize.</param>
+            <param name="scheduler">Scheduler to notify observers on.</param>
+            <returns>Subject whose messages are synchronized and whose observers are notified on the given scheduler.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="subject"/> or <paramref name="scheduler"/> is null.</exception>
+        </member>
         <member name="T:System.Reactive.Subjects.AsyncSubject`1">
             <summary>
             Represents the result of an asynchronous operation.
             The last value before the OnCompleted notification, or the error received through OnError, is sent to all subscribed observers.
             </summary>
             <typeparam name="T">The type of the elements processed by the subject.</typeparam>
+        </member>
+        <member name="T:System.Reactive.Subjects.SubjectBase`1">
+            <summary>
+            Base calss for objects that are both an observable sequence as well as an observer.
+            </summary>
+            <typeparam name="T">The type of the elements processed by the subject.</typeparam>
+        </member>
+        <member name="M:System.Reactive.Subjects.SubjectBase`1.Dispose">
+            <summary>
+            Releases all resources used by the current instance of the subject and unsubscribes all observers.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.SubjectBase`1.OnCompleted">
+            <summary>
+            Notifies all subscribed observers about the end of the sequence.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.SubjectBase`1.OnError(System.Exception)">
+            <summary>
+            Notifies all subscribed observers about the specified exception.
+            </summary>
+            <param name="error">The exception to send to all currently subscribed observers.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="error"/> is null.</exception>
+        </member>
+        <member name="M:System.Reactive.Subjects.SubjectBase`1.OnNext(`0)">
+            <summary>
+            Notifies all subscribed observers about the arrival of the specified element in the sequence.
+            </summary>
+            <param name="value">The value to send to all currently subscribed observers.</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.SubjectBase`1.Subscribe(System.IObserver{`0})">
+            <summary>
+            Subscribes an observer to the subject.
+            </summary>
+            <param name="observer">Observer to subscribe to the subject.</param>
+            <returns>Disposable object that can be used to unsubscribe the observer from the subject.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="observer"/> is null.</exception>
+        </member>
+        <member name="P:System.Reactive.Subjects.SubjectBase`1.HasObservers">
+            <summary>
+            Indicates whether the subject has observers subscribed to it.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Subjects.SubjectBase`1.IsDisposed">
+            <summary>
+            Indicates whether the subject has been disposed.
+            </summary>
         </member>
         <member name="M:System.Reactive.Subjects.AsyncSubject`1.#ctor">
             <summary>
@@ -9744,6 +9953,11 @@
             Indicates whether the subject has observers subscribed to it.
             </summary>
         </member>
+        <member name="P:System.Reactive.Subjects.AsyncSubject`1.IsDisposed">
+            <summary>
+            Indicates whether the subject has been disposed.
+            </summary>
+        </member>
         <member name="P:System.Reactive.Subjects.AsyncSubject`1.IsCompleted">
             <summary>
             Gets whether the AsyncSubject has completed.
@@ -9761,6 +9975,21 @@
             Initializes a new instance of the <see cref="T:System.Reactive.Subjects.BehaviorSubject`1"/> class which creates a subject that caches its last value and starts with the specified value.
             </summary>
             <param name="value">Initial value sent to observers when no other value has been received by the subject yet.</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.BehaviorSubject`1.TryGetValue(`0@)">
+            <summary>
+            Tries to get the current value or throws an exception.
+            </summary>
+            <param name="value">The initial value passed to the constructor until <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnNext(`0)"/> is called; after which, the last value passed to <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnNext(`0)"/>.</param>
+            <returns>true if a value is available; false if the subject was disposed.</returns>
+            <remarks>
+            <para>The value returned from <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.TryGetValue(`0@)"/> is frozen after <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnCompleted"/> is called.</para>
+            <para>After <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnError(System.Exception)"/> is called, <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.TryGetValue(`0@)"/> always throws the specified exception.</para>
+            <alert type="caller">
+            Calling <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.TryGetValue(`0@)"/> is a thread-safe operation, though there's a potential race condition when <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnNext(`0)"/> or <see cref="M:System.Reactive.Subjects.BehaviorSubject`1.OnError(System.Exception)"/> are being invoked concurrently.
+            In some cases, it may be necessary for a caller to use external synchronization to avoid race conditions.
+            </alert>
+            </remarks>
         </member>
         <member name="M:System.Reactive.Subjects.BehaviorSubject`1.OnCompleted">
             <summary>
@@ -9793,6 +10022,16 @@
             Unsubscribe all observers and release resources.
             </summary>
         </member>
+        <member name="P:System.Reactive.Subjects.BehaviorSubject`1.HasObservers">
+            <summary>
+            Indicates whether the subject has observers subscribed to it.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Subjects.BehaviorSubject`1.IsDisposed">
+            <summary>
+            Indicates whether the subject has been disposed.
+            </summary>
+        </member>
         <member name="P:System.Reactive.Subjects.BehaviorSubject`1.Value">
             <summary>
             Gets the current value or throws an exception.
@@ -9808,11 +10047,6 @@
             </alert>
             </remarks>
             <exception cref="T:System.ObjectDisposedException">Dispose was called.</exception>
-        </member>
-        <member name="P:System.Reactive.Subjects.BehaviorSubject`1.HasObservers">
-            <summary>
-            Indicates whether the subject has observers subscribed to it.
-            </summary>
         </member>
         <member name="T:System.Reactive.Subjects.Subject`1">
             <summary>
@@ -9860,6 +10094,11 @@
         <member name="P:System.Reactive.Subjects.Subject`1.HasObservers">
             <summary>
             Indicates whether the subject has observers subscribed to it.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Subjects.Subject`1.IsDisposed">
+            <summary>
+            Indicates whether the subject has been disposed.
             </summary>
         </member>
         <member name="T:System.Reactive.Joins.Pattern">
@@ -10366,23 +10605,10 @@
             </summary>
             <typeparam name="T">The type of the elements processed by the subject.</typeparam>
         </member>
-        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32,System.TimeSpan,System.Reactive.Concurrency.IScheduler)">
+        <member name="F:System.Reactive.Subjects.ReplaySubject`1._implementation">
             <summary>
-            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size, window and scheduler.
+            Underlying optimized implementation of the replay subject.
             </summary>
-            <param name="bufferSize">Maximum element count of the replay buffer.</param>
-            <param name="window">Maximum time length of the replay buffer.</param>
-            <param name="scheduler">Scheduler the observers are invoked on.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero. -or- <paramref name="window"/> is less than TimeSpan.Zero.</exception>
-            <exception cref="T:System.ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
-        </member>
-        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32,System.TimeSpan)">
-            <summary>
-            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size and window.
-            </summary>
-            <param name="bufferSize">Maximum element count of the replay buffer.</param>
-            <param name="window">Maximum time length of the replay buffer.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero. -or- <paramref name="window"/> is less than TimeSpan.Zero.</exception>
         </member>
         <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor">
             <summary>
@@ -10396,6 +10622,13 @@
             <param name="scheduler">Scheduler the observers are invoked on.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
         </member>
+        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size.
+            </summary>
+            <param name="bufferSize">Maximum element count of the replay buffer.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero.</exception>
+        </member>
         <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32,System.Reactive.Concurrency.IScheduler)">
             <summary>
             Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size and scheduler.
@@ -10405,12 +10638,12 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero.</exception>
         </member>
-        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32)">
+        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.TimeSpan)">
             <summary>
-            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size.
+            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified window.
             </summary>
-            <param name="bufferSize">Maximum element count of the replay buffer.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero.</exception>
+            <param name="window">Maximum time length of the replay buffer.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="window"/> is less than TimeSpan.Zero.</exception>
         </member>
         <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.TimeSpan,System.Reactive.Concurrency.IScheduler)">
             <summary>
@@ -10421,12 +10654,23 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="window"/> is less than TimeSpan.Zero.</exception>
         </member>
-        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.TimeSpan)">
+        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32,System.TimeSpan)">
             <summary>
-            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified window.
+            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size and window.
             </summary>
+            <param name="bufferSize">Maximum element count of the replay buffer.</param>
             <param name="window">Maximum time length of the replay buffer.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="window"/> is less than TimeSpan.Zero.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero. -or- <paramref name="window"/> is less than TimeSpan.Zero.</exception>
+        </member>
+        <member name="M:System.Reactive.Subjects.ReplaySubject`1.#ctor(System.Int32,System.TimeSpan,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.Reactive.Subjects.ReplaySubject`1"/> class with the specified buffer size, window and scheduler.
+            </summary>
+            <param name="bufferSize">Maximum element count of the replay buffer.</param>
+            <param name="window">Maximum time length of the replay buffer.</param>
+            <param name="scheduler">Scheduler the observers are invoked on.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="bufferSize"/> is less than zero. -or- <paramref name="window"/> is less than TimeSpan.Zero.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
         </member>
         <member name="M:System.Reactive.Subjects.ReplaySubject`1.OnNext(`0)">
             <summary>
@@ -10464,6 +10708,115 @@
             Indicates whether the subject has observers subscribed to it.
             </summary>
         </member>
+        <member name="P:System.Reactive.Subjects.ReplaySubject`1.IsDisposed">
+            <summary>
+            Indicates whether the subject has been disposed.
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Subjects.ReplaySubject`1.ReplayByTime">
+            <summary>
+            Original implementation of the ReplaySubject with time based operations (Scheduling, Stopwatch, buffer-by-time).
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Subjects.FastImmediateObserver`1">
+            <summary>
+            Specialized scheduled observer similar to a scheduled observer for the immediate scheduler.
+            </summary>
+            <typeparam name="T">Type of the elements processed by the observer.</typeparam>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._gate">
+            <summary>
+            Gate to control ownership transfer and protect data structures.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._observer">
+            <summary>
+            Observer to forward notifications to.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._queue">
+            <summary>
+            Queue to enqueue OnNext notifications into.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._queue2">
+            <summary>
+            Standby queue to swap out for _queue when transferring ownership. This allows to reuse
+            queues in case of busy subjects where the initial replay doesn't suffice to catch up.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._error">
+            <summary>
+            Exception passed to an OnError notification, if any.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._done">
+            <summary>
+            Indicates whether an OnCompleted notification was received.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._busy">
+            <summary>
+            Indicates whether the observer is busy, i.e. some thread is actively draining the
+            notifications that were queued up.
+            </summary>
+        </member>
+        <member name="F:System.Reactive.Subjects.FastImmediateObserver`1._hasFaulted">
+            <summary>
+            Indicates whether a failure occurred when the owner was draining the queue. This will
+            prevent future work to be processed.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.#ctor(System.IObserver{`0})">
+            <summary>
+            Creates a new scheduled observer that proxies to the specified observer.
+            </summary>
+            <param name="observer">Observer to forward notifications to.</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.Dispose">
+            <summary>
+            Disposes the observer.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.EnsureActive">
+            <summary>
+            Notifies the observer of pending work. This will either cause the current owner to
+            process the newly enqueued notifications, or it will cause the calling thread to
+            become the owner and start processing the notification queue.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.EnsureActive(System.Int32)">
+            <summary>
+            Notifies the observer of pending work. This will either cause the current owner to
+            process the newly enqueued notifications, or it will cause the calling thread to
+            become the owner and start processing the notification queue.
+            </summary>
+            <param name="count">The number of enqueued notifications to process (ignored).</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.OnCompleted">
+            <summary>
+            Enqueues an OnCompleted notification.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.OnError(System.Exception)">
+            <summary>
+            Enqueues an OnError notification.
+            </summary>
+            <param name="error">Error of the notification.</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.OnNext(`0)">
+            <summary>
+            Enqueues an OnNext notification.
+            </summary>
+            <param name="value">Value of the notification.</param>
+        </member>
+        <member name="M:System.Reactive.Subjects.FastImmediateObserver`1.Done">
+            <summary>
+            Terminates the observer upon receiving terminal notifications, thus preventing
+            future notifications to go out.
+            </summary>
+            <returns>Observer to send terminal notifications to.</returns>
+        </member>
         <member name="T:System.Reactive.Threading.Tasks.NamespaceDoc">
             <summary>
             The <b>System.Reactive.Threading.Tasks</b> namespace contains helpers for the conversion between tasks and observable sequences.
@@ -10483,6 +10836,16 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="task"/> is null.</exception>
             <remarks>If the specified task object supports cancellation, consider using <see cref="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task})"/> instead.</remarks>
         </member>
+        <member name="M:System.Reactive.Threading.Tasks.TaskObservableExtensions.ToObservable(System.Threading.Tasks.Task,System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Returns an observable sequence that signals when the task completes.
+            </summary>
+            <param name="task">Task to convert to an observable sequence.</param>
+            <param name="scheduler">Scheduler on which to notify observers about completion, cancellation or failure.</param>
+            <returns>An observable sequence that produces a unit value when the task completes, or propagates the exception produced by the task.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="task"/> is null or <paramref name="scheduler"/> is null.</exception>
+            <remarks>If the specified task object supports cancellation, consider using <see cref="M:System.Reactive.Linq.Observable.FromAsync(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task})"/> instead.</remarks>
+        </member>
         <member name="M:System.Reactive.Threading.Tasks.TaskObservableExtensions.ToObservable``1(System.Threading.Tasks.Task{``0})">
             <summary>
             Returns an observable sequence that propagates the result of the task.
@@ -10491,6 +10854,17 @@
             <param name="task">Task to convert to an observable sequence.</param>
             <returns>An observable sequence that produces the task's result, or propagates the exception produced by the task.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="task"/> is null.</exception>
+            <remarks>If the specified task object supports cancellation, consider using <see cref="M:System.Reactive.Linq.Observable.FromAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}})"/> instead.</remarks>
+        </member>
+        <member name="M:System.Reactive.Threading.Tasks.TaskObservableExtensions.ToObservable``1(System.Threading.Tasks.Task{``0},System.Reactive.Concurrency.IScheduler)">
+            <summary>
+            Returns an observable sequence that propagates the result of the task.
+            </summary>
+            <typeparam name="TResult">The type of the result produced by the task.</typeparam>
+            <param name="task">Task to convert to an observable sequence.</param>
+            <param name="scheduler">Scheduler on which to notify observers about completion, cancellation or failure.</param>
+            <returns>An observable sequence that produces the task's result, or propagates the exception produced by the task.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="task"/> is null or <paramref name="scheduler"/> is null.</exception>
             <remarks>If the specified task object supports cancellation, consider using <see cref="M:System.Reactive.Linq.Observable.FromAsync``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}})"/> instead.</remarks>
         </member>
         <member name="M:System.Reactive.Threading.Tasks.TaskObservableExtensions.ToTask``1(System.IObservable{``0})">
