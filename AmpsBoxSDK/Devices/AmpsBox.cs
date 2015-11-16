@@ -49,8 +49,6 @@ namespace AmpsBoxSdk.Devices
     /// Communicates with a PNNL Amps Box
     /// Non shared parts creation policy so that multiple amps boxes can exist in the system at once.
     /// </summary>
-    [Export]
-    [PartCreationPolicy(CreationPolicy.NonShared)]
     [DataContract]
     public sealed class AmpsBox : ReactiveObject, IEntity<AmpsBox>
     {
@@ -114,8 +112,7 @@ namespace AmpsBoxSdk.Devices
         /// <param name="falkorSerialPort">
         /// The falkor Serial Port.
         /// </param>
-        [ImportingConstructor]
-        public AmpsBox(IAmpsBoxCommunicator<FalkorSerialPort> ampsBoxCommunicator, IAmpsBoxFormatter formatter)
+        public AmpsBox(IAmpsBoxCommunicator ampsBoxCommunicator, IAmpsBoxFormatter formatter)
         {
             Contract.Assert(ampsBoxCommunicator != null && formatter != null);
             this.boxVersion         = ConstDefaultBoxVersion;
@@ -139,7 +136,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets or sets the object responsible for communicating directly with the Amps Box.
         /// </summary>
-        public IAmpsBoxCommunicator<FalkorSerialPort> Communicator { get; private set; }
+        public IAmpsBoxCommunicator Communicator { get; private set; }
 
         /// <summary>
         /// Gets or sets the formatter for the communicator.
@@ -251,13 +248,6 @@ namespace AmpsBoxSdk.Devices
         {
             string ampsBoxData  = string.Empty;
             ampsBoxData         += string.Format("\tDevice Settings\n");
-            foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(this.Communicator.GetInterface()))
-            {
-                ampsBoxData += string.Format(
-                    "\t\t{0}:        {1}\n",
-                    propertyDescriptor.DisplayName,
-                    propertyDescriptor.GetValue(this.Communicator.GetInterface()));
-            }
 
             ampsBoxData += "\n";
             ampsBoxData += string.Format("\tTable Settings\n");
@@ -522,7 +512,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public async Task<IReadOnlyList<string>> LoadTimeTableAsync(SignalTable table)
+        public async Task<IReadOnlyList<string>> LoadTimeTableAsync(AmpsSignalTable table)
         {
             List<string> list = new List<string>();
 
@@ -777,15 +767,24 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="IList"/>.
         /// </returns>
-        public async Task<IList<string>> StartTimeTableAsync(SignalTable table)
+        public async Task<IList<string>> StartTimeTableAsync(AmpsSignalTable table)
         {
+            if (!table.Points.Any())
+            {
+                throw new ArgumentException("Table should have elements in it!");
+            }
+
             IList<string> list = new List<string>();
 
             list.Add("\tStarting time table.");
             await this.Communicator.WriteAsync(Formatter.BuildCommunicatorCommand(
-                                                        AmpsCommandType.TimeTableStart,null));
+                AmpsCommandType.TimeTableStart, null));
 
-            this.lastTable = table.ExecutionData.Name;
+            var firstOrDefault = table[table.Points.FirstOrDefault().Name];
+            if (firstOrDefault != null)
+            {
+                this.lastTable = firstOrDefault.Name;
+            }
 
             return list;
         }
@@ -880,12 +879,12 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        private async Task LoadTimeTable(SignalTable table)
+        private async Task LoadTimeTable(AmpsSignalTable table)
         {
             // Todo: this is not covered in AEF's IAmpsBoxFormatter. Spence, your thoughts?
 
             AmpsClockConverter converter                            = new AmpsClockConverter(this.ClockFrequency);
-            ISignalTableFormatter<SignalTable, double> formatter    = new AmpsBoxSignalTableCommandFormatter();
+            ISignalTableFormatter<AmpsSignalTable, double> formatter    = new AmpsBoxSignalTableCommandFormatter();
 
             string command                                          = formatter.FormatTable(table, converter);
             this.LastTable                                          = command;

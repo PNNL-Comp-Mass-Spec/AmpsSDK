@@ -21,7 +21,7 @@ namespace AmpsBoxSdk.Data
     /// <summary>
     /// TODO The amps box signal Table command display formatter.
     /// </summary>
-    public class AmpsBoxSignalTableCommandDisplayFormatter : ISignalTableFormatter<SignalTable, double>
+    public class AmpsBoxSignalTableCommandDisplayFormatter : ISignalTableFormatter<AmpsSignalTable, double>
     {
         #region Fields
 
@@ -68,30 +68,31 @@ namespace AmpsBoxSdk.Data
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
+        public string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
         {
             string eventData = string.Empty;
-            IEnumerable<double> times = table.StartTimes;
-            times = times.OrderBy(x => x);
 
             TimeUnits units = TimeUnits.Ticks;
-            foreach (double time in times)
+            foreach (var point in table.Points)
             {
-                IEnumerable<SignalElement> signals = table.GetSignals(time);
                 StringBuilder timeBuilder = new StringBuilder();
 
-                timeBuilder.AppendFormat("\tTime\t{0:F0}\n", converter.ConvertTo(table.ExecutionData.TimeUnits, units, time));
+           //     timeBuilder.AppendFormat("\tTime\t{0:F0}\n", converter.ConvertTo(table.ExecutionData.TimeUnits, units, time));
 
-                foreach (var signal in signals)
+                foreach (var signal in point.DcBiasElements)
                 {
-                    var output = signal as AnalogStepElement;
-                    if (output != null)
-                    {
-                        timeBuilder.AppendFormat(
-                            "\t\tChannel\t{0}\tVoltage\t{1:F0}\n", 
-                            signal.Channel, 
-                            output.Value);
-                    }
+                    timeBuilder.AppendFormat(
+                           "\t\tChannel\t{0}\tVoltage\t{1:F0}\n",
+                           signal.Address,
+                           signal.Data);
+                }
+
+                foreach (var digitalOutputElement in point.DigitalOutputElements)
+                {
+                    timeBuilder.AppendFormat(
+                           "\t\tChannel\t{0}\tTTL State\t{1:F0}\n",
+                           digitalOutputElement.Address,
+                           digitalOutputElement.Data);
                 }
 
                 string events = timeBuilder.ToString().TrimEnd(':');
@@ -102,7 +103,6 @@ namespace AmpsBoxSdk.Data
 
             return string.Format(
                 this.m_commandFormat, 
-                converter.ConvertTo(table.ExecutionData.TimeUnits, units, table.Length), 
                 eventData);
         }
 

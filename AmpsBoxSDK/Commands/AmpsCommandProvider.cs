@@ -62,6 +62,8 @@ namespace AmpsBoxSdk.Commands
         /// </summary>
         protected Dictionary<AmpsCommandType, AmpsCommand> m_commands;
 
+        protected Dictionary<MipsCommandType, AmpsCommand> mipsCommands; 
+
         #endregion
 
         #region Constructors and Destructors
@@ -73,6 +75,7 @@ namespace AmpsBoxSdk.Commands
         protected AmpsCommandProvider()
         {
             this.m_commands                 = new Dictionary<AmpsCommandType, AmpsCommand>();
+            this.mipsCommands = new Dictionary<MipsCommandType, AmpsCommand>();
             this.encoding                   = new ASCIIEncoding();
             this.ErrorResponse              = 0x15;
             this.InternalClock              = DefaultInternalClock;
@@ -147,6 +150,27 @@ namespace AmpsBoxSdk.Commands
             }
 
             return this.m_commands[commandType];
+        }
+
+        /// <summary>
+        /// Returns the command if it exists.
+        /// </summary>
+        /// <param name="commandType">
+        /// The command Type.
+        /// </param>
+        /// <returns>
+        /// String version of the command
+        /// </returns>
+        public AmpsCommand GetCommand(MipsCommandType commandType)
+        {
+            bool hasCommand = this.mipsCommands.ContainsKey(commandType);
+            if (!hasCommand)
+            {
+                throw new AmpsCommandNotSupported(
+                    string.Format("The command {0} is not supported for the version of firmware loaded.", commandType));
+            }
+
+            return this.mipsCommands[commandType];
         }
 
         /// <summary>

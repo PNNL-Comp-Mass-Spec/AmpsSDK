@@ -7,27 +7,19 @@ using System.Threading.Tasks;
 namespace AmpsBoxSdk.Devices
 {
     using System.ComponentModel.Composition;
+    using System.IO.Ports;
 
     [InheritedExport]
-    public interface IAmpsBoxCommunicator<T>
+    public interface IAmpsBoxCommunicator
     {
         #region Methods
-        /// <summary>
-        /// Read from the device asynchronously.
-        /// </summary>
-        /// <returns></returns>
-        Task<string> ReadAsync(string response);
         /// <summary>
         /// Write to the device asynchronously.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
         Task<string> WriteAsync(string command);
-        /// <summary>
-        /// Read from the device.
-        /// </summary>
-        /// <returns></returns>
-        Task<string> Read();
+
         /// <summary>
         /// Write to the device.
         /// </summary>
@@ -51,17 +43,19 @@ namespace AmpsBoxSdk.Devices
         /// Open communication
         /// </summary>
         /// <returns>True on success.</returns>
-        bool Open();
+        void Open(string portName, int baudRate, Parity parity, StopBits stopBits, Handshake handShake, int dataBits);
         /// <summary>
         /// Close communication.
         /// </summary>
         /// <returns>True on success.</returns>
-        bool Close();
+        void Close();
+
         #endregion
 
         #region Properties
 
-        T GetInterface();
+        string PortName { get; }
+
         /// <summary>
         /// Get or set read timeout for commincator.
         /// </summary>

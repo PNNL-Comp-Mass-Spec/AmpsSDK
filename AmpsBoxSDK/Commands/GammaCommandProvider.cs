@@ -212,6 +212,32 @@ namespace AmpsBoxSdk.Commands
 
         private const string SetName = "SNAME";
 
+        // MIPS Commands
+
+        private const string GetTWaveFreq = "GTWF";
+
+        private const string SetTWaveFreq = "STWF";
+
+        private const string GetTWavePulseVoltage = "GTWPV";
+
+        private const string SetTWavePulseVoltage = "STWPV";
+
+        private const string GetGuardOneVoltage = "GTW1V";
+
+        private const string SetGuardOneVoltage = "STW1V";
+
+        private const string GetGuardTwoVoltage = "GTW2V";
+
+        private const string SetGuardTwoVoltage = "STW2V";
+
+        private const string GetOutputSequence = "GTWSEQ";
+
+        private const string SetOutputSequence = "STWSEQ";
+
+        private const string GetTWaveOutputDirection = "GTWDIR";
+
+        private const string SetTWaveOutputDirection = "STWDIR";
+
         #endregion
 
         // DIO Commands
@@ -243,7 +269,12 @@ namespace AmpsBoxSdk.Commands
         /// </param>
         protected void AddCommand(AmpsCommandType type, string command)
         {
-            this.m_commands.Add(type, new AmpsCommand(type, command));
+            this.m_commands.Add(type, new AmpsCommand(command));
+        }
+
+        protected void AddCommand(MipsCommandType type, string command)
+        {
+          //  this.mipsCommands.Add(type, new AmpsCommand());
         }
 
         /// <summary>
@@ -301,6 +332,8 @@ namespace AmpsBoxSdk.Commands
             this.AddCommand(AmpsCommandType.SetName, SetName);
 
             this.AddCommand(AmpsCommandType.GetName, GetName);
+
+          //  this.AddCommand();
         }
 
         #endregion

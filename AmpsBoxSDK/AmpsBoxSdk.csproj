@@ -95,8 +95,8 @@
     <Reference Include="System">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.1\System.dll</HintPath>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.1.36.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.1.36\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.1.37-beta-23019\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.ComponentModel.Composition">
@@ -143,8 +143,11 @@
     <Compile Include="Commands\AmpsCommandFactory.cs" />
     <Compile Include="Commands\AmpsCommandNotSupported.cs" />
     <Compile Include="Commands\AmpsCommandType.cs" />
+    <Compile Include="Commands\ClockSync.cs" />
     <Compile Include="Commands\GammaCommandProvider.cs" />
     <Compile Include="Commands\IAmpsBoxFormatter.cs" />
+    <Compile Include="Commands\MipsCommandType.cs" />
+    <Compile Include="Commands\TWaveOutputDirection.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
@@ -166,6 +169,9 @@
     <Compile Include="Devices\ClockType.cs" />
     <Compile Include="Devices\ErrorCodes.cs" />
     <Compile Include="Devices\IAmpsBoxCommunicator.cs" />
+    <Compile Include="Devices\IDcBiasBoard.cs" />
+    <Compile Include="Devices\IRfBoard.cs" />
+    <Compile Include="Devices\ISourceBoard.cs" />
     <Compile Include="Devices\Responses.cs" />
     <Compile Include="Devices\StartTriggerTypes.cs" />
     <Compile Include="Devices\AmpsClockConverter.cs" />
@@ -188,8 +194,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y "$(TargetDir)*" "$(SolutionDir)lib\SDK\$(ProjectName)\"
-</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

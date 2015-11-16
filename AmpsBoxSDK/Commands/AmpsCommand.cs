@@ -28,10 +28,9 @@ namespace AmpsBoxSdk.Commands
         /// <param name="isSupported">
         /// TODO The is supported.
         /// </param>
-        public AmpsCommand(AmpsCommandType type, string value, bool isSupported)
+        public AmpsCommand(string value, bool isSupported)
         {
             this.Value = value;
-            this.CommandType = type;
             this.IsSupported = isSupported;
             this.ExpectedResponse = 0x06;
         }
@@ -45,8 +44,8 @@ namespace AmpsBoxSdk.Commands
         /// <param name="value">
         /// TODO The value.
         /// </param>
-        public AmpsCommand(AmpsCommandType type, string value)
-            : this(type, value, true)
+        public AmpsCommand(string value)
+            : this(value, true)
         {
             this.ExpectedResponse = 0x06;
         }
@@ -54,11 +53,6 @@ namespace AmpsBoxSdk.Commands
         #endregion
 
         #region Public Properties
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public AmpsCommandType CommandType { get; set; }
 
         /// <summary>
         /// Gets or sets the expected response

@@ -22,7 +22,7 @@ namespace AmpsBoxSdk.Data
     /// <summary>
     /// TODO The amps box signal Table command formatter.
     /// </summary>
-    public class AmpsBoxSignalTableCommandFormatter : ISignalTableFormatter<SignalTable, double>
+    public class AmpsBoxSignalTableCommandFormatter : ISignalTableFormatter<AmpsSignalTable, double>
     {
         #region Fields
 
@@ -52,141 +52,115 @@ namespace AmpsBoxSdk.Data
 
         #region Public Methods and Operators
 
-        /// <summary>
-        /// Formats a Table into the AMPS box readable time Table.
-        /// </summary>
-        /// <param name="table">
-        /// </param>
-        /// <param name="converter">
-        /// The converter.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
-        {
-          // var waveformTables = 
-          //  Process(rootTable, converter);
-            eventData = eventData.Trim(',');
-
-            int count = 0;
-            foreach (var str in eventData)
-            {
-                if (str == '[' || str == ']')
-                {
-                    count++;
-                }
-            }
-
-            if (count % 2 == 1)
-            {
-                eventData = eventData.Remove(eventData.LastIndexOf("]"));
-            }
-
-            var iterationData = string.Format("{0}{1}{2}{3}", 0, ":", table.ExecutionData.Iterations, ",");
-            
-          //  var startTime = rootTable.ExecutionData.StartTime;
-         //   var stringToReturn = string.Format(this.commandFormat, eventData, startTime + ":[", "]", iterationData);
-            return string.Empty;
-        }
-
         #endregion
 
-        /// <summary>
-        /// Process takes a node and converter and seeks to determine a base condition or recurse through the graph building up the nested signal table string.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="converter"></param>
-        private void Process(SignalTable node, ITimeUnitConverter<double> converter)
+        public string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
         {
-            //var waveformTimes = new Queue<double>(node.StartTimes.OrderBy(x => x)); // Generate queue based on start times.
-            //var children = node.Children.Select(x => ((SignalTable)x).ExecutionData.StartTime).OrderBy(x => x);
-            //var childrenStartTimes = new Queue<double>(children); // Generate queue based on start times of children.
-            
+            string sTable = string.Empty;
+            string tableName = "A";
 
-           // // Loop that checks between the waveform start times and the children signal table start times. If the waveform time is less, then that branch is selected.
-           // // If the children start time is less, then the branch to handle that is taken. This may require some degree of recursion.
-           // while (waveformTimes.Any() || childrenStartTimes.Any())
-           // {
-           //     var timeBuilder = new StringBuilder();
-           //     if (childrenStartTimes.Any() && waveformTimes.Any())
-           //     {
-           //         if (waveformTimes.Peek() < childrenStartTimes.Peek())
-           //         {
-           //             AppendWaveform(waveformTimes, node, converter, timeBuilder);
-           //         }
-           //         else if (childrenStartTimes.Peek() < waveformTimes.Peek())
-           //         {
-           //             AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
-           //         }
-           //     }
-           //     else if (waveformTimes.Any())
-           //     {
-           //         AppendWaveform(waveformTimes, node, converter, timeBuilder);
-           //     }
+            var points = table.Points.ToList();
+            for (int i = 0; i < points.Count; i++)
+            {
+                // TODO: Move this if / else into separate function calls to speed up for loop evaluation. 
+                if (i == 0)
+                {
+                    var count = GetLoopCount(points, points[i]);
+                    if (count.HasValue)
+                    {
+                        sTable += "0:[" + tableName;
+                        sTable += ":" + count.Value + "," + points[i].TimePoint;
+                        tableName = ((int)tableName[0] + 1).ToString();
+                    }
+                    else
+                    {
+                        sTable += points[i].TimePoint;
+                    }
 
-           //     else if (childrenStartTimes.Any())
-           //     {
-           //         AppendSignalTable(childrenStartTimes, node, converter, timeBuilder);
-           //     }
-           // }
-           //eventData = eventData.Trim(',');
-           //eventData += "],";
+                    foreach (var dcBiasElement in points[i].DcBiasElements)
+                    {
+                        if (dcBiasElement.Data != 0)
+                        {
+                            sTable += ":" + dcBiasElement.Address + ":" + Convert.ToInt32(dcBiasElement.Data);
+                        }
+                    }
 
+                    foreach (var digitalOutputElement in points[i].DigitalOutputElements)
+                    {
+                        if (digitalOutputElement.Data)
+                        {
+                            sTable += ":" + digitalOutputElement.Address +  ":" + Convert.ToInt32(digitalOutputElement.Data);
+                        }
+                    }
+                }
+
+                else
+                {
+                    var count = GetLoopCount(points, points[i]);
+                    if (count.HasValue)
+                    {
+                        sTable += "," + points[i].TimePoint + ":[" + tableName + ":";
+                        sTable += count.Value + ",0";
+                        tableName = char.ToString((char)(tableName[0] + 1));
+                    }
+
+                    else
+                    {
+                        sTable += "," + points[i].TimePoint;
+                    }
+
+                    foreach (var dcBiasElement in points[i].DcBiasElements)
+                    {
+                        var point =
+                            points[i - 1].DcBiasElements.FirstOrDefault(
+                                x => x.Address.SameValueAs(dcBiasElement.Address));
+                        if (point != null)
+                        {
+                            if (!dcBiasElement.Data.SameValueAs(point.Data))
+                            {
+                                sTable += ":" + dcBiasElement.Address + ":" + dcBiasElement.Data;
+                            }
+                        }
+                    }
+
+                    foreach (var digitalOutputElement in points[i].DigitalOutputElements)
+                    {
+                        var point =
+                            points[i - 1].DigitalOutputElements.FirstOrDefault(
+                                x => x.Address.SameValueAs(digitalOutputElement.Address));
+                        if (point != null)
+                        {
+                            sTable += ":" + digitalOutputElement.Address + Convert.ToInt32(digitalOutputElement.Data);
+                        }
+                    }
+
+                   
+                }
+
+                if (points[i].Loop)
+                {
+                    sTable += "]";
+                }
+
+            }
+
+            return sTable;
         }
 
-        private void AppendWaveform(Queue<double> waveformTimes, SignalTable node, ITimeUnitConverter<double> converter, StringBuilder timeBuilder)
+        private int? GetLoopCount(List<PsgPoint> points, PsgPoint point)
         {
-            var time = waveformTimes.Dequeue();
-            int maxTime = 0;
-
-            var signals = node.GetSignals(time).ToList();
-
-            int intTime =
-                Convert.ToInt32(
-                    converter.ConvertTo(node.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-            if (intTime > maxTime)
+            var reference = ContainsReference(points, point);
+            if (reference != null)
             {
-                maxTime = intTime;
+                return reference.LoopCount;
             }
-
-            timeBuilder.AppendFormat("{0:F0}:", intTime);
-            var analogStepEvents = signals.OfType<RampElement>();
-
-            foreach (var signal in analogStepEvents)
-            {
-                timeBuilder.AppendFormat("{0}:{1:F0}:", signal.Channel, signal.EndValue);
-            }
-
-            char[] ap = Enumerable.Range('A', 'S' - 'A' + 1).Select(i => (char)i).ToArray();
-            var digitalStepEvents = signals.OfType<DigitalStepElement>();
-            foreach (var digitalStepEvent in digitalStepEvents)
-            {
-                var state = Convert.ToInt32(digitalStepEvent.Value);
-                timeBuilder.AppendFormat(
-                    "{0}:{1}:",
-                    ap[int.Parse(digitalStepEvent.Channel.ChannelIdentifier)],
-                    state);
-            }
-
-            string events = timeBuilder.ToString().TrimEnd(':');
-            eventData += events;
-            eventData += ",";
+            return null;
         }
 
-        private void AppendSignalTable(Queue<double> childrenStartTimes, SignalTable node, ITimeUnitConverter<double> converter, StringBuilder timeBuilder)
+        private PsgPoint ContainsReference(List<PsgPoint> points, PsgPoint point)
         {
-            //var time = childrenStartTimes.Dequeue();
-            //var signalTable =
-            //    node.Children.OfType<SignalTable>().FirstOrDefault(x => x.ExecutionData.StartTime == time);
-
-            //int intTime =
-            //  Convert.ToInt32(
-            //      converter.ConvertTo(signalTable.ExecutionData.TimeUnits, TimeUnits.Ticks, time));
-            //tableName++;
-            //timeBuilder.AppendFormat("{0}:[{1}:{2},", intTime, tableName, signalTable.ExecutionData.Iterations);
-            //eventData += timeBuilder.ToString();
-            //Process(signalTable, converter);
+            var reference = points.FirstOrDefault(x => x.LoopName == point.Name);
+            return reference;
         }
     }
 }

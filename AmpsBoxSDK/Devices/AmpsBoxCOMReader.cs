@@ -17,7 +17,7 @@ namespace AmpsBoxSdk.Devices
     using FalkorSDKInterop;
 
     [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class AmpsBoxCOMReader : IAmpsBoxCommunicator<FalkorSerialPort>
+    public class AmpsBoxCOMReader : IAmpsBoxCommunicator
     {
         #region Constants
         /// <summary>
@@ -35,10 +35,6 @@ namespace AmpsBoxSdk.Devices
         #endregion
 
         #region Members
-        /// <summary>
-        /// Serial port used. 
-        /// </summary>
-        private FalkorSerialPort                falkorPort;
 
         private TimeoutSerialPort com;
         /// <summary>
@@ -60,13 +56,12 @@ namespace AmpsBoxSdk.Devices
         /// Default constuctor.
         /// </summary>
         [ImportingConstructor]
-        public AmpsBoxCOMReader(FalkorSerialPort port)
+        public AmpsBoxCOMReader()
         {
             this.sync               = new object();
             this.commandProvider    = AmpsCommandFactory.CreateCommandProvider(ConstDefaultBoxVersion);
             this.boxVersion         = ConstDefaultBoxVersion;
             this.IsEmulated         = false;
-            Port                    = port;
             this.com = new TimeoutSerialPort();
             this.com.SetTimeout(1);
         }
@@ -107,6 +102,10 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<string> WriteAsync(string command)
         {
+            if (com.IsOpen)
+            {
+
+            }
             LatestWrite = command;
  
             try
@@ -141,58 +140,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<string> Read()
         {
-            // Emulate/copy readline, 
-            byte[] buffer           = new byte[4096];
-            int actualLength        = 0;
-            string response         = String.Empty;
-            string stringToReturn   = String.Empty;
-            try
-            {
-                const int Offset    = 0;
-                Stopwatch watch     = Stopwatch.StartNew();
-              
-                while (!stringToReturn.Contains("\r\n") && watch.ElapsedMilliseconds < 1000)
-                {
-                    actualLength        = await falkorPort.Port.BaseStream.ReadAsync(buffer, Offset, buffer.Length);
-                    byte[] received     = new byte[actualLength];
-                    Buffer.BlockCopy(buffer, Offset, received, Offset, actualLength);
-                    stringToReturn      += System.Text.Encoding.ASCII.GetString(received);
-                    bool validResponse  = await this.IsValidCommunicationAsync(stringToReturn);
-                    if (!validResponse)
-                    {
-                        var error   = await this.GetError();
-                        return error.ToString();
-                    }
-
-                    if (stringToReturn.Contains(this.commandProvider.EndOfLine))
-                    {
-                        watch.Stop();
-                        return stringToReturn;
-                    }
-                }
-                watch.Stop();
-            }
-
-            catch (InvalidOperationException ex)
-            {
-            }
-
-            catch (NotSupportedException ex)
-            {
-            }
-
-            catch (ArgumentNullException ex)
-            {
-            }
-
-            catch (ArgumentOutOfRangeException ex)
-            {
-            }
-
-            catch (ArgumentException ex)
-            {
-            }
-            return string.Empty;
+            return await Task.FromResult("");
         }
         /// <summary>
         /// Write to the device.
@@ -201,7 +149,37 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public string Write(string command)
         {
-            return "";
+            if (com.IsOpen)
+            {
+                
+            }
+            LatestWrite = command;
+
+            try
+            {
+                var commandToWrite = command + "\r\n";
+
+                var response = com.Write(commandToWrite);
+
+                return response;
+
+            }
+            catch (IOException ioException)
+            {
+                throw new IOException(ioException.Message, ioException.InnerException);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex.InnerException);
+            }
+            catch (TimeoutException timeoutException)
+            {
+                throw new TimeoutException(timeoutException.Message, timeoutException.InnerException);
+            }
+            catch (ArgumentNullException exception)
+            {
+                throw new ArgumentNullException(exception.Message, exception.InnerException);
+            }
         }
         /// <summary>
         /// Determine if the response is valid.
@@ -248,34 +226,30 @@ namespace AmpsBoxSdk.Devices
         /// Open communication
         /// </summary>
         /// <returns>True on success.</returns>
-        public bool Open()
+        public void Open(string portName, int baudRate, Parity parity, StopBits stopBits, Handshake handShake, int dataBits)
         {
             if (this.IsEmulated)
             {
-                return true;
+                return;
             }
 
             lock (this.sync)
             {
                 if (!this.com.IsOpen)
                 {
-                 //   this.falkorPort.Port.ReadTimeout = ConstReadTimeout;
-                 //   this.falkorPort.Port.WriteTimeout = ConstWriteTimeout;
-                 //   this.falkorPort.Open();
-                 this.com.Open(this.Port.Port.PortName, this.Port.BaudRate, this.Port.Parity, this.Port.StopBits, this.Port.Handshake, this.Port.DataBits);
+                   this.com.Open(portName, baudRate, parity, stopBits, handShake, dataBits);
                 }
             }
-            return this.com.IsOpen;
         }
         /// <summary>
         /// Close communication
         /// </summary>
         /// <returns>True on success.</returns>
-        public bool Close()
+        public void Close()
         {
             if (this.IsEmulated)
             {
-                return true;
+                return;
             }
 
             lock(this.sync) 
@@ -285,13 +259,9 @@ namespace AmpsBoxSdk.Devices
                     this.com.Close();
                 }
             }
-            return this.com.IsOpen;
         }
 
-        public FalkorSerialPort GetInterface()
-        {
-            return this.Port;
-        }
+        public string PortName { get; private set; }
 
         /// <summary>
         ///// Parses a response from the Amps Box.
@@ -332,24 +302,6 @@ namespace AmpsBoxSdk.Devices
             get
             {
                 return com.IsOpen;
-            }
-        }
-        /// <summary>
-        /// Gets the serial port
-        /// </summary>
-        public FalkorSerialPort Port
-        {
-            get
-            {
-                return this.falkorPort;
-            }
-
-            set
-            {
-                lock (this.sync)
-                {
-                    this.falkorPort = value;
-                }
             }
         }
         /// <summary>

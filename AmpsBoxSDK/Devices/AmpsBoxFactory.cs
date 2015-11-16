@@ -1,5 +1,7 @@
 ﻿namespace AmpsBoxSdk.Devices
 {
+    using System.ComponentModel.Composition;
+
     using AmpsBoxSdk.Commands;
 
     using FalkorSDK.IO.Ports;
@@ -11,9 +13,9 @@
     public static class AmpsBoxFactory
     {
         //TODO: Make the AmpsBoxFactory the primary way of constructing an AmpsBox object, remove MEF construction methods. 
-        public static AmpsBox NewAmpsBox(IAmpsBoxCommunicator<FalkorSerialPort> communicator, IAmpsBoxFormatter formatter)
+        public static AmpsBox NewAmpsBox()
         {
-            return new AmpsBox(communicator, formatter);
+            return new AmpsBox(new AmpsBoxCOMReader(), new AmpsCOMCommandFormatter());
         }
     }
 }

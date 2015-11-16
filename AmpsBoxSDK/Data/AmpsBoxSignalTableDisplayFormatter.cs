@@ -9,6 +9,7 @@
 
 namespace AmpsBoxSdk.Data
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -21,7 +22,7 @@ namespace AmpsBoxSdk.Data
     /// <summary>
     /// TODO The amps box signal Table display formatter.
     /// </summary>
-    public class AmpsBoxSignalTableDisplayFormatter : ISignalTableFormatter<SignalTable, double>
+    public class AmpsBoxSignalTableDisplayFormatter : ISignalTableFormatter<AmpsSignalTable, double>
     {
         #region Public Methods and Operators
 
@@ -36,40 +37,42 @@ namespace AmpsBoxSdk.Data
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public string FormatTable(SignalTable table, ITimeUnitConverter<double> converter)
+        public string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
         {
-            IEnumerable<double> times = table.StartTimes;
-            times = times.OrderBy(x => x);
-            StringBuilder timeBuilder = new StringBuilder();
+            //IEnumerable<double> times = table.StartTimes;
+            //times = times.OrderBy(x => x);
+            //StringBuilder timeBuilder = new StringBuilder();
 
-            TimeUnits units = TimeUnits.Seconds;
+            //TimeUnits units = TimeUnits.Seconds;
 
-            foreach (double time in times)
-            {
-                IEnumerable<SignalElement> signals = table.GetSignals(time);
+            //foreach (double time in times)
+            //{
+            //    IEnumerable<SignalElement> signals = table.GetSignals(time);
 
-                timeBuilder.AppendFormat("\t-----------------------------------------------\n");
+            //    timeBuilder.AppendFormat("\t-----------------------------------------------\n");
 
-                foreach (var signal in signals)
-                {
-                    double xTime = converter.ConvertTo(table.ExecutionData.TimeUnits, units, signal.StartTime);
+            //    foreach (var signal in signals)
+            //    {
+            //        double xTime = converter.ConvertTo(table.ExecutionData.TimeUnits, units, signal.StartTime);
 
-                    var output = signal as AnalogStepElement;
-                    if (output != null)
-                    {
-                        timeBuilder.AppendFormat("\t{0}\t{1}\t{2:F0}\n", xTime, signal.Channel, output.Value);
-                    }
-                }
-            }
+            //        var output = signal as AnalogStepElement;
+            //        if (output != null)
+            //        {
+            //            timeBuilder.AppendFormat("\t{0}\t{1}\t{2:F0}\n", xTime, signal.Channel, output.Value);
+            //        }
+            //    }
+            //}
 
-            string eventData = timeBuilder.ToString();
+            //string eventData = timeBuilder.ToString();
 
-            return string.Format(
-                "Table: {0}\n\tLength:\t{1}\n\tTime Units:\t{2}\n{3}", 
-                table.ExecutionData.Name, 
-                converter.ConvertTo(table.ExecutionData.TimeUnits, units, table.Length), 
-                units, 
-                eventData);
+            //return string.Format(
+            //    "Table: {0}\n\tLength:\t{1}\n\tTime Units:\t{2}\n{3}", 
+            //    table.ExecutionData.Name, 
+            //    converter.ConvertTo(table.ExecutionData.TimeUnits, units, table.Length), 
+            //    units, 
+            //    eventData);
+
+            throw new NotImplementedException();
         }
 
         #endregion
