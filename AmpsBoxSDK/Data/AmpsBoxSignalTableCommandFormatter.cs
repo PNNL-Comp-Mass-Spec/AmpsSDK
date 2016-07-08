@@ -22,41 +22,21 @@ namespace AmpsBoxSdk.Data
     /// <summary>
     /// TODO The amps box signal Table command formatter.
     /// </summary>
-    public class AmpsBoxSignalTableCommandFormatter : ISignalTableFormatter<AmpsSignalTable, double>
+    public static class AmpsBoxSignalTableCommandFormatter 
     {
-        #region Fields
-
-        /// <summary>
-        /// Table command to format
-        /// </summary>
-        private readonly string commandFormat;
-
-        private string eventData = string.Empty;
-
-        private int tableName;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AmpsBoxSignalTableCommandFormatter"/> class.
-        /// </summary>
-        public AmpsBoxSignalTableCommandFormatter()
-        {
-            this.commandFormat = "STBLDAT;{1}{3}{0}{2};";
-            this.tableName = 1;
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         #endregion
 
-        public string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
+        /// <summary>
+        /// Formats a provided amps signal table into a string command that can be interpreted by an AMPS / MIPS box.
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="converter"></param>
+        /// <returns>Command string ready to be sent to AMPS / MIPS box.</returns>
+        public static string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
         {
-            string sTable = string.Empty;
+            StringBuilder builder = new StringBuilder();
             string tableName = "A";
 
             var points = table.Points.ToList();
@@ -68,29 +48,24 @@ namespace AmpsBoxSdk.Data
                     var count = GetLoopCount(points, points[i]);
                     if (count.HasValue)
                     {
-                        sTable += "0:[" + tableName;
-                        sTable += ":" + count.Value + "," + points[i].TimePoint;
+                        builder.Append("0:[" + tableName);
+                        builder.Append(":" + count.Value + "," + points[i].TimePoint);
                         tableName = ((int)tableName[0] + 1).ToString();
                     }
                     else
                     {
-                        sTable += points[i].TimePoint;
+                        builder.Append(points[i].TimePoint);
                     }
 
                     foreach (var dcBiasElement in points[i].DcBiasElements)
                     {
-                        if (dcBiasElement.Data != 0)
-                        {
-                            sTable += ":" + dcBiasElement.Address + ":" + Convert.ToInt32(dcBiasElement.Data);
-                        }
+                        builder.Append(":" + dcBiasElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(dcBiasElement.Voltage));
                     }
 
                     foreach (var digitalOutputElement in points[i].DigitalOutputElements)
                     {
-                        if (digitalOutputElement.Data)
-                        {
-                            sTable += ":" + digitalOutputElement.Address +  ":" + Convert.ToInt32(digitalOutputElement.Data);
-                        }
+                        builder.Append(
+                                  ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
                     }
                 }
 
@@ -99,27 +74,34 @@ namespace AmpsBoxSdk.Data
                     var count = GetLoopCount(points, points[i]);
                     if (count.HasValue)
                     {
-                        sTable += "," + points[i].TimePoint + ":[" + tableName + ":";
-                        sTable += count.Value + ",0";
+                        builder.Append("," + points[i].TimePoint + ":[" + tableName + ":");
+
+                        builder.Append(count.Value + ",0");
                         tableName = char.ToString((char)(tableName[0] + 1));
                     }
 
                     else
                     {
-                        sTable += "," + points[i].TimePoint;
+                        builder.Append("," + points[i].TimePoint);
                     }
 
                     foreach (var dcBiasElement in points[i].DcBiasElements)
                     {
                         var point =
                             points[i - 1].DcBiasElements.FirstOrDefault(
-                                x => x.Address.SameValueAs(dcBiasElement.Address));
+                                x => x.ChannelIdentifier.SameValueAs(dcBiasElement.ChannelIdentifier));
                         if (point != null)
                         {
-                            if (!dcBiasElement.Data.SameValueAs(point.Data))
+                            if (Math.Abs(dcBiasElement.Voltage - point.Voltage) > 1e-6)
                             {
-                                sTable += ":" + dcBiasElement.Address + ":" + dcBiasElement.Data;
+                                builder.Append(":" + dcBiasElement.ChannelIdentifier.Address + ":" + dcBiasElement.Voltage);
                             }
+                        }
+
+                        else
+                        {
+                            builder.Append(
+                            ":" + dcBiasElement.ChannelIdentifier.Address + ":" + dcBiasElement.Voltage);
                         }
                     }
 
@@ -127,40 +109,54 @@ namespace AmpsBoxSdk.Data
                     {
                         var point =
                             points[i - 1].DigitalOutputElements.FirstOrDefault(
-                                x => x.Address.SameValueAs(digitalOutputElement.Address));
+                                x => x.ChannelIdentifier.SameValueAs(digitalOutputElement.ChannelIdentifier));
                         if (point != null)
                         {
-                            sTable += ":" + digitalOutputElement.Address + Convert.ToInt32(digitalOutputElement.Data);
+                            if (digitalOutputElement.State == point.State)
+                            {
+                                builder.Append(
+                              ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
+                            }
+                        }
+                        else
+                        {
+                            builder.Append(
+                            ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
                         }
                     }
 
                    
                 }
 
-                if (points[i].Loop)
+                if (points[i].PsgPointLoopData.DoLoop)
                 {
-                    sTable += "]";
+                    builder.Append("]");
                 }
 
             }
-
-            return sTable;
+            var stringToReturn = string.Format("{0};{1};", "STBLDAT", builder.ToString());
+            return stringToReturn;
         }
 
-        private int? GetLoopCount(List<PsgPoint> points, PsgPoint point)
+        /// <summary>
+        /// Checks loop data and returns the loop count for a given psg point.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="point"></param>
+        /// <returns>The loop count for a matching psg point that contains the loop name of the provided psg point.</returns>
+        private static int? GetLoopCount(List<PsgPoint> points, PsgPoint point)
         {
-            var reference = ContainsReference(points, point);
-            if (reference != null)
+            foreach (var psgPoint in points)
             {
-                return reference.LoopCount;
+                var psgPointLoopData = psgPoint.PsgPointLoopData;
+                if (psgPointLoopData.DoLoop && psgPointLoopData.LoopToName.Equals(point.Name))
+                {
+                    return psgPointLoopData.LoopCount;
+                }
             }
             return null;
         }
 
-        private PsgPoint ContainsReference(List<PsgPoint> points, PsgPoint point)
-        {
-            var reference = points.FirstOrDefault(x => x.LoopName == point.Name);
-            return reference;
-        }
+
     }
 }

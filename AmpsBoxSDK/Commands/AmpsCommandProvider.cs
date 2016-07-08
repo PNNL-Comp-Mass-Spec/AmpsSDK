@@ -9,12 +9,15 @@
 
 namespace AmpsBoxSdk.Commands
 {
+    using System;
     using System.Collections.Generic;
+    using System.ComponentModel.Composition;
     using System.Text;
 
     /// <summary>
     /// Provides a resource with commands to communicate to the AMPS Box with
     /// </summary>
+    [InheritedExport]
     public abstract class AmpsCommandProvider
     {
         /// <summary>
@@ -62,8 +65,6 @@ namespace AmpsBoxSdk.Commands
         /// </summary>
         protected Dictionary<AmpsCommandType, AmpsCommand> m_commands;
 
-        protected Dictionary<MipsCommandType, AmpsCommand> mipsCommands; 
-
         #endregion
 
         #region Constructors and Destructors
@@ -75,7 +76,6 @@ namespace AmpsBoxSdk.Commands
         protected AmpsCommandProvider()
         {
             this.m_commands                 = new Dictionary<AmpsCommandType, AmpsCommand>();
-            this.mipsCommands = new Dictionary<MipsCommandType, AmpsCommand>();
             this.encoding                   = new ASCIIEncoding();
             this.ErrorResponse              = 0x15;
             this.InternalClock              = DefaultInternalClock;
@@ -85,7 +85,22 @@ namespace AmpsBoxSdk.Commands
             this.NumberOfPaddingCharacters  = ConstNumCharEndPadding;
             this.TableResponse              = TableFinishResponse;
 
-            this.GenerateCommands();
+            this.Generate();
+        }
+
+        /// <summary>
+        /// Factory method.
+        /// </summary>
+        /// <param name="versionString"></param>
+        /// <returns></returns>
+        AmpsCommandProvider CreateProvider(string versionString)
+        {
+            if (versionString.Contains("AMPS"))
+            {
+                return new GammaCommandProvider();
+            }
+
+            throw new Exception();
         }
 
         #endregion
@@ -153,27 +168,6 @@ namespace AmpsBoxSdk.Commands
         }
 
         /// <summary>
-        /// Returns the command if it exists.
-        /// </summary>
-        /// <param name="commandType">
-        /// The command Type.
-        /// </param>
-        /// <returns>
-        /// String version of the command
-        /// </returns>
-        public AmpsCommand GetCommand(MipsCommandType commandType)
-        {
-            bool hasCommand = this.mipsCommands.ContainsKey(commandType);
-            if (!hasCommand)
-            {
-                throw new AmpsCommandNotSupported(
-                    string.Format("The command {0} is not supported for the version of firmware loaded.", commandType));
-            }
-
-            return this.mipsCommands[commandType];
-        }
-
-        /// <summary>
         /// Returns the string of the latest version this provider supports.
         /// </summary>
         /// <returns>
@@ -189,6 +183,11 @@ namespace AmpsBoxSdk.Commands
         /// Creates a list of commands to be created.
         /// </summary>
         protected abstract void GenerateCommands();
+
+        private void Generate()
+        {
+            this.GenerateCommands();
+        }
 
         #endregion
     }

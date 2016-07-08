@@ -7,11 +7,14 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.ComponentModel.Composition;
+
 namespace AmpsBoxSdk.Commands
 {
     /// <summary>
     /// Major departure from Beta and Alpha commands.
     /// </summary>
+    [PartCreationPolicy(CreationPolicy.Shared)]
     public class GammaCommandProvider : AmpsCommandProvider
     {
         #region Constants
@@ -19,25 +22,21 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// Sets the AMPS to use External Clock
         /// </summary>
-        private const string CommandClockSyncExternal = "STBLCLK,EXT";
+        private const string CommandClockSync = "STBLCLK,{0}";
 
-        /// <summary>
-        /// Sets the AMPS to use Internal Clock
-        /// </summary>
-        private const string CommandClockSyncInternal = "STBLCLK,INT";
 
-	    private const string CommandSetTrigger = "STBLTRG";
+	    private const string CommandSetTrigger = "STBLTRG,{1}";
 
 		/// <summary>
 		/// TODO The command_ h v_ ge t_ channels.
 		/// </summary>
-		private const string CommandHvGetChannels = "GCHAN,DCB";
+		private const string CommandGetChannels = "GCHAN,{0}";
 
 
         /// <summary>
         /// TODO The command h v_ ge t_ voltage.
         /// </summary>
-        private const string CommandHvGetVoltage = "GDCB";
+        private const string CommandHvGetVoltage = "GDCB,{0}";
 
         /// <summary>
         /// The command get dc guard offset status.
@@ -47,38 +46,40 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// TODO The command h v_ se t_ voltage.
         /// </summary>
-        private const string CommandSetDcBias = "SDCB";
+        private const string CommandSetDcBias = "SDCB,{0},{1}";
 
+        private const string GetTableFrequency = "GTBLFRQ";
 
-        /// <summary>
-        /// TODO The command r f_ get_ channels.
-        /// </summary>
-        private const string CommandRfGetChannels = "GCHAN,RF";
 
         /// <summary>
         /// TODO The command r f_ get_ drivelevel.
         /// </summary>
-        private const string CommandRfGetDrivelevel = "GRFDRV";
+        private const string CommandRfGetDrivelevel = "GRFDRV,{0}";
 
         /// <summary>
         /// TODO The command r f_ get_ frequency.
         /// </summary>
-        private const string CommandRfGetFrequency = "GRFFRQ";
+        private const string CommandRfGetFrequency = "GRFFRQ,{0}";
 
         /// <summary>
         /// TODO The command r f_ set_ drivelevel.
         /// </summary>
-        private const string CommandRfSetDrivelevel = "SRFDRV";
+        private const string CommandRfSetDrivelevel = "SRFDRV,{0},{1}";
+
+        private const string SetRfLevel = "SRFVLT";
+
+        private const string ReturnRfPositiveVpp = "GRFPPVP,{0}";
+
+        private const string ReturnRfNegativeOutputVpp = "GRFPPVN,{0}";
+
+        private const string GetOutputVppSetpoint = "GRFVLT,{0}";
+
+        private const string GetChannelPowerWatts = "GRFPWR,{0}";
 
         /// <summary>
         /// 
         /// </summary>
-        private const string CommandRfSetFrequency = "SRFFRQ";
-
-        /// <summary>
-        /// TODO The command_ r f_ set_ voltage.
-        /// </summary>
-        private const string CommandRfSetVoltage = "SRFAUTO";
+        private const string CommandRfSetFrequency = "SRFFRQ,{0}";
 
         /// <summary>
         /// Saves the parameters to FLASH ROM on the AMPS Box
@@ -93,7 +94,7 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// Time Table command.  Notice that this is a format string.
         /// </summary>
-        private const string CommandTimeTableFormatter = "STBLDAT;{1};";
+        private const string CommandTimeTableFormatter = "STBLDAT,{0}";
 
         /// <summary>
         /// The command set mode.
@@ -114,18 +115,18 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// TODO The get dc bias voltage read back actual.
         /// </summary>
-        private const string GetDcBiasVoltageReadbackActual = "GDCBV";
+        private const string GetDcBiasVoltageReadbackActual = "GDCBV,{0}";
 
         /// <summary>
         /// TODO The get digital io direction.
         /// </summary>
-        private const string GetDigitalIoDirection = "GDIODR";
+        private const string GetDigitalIoDirection = "GDIODR,{0}";
 
 
         /// <summary>
         /// TODO The get digital io state.
         /// </summary>
-        private const string GetDigitalIoState = "GDIO";
+        private const string GetDigitalIoState = "GDIO,{0}";
 
 
         /// <summary>
@@ -134,58 +135,35 @@ namespace AmpsBoxSdk.Commands
         private const string GetHeaterReadback = "GHTRTC";
 
         /// <summary>
-        /// TODO The get number dc bias channels.
-        /// </summary>
-        private const string GetNumberDcBiasChannels = "GCHAN";
-
-
-        /// <summary>
-        /// TODO The read negative hv.
-        /// </summary>
-        private const string ReadNegativeHv = "GNHV";
-
-        /// <summary>
-        /// TODO The read positive hv.
-        /// </summary>
-        private const string ReadPositiveHv = "GPHV";
-
-        /// <summary>
         /// TODO The set dc bias offset voltage.
         /// </summary>
-        private const string SetDcBiasOffsetVoltage = "SDCBOF";
+        private const string SetDcBiasOffsetVoltage = "SDCBOF,{0}";
+
+        private const string SetEsiVoltage = "SHV,{0},{1}";
+
+        private const string GetEsiVoltageSetPoint = "GHV,{0}";
+
+        private const string GetEsiVoltageOutput = "GHVV,{0}";
+
+        private const string GetEsiChannelCurrent = "GHVI,{0}";
+
+        private const string GetEsiChannelMaximumVoltage = "GHVMAX,{0}";
 
         /// <summary>
         /// TODO The set digital io.
         /// </summary>
-        private const string SetDigitalIo = "SDIO";
+        private const string SetDigitalIo = "SDIO,{0}";
 
         /// <summary>
         /// TODO The set digital io direction.
         /// </summary>
-        private const string SetDigitalIoDirection = "SDIODR";
+        private const string SetDigitalIoDirection = "SDIODR,{0}";
 
 
         /// <summary>
         /// TODO The set heater set point.
         /// </summary>
         private const string SetHeaterSetPoint = "SHTRTMP";
-
-        /// <summary>
-        /// TODO The set negative hv.
-        /// </summary>
-        private const string SetNegativeHv = "SNHV";
-
-
-        /// <summary>
-        /// TODO The set positive hv.
-        /// </summary>
-        private const string SetPositiveHv = "SPHV";
-
-
-        /// <summary>
-        /// TODO The supported version.
-        /// </summary>
-        private const string SupportedVersion = "v2.0b";
 
         /// <summary>
         /// TODO The toggle dc guard offset voltages.
@@ -210,33 +188,43 @@ namespace AmpsBoxSdk.Commands
 
         private const string GetName = "GNAME";
 
-        private const string SetName = "SNAME";
+        private const string SetName = "SNAME,{0}";
 
-        // MIPS Commands
+        private const string GetDcMinimum = "GDCMIN,{0}";
+
+        private const string GetDcMaximum = "GDCMAX,{0}";
+
+        private const string SetDcPower = "SDCPWR,{0}";
+
+        private const string GetDcPower = "GDCPWR,{0}";
+
+        private const string GetAllCommands = "GCMDS";
 
         private const string GetTWaveFreq = "GTWF";
 
-        private const string SetTWaveFreq = "STWF";
+        private const string SetTWaveFreq = "STWF,{0},{1}";
 
-        private const string GetTWavePulseVoltage = "GTWPV";
+        private const string GetTWavePulseVoltage = "GTWPV,{0}";
 
-        private const string SetTWavePulseVoltage = "STWPV";
+        private const string SetTWavePulseVoltage = "STWPV,{0},{1}";
 
-        private const string GetGuardOneVoltage = "GTW1V";
+        private const string GetGuardOneVoltage = "GTWG1V,{0}";
 
-        private const string SetGuardOneVoltage = "STW1V";
+        private const string SetGuardOneVoltage = "STWG1V,{0},{1}";
 
-        private const string GetGuardTwoVoltage = "GTW2V";
+        private const string GetGuardTwoVoltage = "GTWG2V,{0}";
 
-        private const string SetGuardTwoVoltage = "STW2V";
+        private const string SetGuardTwoVoltage = "STWG2V,{0},{1}";
 
-        private const string GetOutputSequence = "GTWSEQ";
+        private const string GetOutputSequence = "GTWSEQ,{0}";
 
-        private const string SetOutputSequence = "STWSEQ";
+        private const string SetOutputSequence = "STWSEQ,{0},{1}";
 
-        private const string GetTWaveOutputDirection = "GTWDIR";
+        private const string GetTWaveOutputDirection = "GTWDIR,{0}";
 
-        private const string SetTWaveOutputDirection = "STWDIR";
+        private const string SetTWaveOutputDirection = "STWDIR,{0},{1}";
+
+
 
         #endregion
 
@@ -251,7 +239,7 @@ namespace AmpsBoxSdk.Commands
         /// </returns>
         public override string GetSupportedVersions()
         {
-            return SupportedVersion;
+            return "3.2a";
         }
 
         #endregion
@@ -290,32 +278,27 @@ namespace AmpsBoxSdk.Commands
             this.AddCommand(AmpsCommandType.GetGuardOffset, CommandGetDcGuardOffsetStatus);
 
             this.AddCommand(AmpsCommandType.TimeTableAbort, CommandTimeTableAbort);
+
             this.AddCommand(
-                AmpsCommandType.TimeTableClockSycnInternal, 
-                CommandClockSyncInternal);
-            this.AddCommand(
-                AmpsCommandType.TimeTableClockSyncExternal, 
-                CommandClockSyncExternal);
+                AmpsCommandType.TimeTableClockSync, 
+                CommandClockSync);
 
             this.AddCommand(AmpsCommandType.Save, CommandSave);
             this.AddCommand(AmpsCommandType.SetOutputDriveLevel, CommandRfSetDrivelevel);
-            this.AddCommand(AmpsCommandType.SetRfFrequency, CommandRfSetFrequency);
-            this.AddCommand(AmpsCommandType.SetRfVoltage, CommandRfSetVoltage);
-            this.AddCommand(AmpsCommandType.SetDriveLevel, CommandRfSetDrivelevel);
+            this.AddCommand(AmpsCommandType.SetFrequency, CommandRfSetFrequency);
+            this.AddCommand(AmpsCommandType.SetDriveLevel, SetRfLevel);
+
             this.AddCommand(AmpsCommandType.SetDcBias, CommandSetDcBias);
 
             this.AddCommand(AmpsCommandType.GetVersion, CommandVersion);
-            this.AddCommand(AmpsCommandType.GetRfFrequency, CommandRfGetFrequency);
-            this.AddCommand(AmpsCommandType.GetRfChannels, CommandRfGetChannels);
+            this.AddCommand(AmpsCommandType.GetFrequency, CommandRfGetFrequency);
             this.AddCommand(AmpsCommandType.GetDriveLevel, CommandRfGetDrivelevel);
             this.AddCommand(AmpsCommandType.GetDcBias, CommandHvGetVoltage);
-            this.AddCommand(AmpsCommandType.GetHighVoltageChannels, CommandHvGetChannels);
+            this.AddCommand(AmpsCommandType.GetChannels, CommandGetChannels);
 
             this.AddCommand(AmpsCommandType.ToggleHeater, ToggleHeater);
             this.AddCommand(AmpsCommandType.SetHeaterSetpoint, SetHeaterSetPoint);
             this.AddCommand(AmpsCommandType.GetHeaterTemperature, GetHeaterReadback);
-            this.AddCommand(AmpsCommandType.SetPositiveHV, SetPositiveHv);
-            this.AddCommand(AmpsCommandType.SetNegativeHV, SetNegativeHv);
 
             this.AddCommand(AmpsCommandType.SetDigitalIo, SetDigitalIo);
             this.AddCommand(AmpsCommandType.GetDigitalIo, GetDigitalIoState);
@@ -333,7 +316,20 @@ namespace AmpsBoxSdk.Commands
 
             this.AddCommand(AmpsCommandType.GetName, GetName);
 
-          //  this.AddCommand();
+            this.AddCommand(AmpsCommandType.GetTravellingWaveFrequency, GetTWaveFreq);
+            this.AddCommand(AmpsCommandType.SetTravellingWaveFrequency, SetTWaveFreq);
+            this.AddCommand(AmpsCommandType.GetTWaveVoltage, GetTWavePulseVoltage);
+            this.AddCommand(AmpsCommandType.SetTWaveVoltage, SetTWavePulseVoltage);
+            this.AddCommand(AmpsCommandType.GetGuardOneVoltage, GetGuardOneVoltage);
+            this.AddCommand(AmpsCommandType.SetGuardOneVoltage, SetGuardOneVoltage);
+            this.AddCommand(AmpsCommandType.GetGuardTwoVoltage, GetGuardTwoVoltage);
+            this.AddCommand(AmpsCommandType.SetGuardTwoVoltage, SetGuardTwoVoltage);
+            this.AddCommand(AmpsCommandType.GetOutputSequence, GetOutputSequence);
+            this.AddCommand(AmpsCommandType.SetOutputSequence, SetOutputSequence);
+            this.AddCommand(AmpsCommandType.GetTWaveOutputDirection, GetTWaveOutputDirection);
+            this.AddCommand(AmpsCommandType.SetTWaveOutputDirection, SetTWaveOutputDirection);
+
+
         }
 
         #endregion

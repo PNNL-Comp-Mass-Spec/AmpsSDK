@@ -7,12 +7,17 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using AmpsBoxSdk.Devices;
+
 namespace AmpsBoxSdk.Commands
 {
+    using System.Runtime.Serialization;
+
     /// <summary>
     /// AMPS Box command structure for supporting multiple versions of the software.
     /// </summary>
-    public class AmpsCommand
+    [DataContract]
+    public class AmpsCommand : Command
     {
         #region Constructors and Destructors
 
@@ -57,17 +62,22 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// Gets or sets the expected response
         /// </summary>
+        [DataMember]
         public int ExpectedResponse { get; private set; }
 
         /// <summary>
         /// Gets or sets whether this command is supported to being phased out.
         /// </summary>
+        [DataMember]
         public bool IsSupported { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the command
         /// </summary>
+        [DataMember]
         public string Value { get; set; }
+
+        public string Name { get; set; }
 
         #endregion
     }

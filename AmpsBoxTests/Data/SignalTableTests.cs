@@ -2,21 +2,23 @@
 {
     using System;
     using System.IO.Ports;
-    using System.Linq;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Windows.Forms;
+    using System.Windows.Media;
 
     using AmpsBoxSdk.Commands;
     using AmpsBoxSdk.Data;
     using AmpsBoxSdk.Devices;
 
+    using AMPSFalkorPlugin;
+    using AMPSFalkorPlugin.Domain.Model;
+    using AMPSFalkorPlugin.Services;
+
     using FalkorSDK.Channel;
-    using FalkorSDK.Data;
-    using FalkorSDK.Data.Elements;
+    using FalkorSDK.Channel.Calibration;
+    using FalkorSDK.Data.MassSpectrometry;
     using FalkorSDK.Data.Signals;
     using FalkorSDK.IO.Ports;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -25,16 +27,34 @@
         [Test]
         public void SignalTableTest()
         {
-          
+            var signalTable = new AmpsSignalTable();
+            var point = new PsgPoint("1", 100, new LoopData());
+            var point2 = new PsgPoint("2", 150, new LoopData() );
 
+            var point3 = new PsgPoint("3", 175, new LoopData() );
 
+            point.CreateOutput(new ChannelAddress("4"), 0);
+            point.CreateOutput(new ChannelAddress("A"), true );
+            point2.CreateOutput(new ChannelAddress("3"), 0 );
+            point3.CreateOutput(new ChannelAddress("4"), 40 );
+            point3.CreateOutput(new ChannelAddress("A"), false);
+            signalTable.AddTimePoint(point);
+            signalTable.AddTimePoint(point2);
+            signalTable.AddTimePoint(point3);
+            var clockConverter = new AmpsClockConverter(100000);
+            var table = AmpsBoxSignalTableCommandFormatter.FormatTable(signalTable, clockConverter);
+            Console.WriteLine(table);
+        }
+
+        [Test]
+        public void Test1()
+        {
+          Console.WriteLine((int)'A');
         }
 
         [Test]
         public void NestedSignalTableTest()
         {
-         
-
             //var falkorSerialPort = new FalkorSerialPort(new SerialPort("COM18") { BaudRate = 19200, Handshake = Handshake.XOnXOff, DataBits = 8, Parity = Parity.Even, Encoding = Encoding.ASCII, StopBits = StopBits.One });
             //AmpsBox box = new AmpsBox(new AmpsBoxCOMReader(falkorSerialPort), new AmpsCOMCommandFormatter());
             //box.Communicator.Open();
@@ -62,11 +82,11 @@
         [Test]
         public async void AmpsCommunicationTest()
         {
-            var falkorSerialPort = new FalkorSerialPort(new SerialPort("COM18") { BaudRate = 19200, Handshake = Handshake.XOnXOff, DataBits = 8, Parity = Parity.Even, Encoding = Encoding.ASCII, StopBits = StopBits.One });
-            AmpsBox box = new AmpsBox(new AmpsBoxCOMReader(falkorSerialPort), new AmpsCOMCommandFormatter());
-            box.Communicator.Open();
-            var version = box.GetVersionAsync().Result;
-         Console.WriteLine(version);
+         //   var falkorSerialPort = new FalkorSerialPort(new SerialPort("COM18") { BaudRate = 19200, Handshake = Handshake.XOnXOff, DataBits = 8, Parity = Parity.Even, Encoding = Encoding.ASCII, StopBits = StopBits.One });
+         //   AmpsBox box = new AmpsBox(new AmpsBoxCOMReader(new FalkorSerialPort()), new AmpsCOMCommandFormatter());
+         //   //box.Communicator.Open();
+         //   var version = box.GetVersionAsync().Result;
+         //Console.WriteLine(version);
         }
 
   
@@ -83,4 +103,6 @@
 
         }
     }
+
+
 }

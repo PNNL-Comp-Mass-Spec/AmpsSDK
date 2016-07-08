@@ -9,7 +9,10 @@
 
 namespace AmpsBoxSdk.Commands
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Creates an AMPS Command Provider based on the version returned from the device.
@@ -34,7 +37,9 @@ namespace AmpsBoxSdk.Commands
         {
             providerMap = new Dictionary<string, AmpsCommandProvider>();
 
-            AmpsCommandProvider provider = new GammaCommandProvider();
+            //TODO: Use MEF to supply providers. 
+            var provider = new GammaCommandProvider();
+          //  var mipsProvider = new MipsAlphaCommandProvider();
             providerMap.Add(provider.GetSupportedVersions().ToLower(), provider);
         }
 
@@ -53,16 +58,17 @@ namespace AmpsBoxSdk.Commands
         /// </returns>
         public static AmpsCommandProvider CreateCommandProvider(string version)
         {
-            AmpsCommandProvider provider = null;
-
             version = version.ToLower();
-
-            if (providerMap.ContainsKey(version))
+            foreach (var key in providerMap.Keys)
             {
-                return providerMap[version];
+                var match = Regex.Match(key, @"\d+(\.\d{1,2}(\w))?", RegexOptions.IgnoreCase);
+                if (match.Value == version)
+                {
+                    return providerMap[version];
+                }
             }
 
-            return new GammaCommandProvider();
+            return providerMap["1.23"];
         }
 
         #endregion

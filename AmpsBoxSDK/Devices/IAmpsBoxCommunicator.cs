@@ -9,47 +9,48 @@ namespace AmpsBoxSdk.Devices
     using System.ComponentModel.Composition;
     using System.IO.Ports;
 
+    using FalkorSDK.IO.Ports;
+
     [InheritedExport]
     public interface IAmpsBoxCommunicator
     {
         #region Methods
-        /// <summary>
-        /// Write to the device asynchronously.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        Task<string> WriteAsync(string command);
 
         /// <summary>
         /// Write to the device.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        string Write(string command);
+        void Write(string command);
+
+        string Response { get; }
         /// <summary>
         /// Determine if the response is valid.
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        Task<bool> IsValidCommunicationAsync(string response);
+        bool ValidateResponse(string response);
         /// <summary>
         /// Parse a reply from the AmpsBox.
         /// </summary>
         /// <param name="response"></param>
         /// <param name="shouldValidateResponse"></param>
         /// <returns></returns>
-        Task<string> ParseResponseAsync(string response, bool shouldValidateResponse);
+        string ParseResponse(string response, bool shouldValidateResponse);
         /// <summary>
         /// Open communication
         /// </summary>
         /// <returns>True on success.</returns>
-        void Open(string portName, int baudRate, Parity parity, StopBits stopBits, Handshake handShake, int dataBits);
+        void Open();
         /// <summary>
         /// Close communication.
         /// </summary>
         /// <returns>True on success.</returns>
         void Close();
 
+        void SetSerialPortProperties(SerialPortProperties properties);
+
+        SerialPortProperties SerialPortProperties { get; }
         #endregion
 
         #region Properties
@@ -65,13 +66,15 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         int ReadWriteTimeout { get; set; }
         /// <summary>
-        /// Get or set whether we are emulating commincation or communicating.
+        /// Get or set whether we are emulating communication
         /// </summary>
         bool IsEmulated { get; set; }
         /// <summary>
         /// Gets whether the port is open.
         /// </summary>
         bool IsOpen { get; }
+
+
         #endregion
 
     }

@@ -83,16 +83,16 @@ namespace AmpsBoxSdk.Data
                 {
                     timeBuilder.AppendFormat(
                            "\t\tChannel\t{0}\tVoltage\t{1:F0}\n",
-                           signal.Address,
-                           signal.Data);
+                           signal.ChannelIdentifier,
+                           signal.Voltage);
                 }
 
                 foreach (var digitalOutputElement in point.DigitalOutputElements)
                 {
                     timeBuilder.AppendFormat(
                            "\t\tChannel\t{0}\tTTL State\t{1:F0}\n",
-                           digitalOutputElement.Address,
-                           digitalOutputElement.Data);
+                           digitalOutputElement.ChannelIdentifier,
+                           digitalOutputElement.State);
                 }
 
                 string events = timeBuilder.ToString().TrimEnd(':');

@@ -25,14 +25,9 @@ namespace AmpsBoxSdk.Commands
         TimeTableFormatter, 
 
         /// <summary>
-        /// TODO The time Table clock sycn internal.
+        /// TODO The time Table clock sync command
         /// </summary>
-        TimeTableClockSycnInternal, 
-
-        /// <summary>
-        /// TODO The time Table clock sync external.
-        /// </summary>
-        TimeTableClockSyncExternal,
+        TimeTableClockSync, 
 
 		CommandSetTrigger,
 
@@ -66,32 +61,22 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// TODO The set RadioFrequency frequency.
         /// </summary>
-        SetRfFrequency, 
+        SetFrequency, 
 
         /// <summary>
         /// TODO The set RadioFrequency voltage.
         /// </summary>
-        SetRfVoltage, 
+        SetDriveLevel, 
 
         /// <summary>
         /// TODO The get RadioFrequency frequency.
         /// </summary>
-        GetRfFrequency, 
+        GetFrequency, 
 
         /// <summary>
         /// TODO The get RadioFrequency voltage.
         /// </summary>
         GetRfVoltage, 
-
-        /// <summary>
-        /// TODO The get Radio Frequence channels.
-        /// </summary>
-        GetRfChannels, 
-
-        /// <summary>
-        /// TODO The set drive level.
-        /// </summary>
-        SetDriveLevel, 
 
         /// <summary>
         /// TODO The get drive level.
@@ -111,17 +96,7 @@ namespace AmpsBoxSdk.Commands
         /// <summary>
         /// TODO The get high voltage channels.
         /// </summary>
-        GetHighVoltageChannels, 
-
-        /// <summary>
-        /// Turns the "real time" mode on for the AMPS Box to listen for serial commands only.
-        /// </summary>
-        SetRTOn, 
-
-        /// <summary>
-        /// Turns the "real time" mode off for the AMPS Box to do other things while idle.
-        /// </summary>
-        SetRTOff, 
+        GetChannels, 
 
         /// <summary>
         /// TODO The toggle heater.
@@ -137,16 +112,6 @@ namespace AmpsBoxSdk.Commands
         /// TODO The get heater temperature.
         /// </summary>
         GetHeaterTemperature, 
-
-        /// <summary>
-        /// TODO The set positive hv.
-        /// </summary>
-        SetPositiveHV, 
-
-        /// <summary>
-        /// TODO The set negative hv.
-        /// </summary>
-        SetNegativeHV, 
 
         /// <summary>
         /// TODO The read positive hv.
@@ -189,11 +154,6 @@ namespace AmpsBoxSdk.Commands
         GetDigitalIoDirection, 
 
         /// <summary>
-        /// TODO The get number dc bias channels.
-        /// </summary>
-        GetNumberDcBiasChannels, 
-
-        /// <summary>
         /// TODO The get error.
         /// </summary>
         GetError, 
@@ -208,12 +168,58 @@ namespace AmpsBoxSdk.Commands
         /// </summary>
         GetGuardOffset,
 
+        SetEsiVoltage,
+        GetEsiVoltageSetpoint,
+        GetEsiOutputVoltage,
+        GetEsiChannelCurrent,
+        GetEsiMaxVoltage,
+
+
         Reset,
 
         Test,
 
         SetName,
 
-        GetName
+        GetName,
+
+        TrigOut,
+
+        GAENA,
+
+        SAENA,
+
+        SetDCPowerState,
+        GetDcPowerState,
+
+        GetTravellingWaveFrequency,
+        SetTravellingWaveFrequency,
+        GetTWaveVoltage,
+        SetTWaveVoltage,
+        GetGuardOneVoltage,
+        SetGuardOneVoltage,
+        GetGuardTwoVoltage,
+        SetGuardTwoVoltage,
+        GetOutputSequence,
+        SetOutputSequence,
+        GetTWaveOutputDirection,
+        SetTWaveOutputDirection,
+        ListAllCommands,
+        GetCompressorOrder,
+        SetCompressorOrder,
+        GetCompressionTime,
+        SetCompressionTime,
+        GetNormalTime,
+        SetNormalTime,
+        GetNonCompressTime,
+        SetNonCompressTime,
+        ForceMultipassTrigger,
+        GetSwitchState,
+        SetSwitchState,
+        SetTwaveCommonClock,
+        SetTWaveCompressorMode,
+        SetCompressorMode,
+        GetCompressorMode,
+
     }
 }
