@@ -7,10 +7,10 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using AmpsBoxSdk.Data;
+
 namespace AmpsBoxSdk.Devices
 {
-    using FalkorSDK.Data;
-
     /// <summary>
     /// Converts 
     /// </summary>
@@ -55,7 +55,7 @@ namespace AmpsBoxSdk.Devices
         /// </param>
         public AmpsClockConverter(double frequency)
         {
-            this.ClockFrequency = frequency;
+            this.Clockint = frequency;
         }
 
         #endregion
@@ -65,7 +65,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets the clock frequency.
         /// </summary>
-        public double ClockFrequency { get; private set; }
+        public double Clockint { get; private set; }
 
         #endregion
 
@@ -106,7 +106,7 @@ namespace AmpsBoxSdk.Devices
                     scaler = SCALER_SECONDS;
                     break;
                 case TimeUnits.Ticks:
-                    scaler = SCALER_SECONDS / this.ClockFrequency * 1000;
+                    scaler = SCALER_SECONDS / this.Clockint * 1000;
                     break;
                 default:
                     break;

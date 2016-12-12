@@ -11,8 +11,6 @@ namespace AmpsBoxSdk.Devices
 {
 	using System.Collections.Generic;
 
-	using FalkorSDK.Channel;
-
     /// <summary>
     /// Data for each device
     /// </summary>

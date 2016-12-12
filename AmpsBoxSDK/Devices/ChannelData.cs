@@ -1,30 +1,20 @@
 namespace AmpsBoxSdk.Devices
 {
-    using FalkorSDK.Channel;
-    using FalkorSDK.Data.Signals;
-
-    using Infrastructure.Domain.Shared;
-
     /// <summary>
 	/// Data for each channel
 	/// </summary>
-	public class ChannelData : IValueObject<ChannelData>
+	public class ChannelData 
 	{
 		#region Constructors and Destructors
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ChannelData"/> class.
 		/// </summary>
-		public ChannelData(double minimumVoltage, double maximumVoltage)
+		public ChannelData(double minimumdouble, double maximumdouble)
 		{
-		    this.Minimum = minimumVoltage;
-		    this.Maximum = maximumVoltage;
+		    this.Minimum = minimumdouble;
+		    this.Maximum = maximumdouble;
 		}
-
-        public ChannelData()
-        {
-            
-        }
 
 		#endregion
 
@@ -51,20 +41,5 @@ namespace AmpsBoxSdk.Devices
 		public double Setpoint { get; private set; }
 
 		#endregion
-
-        public bool SameValueAs(ChannelData other)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return base.Equals(obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
 	}
 }

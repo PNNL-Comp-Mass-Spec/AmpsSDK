@@ -7,8 +7,8 @@ namespace AmpsBoxSdk.Modules
     {
         int GetClockPulseWidth();
         void SetClockPulseWidth();
-        int GetClockFrequencyHz();
-        void SetClockFrequencyHz(int hz);
+        int GetClockintHz();
+        void SetClockintHz(int hz);
 
         /// <summary>
         /// 

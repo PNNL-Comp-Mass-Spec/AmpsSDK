@@ -14,11 +14,6 @@ namespace AmpsBoxSdk.Data
     using System.Linq;
     using System.Text;
 
-    using FalkorSDK.Data;
-    using FalkorSDK.Data.Elements;
-    using FalkorSDK.Data.Signals;
-    using FalkorSDK.IO.Signals;
-
     /// <summary>
     /// TODO The amps box signal Table command formatter.
     /// </summary>
@@ -34,7 +29,7 @@ namespace AmpsBoxSdk.Data
         /// <param name="table"></param>
         /// <param name="converter"></param>
         /// <returns>Command string ready to be sent to AMPS / MIPS box.</returns>
-        public static string FormatTable(AmpsSignalTable table, ITimeUnitConverter<double> converter)
+        public static string FormatTable(this AmpsSignalTable table)
         {
             StringBuilder builder = new StringBuilder();
             string tableName = "A";
@@ -59,13 +54,13 @@ namespace AmpsBoxSdk.Data
 
                     foreach (var dcBiasElement in points[i].DcBiasElements)
                     {
-                        builder.Append(":" + dcBiasElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(dcBiasElement.Voltage));
+                        builder.Append(":" + dcBiasElement.Key + ":" + Convert.ToInt32(dcBiasElement.Value));
                     }
 
                     foreach (var digitalOutputElement in points[i].DigitalOutputElements)
                     {
                         builder.Append(
-                                  ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
+                                  ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
                     }
                 }
 
@@ -82,26 +77,26 @@ namespace AmpsBoxSdk.Data
 
                     else
                     {
-                        builder.Append("," + points[i].TimePoint);
+                         builder.Append("," + points[i].TimePoint);
                     }
 
                     foreach (var dcBiasElement in points[i].DcBiasElements)
                     {
                         var point =
                             points[i - 1].DcBiasElements.FirstOrDefault(
-                                x => x.ChannelIdentifier.SameValueAs(dcBiasElement.ChannelIdentifier));
-                        if (point != null)
+                                x => x.Equals(dcBiasElement));
+                        if (point.Key != default(string))
                         {
-                            if (Math.Abs(dcBiasElement.Voltage - point.Voltage) > 1e-6)
+                            if (Math.Abs(dcBiasElement.Value - point.Value) > 1e-6)
                             {
-                                builder.Append(":" + dcBiasElement.ChannelIdentifier.Address + ":" + dcBiasElement.Voltage);
+                                builder.Append(":" + dcBiasElement.Key + ":" + dcBiasElement.Value);
                             }
                         }
 
                         else
                         {
                             builder.Append(
-                            ":" + dcBiasElement.ChannelIdentifier.Address + ":" + dcBiasElement.Voltage);
+                            ":" + dcBiasElement.Key + ":" + dcBiasElement.Value);
                         }
                     }
 
@@ -109,19 +104,19 @@ namespace AmpsBoxSdk.Data
                     {
                         var point =
                             points[i - 1].DigitalOutputElements.FirstOrDefault(
-                                x => x.ChannelIdentifier.SameValueAs(digitalOutputElement.ChannelIdentifier));
-                        if (point != null)
+                                x => x.Key.Equals(digitalOutputElement.Key));
+                        if (point.Key != default(string))
                         {
-                            if (digitalOutputElement.State == point.State)
+                            if (digitalOutputElement.Value != point.Value)
                             {
                                 builder.Append(
-                              ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
+                              ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
                             }
                         }
                         else
                         {
                             builder.Append(
-                            ":" + digitalOutputElement.ChannelIdentifier.Address + ":" + Convert.ToInt32(digitalOutputElement.State));
+                            ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
                         }
                     }
 
@@ -134,7 +129,7 @@ namespace AmpsBoxSdk.Data
                 }
 
             }
-            var stringToReturn = string.Format("{0};{1};", "STBLDAT", builder.ToString());
+            var stringToReturn = $"{"STBLDAT"};{builder.ToString()};";
             return stringToReturn;
         }
 

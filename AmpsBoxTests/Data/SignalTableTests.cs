@@ -27,11 +27,11 @@
         [Test]
         public void SignalTableTest()
         {
-            var signalTable = new AmpsSignalTable();
-            var point = new PsgPoint("1", 100, new LoopData());
-            var point2 = new PsgPoint("2", 150, new LoopData() );
+            var signalTable = new FalkorSDK.Data.Signals.AmpsSignalTable();
+            var point = new FalkorSDK.Data.Signals.PsgPoint("1", 100, new FalkorSDK.Data.Signals.LoopData());
+            var point2 = new FalkorSDK.Data.Signals.PsgPoint("2", 150, new FalkorSDK.Data.Signals.LoopData() );
 
-            var point3 = new PsgPoint("3", 175, new LoopData() );
+            var point3 = new FalkorSDK.Data.Signals.PsgPoint("3", 175, new FalkorSDK.Data.Signals.LoopData() );
 
             point.CreateOutput(new ChannelAddress("4"), 0);
             point.CreateOutput(new ChannelAddress("A"), true );
@@ -42,7 +42,7 @@
             signalTable.AddTimePoint(point2);
             signalTable.AddTimePoint(point3);
             var clockConverter = new AmpsClockConverter(100000);
-            var table = AmpsBoxSignalTableCommandFormatter.FormatTable(signalTable, clockConverter);
+            var table = signalTable.FormatTable();
             Console.WriteLine(table);
         }
 

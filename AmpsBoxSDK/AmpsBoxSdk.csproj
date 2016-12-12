@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AmpsBoxSdk</RootNamespace>
     <AssemblyName>AmpsBoxSdk</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
@@ -78,39 +78,37 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FalkorSDK">
-      <HintPath>..\lib\FalkorSDK.dll</HintPath>
-    </Reference>
-    <Reference Include="Infrastructure">
-      <HintPath>..\lib\Infrastructure.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.1.38.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Collections.Immutable.1.1.38-beta-23516\lib\dotnet5.1\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="ReactiveUI, Version=7.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\reactiveui-core.7.0.0\lib\Net45\ReactiveUI.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Splat, Version=1.6.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Splat.1.6.2\lib\Net45\Splat.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.Composition.registration" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx-Core.2.3.0-beta2\lib\net45\System.Reactive.Core.dll</HintPath>
-      <Private>True</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Rx-Core.2.3.0-beta2\lib\net46\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Interfaces, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx-Interfaces.2.3.0-beta2\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    <Reference Include="System.Reactive.Interfaces, Version=3.0.1000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Reactive.Interfaces.3.1.1\lib\net45\System.Reactive.Interfaces.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Reactive.Linq, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx-Linq.2.3.0-beta2\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Rx-Linq.2.3.0-beta2\lib\net46\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=3.0.3000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Reactive.PlatformServices.3.1.1\lib\net46\System.Reactive.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Reactive.PlatformServices, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx-PlatformServices.2.3.0-beta2\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Reactive.Windows.Threading, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx-XAML.2.3.0-beta2\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
+    <Reference Include="System.Reactive.Windows.Threading, Version=3.0.1000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Reactive.Windows.Threading.3.1.1\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
@@ -118,6 +116,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -127,23 +126,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\AmpsCommand.cs" />
-    <Compile Include="Commands\AmpsCommandFactory.cs" />
-    <Compile Include="Commands\AmpsCommandNotSupported.cs" />
-    <Compile Include="Commands\AmpsCommandType.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DcPowerStates.cs" />
-    <Compile Include="Commands\GammaCommandProvider.cs" />
-    <Compile Include="Commands\MipsAlphaCommandProvider.cs" />
-    <Compile Include="Commands\MipsCommandType.cs" />
     <Compile Include="Commands\SignalSources.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
+    <Compile Include="Data\AmpsBoxTimeTableWriterPlain.cs" />
+    <Compile Include="Data\AmpsSignalTable.cs" />
+    <Compile Include="Data\ISignalTableFormatter.cs" />
+    <Compile Include="Data\ISignalTableReader.cs" />
+    <Compile Include="Data\ISignalTableWriter.cs" />
+    <Compile Include="Data\ITimeUnitConverter.cs" />
+    <Compile Include="Data\LoopData.cs" />
+    <Compile Include="Data\PsgPoint.cs" />
+    <Compile Include="Data\SimpleTimeConverter.cs" />
+    <Compile Include="Data\TimeUnits.cs" />
     <Compile Include="Devices\AmpsBox.cs" />
+    <Compile Include="Devices\AmpsBoxFactory.cs" />
     <Compile Include="Devices\ChannelData.cs" />
-    <Compile Include="Devices\AmpsBoxCommunicator.cs" />
     <Compile Include="Devices\AmpsBoxDeviceData.cs" />
-    <Compile Include="Commands\AmpsCommandProvider.cs" />
     <Compile Include="Devices\AmpsBoxExtensionMethods.cs" />
     <Compile Include="Devices\AmpsBoxRfData.cs" />
     <Compile Include="Devices\AmpsCommandNotRecognized.cs" />
@@ -158,6 +160,7 @@
     <Compile Include="Devices\IAmpsBoxCommunicator.cs" />
     <Compile Include="Devices\IDcBiasBoard.cs" />
     <Compile Include="Devices\IRfBoard.cs" />
+    <Compile Include="Devices\ISerialPortCommunicator.cs" />
     <Compile Include="Devices\Responses.cs" />
     <Compile Include="Devices\StartTriggerTypes.cs" />
     <Compile Include="Devices\AmpsClockConverter.cs" />
@@ -169,15 +172,10 @@
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
     <Compile Include="Modules\IEsiModule.cs" />
-    <Compile Include="Modules\IFaimsModule.cs" />
-    <Compile Include="Modules\IFilamentModule.cs" />
     <Compile Include="Modules\IMacroModule.cs" />
     <Compile Include="Modules\IPulseSequenceGeneratorModule.cs" />
     <Compile Include="Modules\IRfDriverModule.cs" />
     <Compile Include="Modules\IStandardModule.cs" />
-    <Compile Include="Modules\ITwaveModule.cs" />
-    <Compile Include="Modules\IWiFiModule.cs" />
-    <Compile Include="Modules\MipsTWaveModule.cs" />
     <Compile Include="Modules\Module.cs" />
     <Compile Include="Modules\StandardModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -188,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Channels\" />
+    <Folder Include="Modules\Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

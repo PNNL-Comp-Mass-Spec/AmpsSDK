@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
@@ -12,13 +10,10 @@ namespace AmpsBoxSdk.Modules
     public class StandardModule : IStandardModule
     {
         private IAmpsBoxCommunicator communicator;
-        private AmpsCommandProvider provider;
-
         [ImportingConstructor]
-        public StandardModule(IAmpsBoxCommunicator communicator, AmpsCommandProvider provider)
+        public StandardModule(IAmpsBoxCommunicator communicator)
         {
             this.communicator = communicator;
-            this.provider = provider;
         }
         /// <summary>
         /// Gets the version of the AMPS box.

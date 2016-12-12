@@ -10,14 +10,6 @@
 namespace AmpsBoxSdk.Data
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-
-    using FalkorSDK.Data;
-    using FalkorSDK.Data.Elements;
-    using FalkorSDK.Data.Signals;
-    using FalkorSDK.IO.Signals;
 
     /// <summary>
     /// TODO The amps box signal Table display formatter.

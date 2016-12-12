@@ -1,9 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Composition;
-using System.Runtime.Serialization;
-using AmpsBoxSdk.Commands;
+using System.Reactive;
 using AmpsBoxSdk.Devices;
-using FalkorSDK.Channel;
 
 namespace AmpsBoxSdk.Modules
 {
@@ -11,44 +9,37 @@ namespace AmpsBoxSdk.Modules
     {
         private IAmpsBoxCommunicator communicator;
 
-        private AmpsCommandProvider provider;
-
         [ImportingConstructor]
-        public AmpsEsiModule(IAmpsBoxCommunicator communicator, AmpsCommandProvider provider)
+        public AmpsEsiModule(IAmpsBoxCommunicator communicator)
         {
             this.communicator = communicator;
-            this.provider = provider;
         }
+
+
         /// <summary>
-        /// Set the high voltage.
+        /// 
         /// </summary>
-        /// <param name="voltage">      The voltage to set.</param>
-        public void SetChannelVoltage(double voltage)
+        /// <returns>Item1 = voltage, Item2 = uA</returns>
+        public Tuple<double, double> GetPositiveEsi()
         {
             throw new NotImplementedException();
         }
 
-        public void SetChannelVoltage(ChannelAddress address, double voltage)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>Item1 = voltage, Item2 = uA</returns>
+        public Tuple<double, double> GetNegativeEsi()
         {
             throw new NotImplementedException();
         }
 
-        public double GetChannelVoltageSetpoint(ChannelAddress address)
+        public IObservable<Unit> SetPositiveHighVoltage(int volts)
         {
             throw new NotImplementedException();
         }
 
-        public double GetChannelOutputVoltage(ChannelAddress address)
-        {
-            throw new NotImplementedException();
-        }
-
-        public double GetChannelCurrentMilliAmps(ChannelAddress address)
-        {
-            throw new NotImplementedException();
-        }
-
-        public double GetChannelMaxVoltage(ChannelAddress address)
+        public IObservable<Unit> SetNegativeHighVoltage(int volts)
         {
             throw new NotImplementedException();
         }

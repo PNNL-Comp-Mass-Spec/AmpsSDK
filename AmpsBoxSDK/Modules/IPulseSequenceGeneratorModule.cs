@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.Composition;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Devices;
-using FalkorSDK.Data.Signals;
 
 namespace AmpsBoxSdk.Modules
 {
@@ -17,7 +15,7 @@ namespace AmpsBoxSdk.Modules
         void SetTrigger(StartTriggerTypes startTriggerType);
         void SetMode();
         void StopTable();
-        string StartTimeTable();
+        void StartTimeTable();
         string LastTable { get; }
 
     }
@@ -25,13 +23,13 @@ namespace AmpsBoxSdk.Modules
     public class PulseSequenceGeneratorModule : IPulseSequenceGeneratorModule
     {
         private IAmpsBoxCommunicator communicator;
-        private AmpsCommandProvider provider;
+        private IStandardModule standardModule;
 
         [ImportingConstructor]
-        public PulseSequenceGeneratorModule(AmpsCommandProvider provider, IAmpsBoxCommunicator communicator)
+        public PulseSequenceGeneratorModule(IAmpsBoxCommunicator communicator, IStandardModule standardModule)
         {
-            this.provider = provider;
             this.communicator = communicator;
+            this.standardModule = standardModule;
         }
        /// <summary>
        /// 
@@ -42,33 +40,38 @@ namespace AmpsBoxSdk.Modules
            string formattedCommand = command.Value;
             this.communicator.Write(
                                   formattedCommand);
+           if (this.communicator.IsError)
+           {
+               System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+           }
         }
 
         /// <summary>
         /// Starts execution of time table.
         /// </summary>
         /// <returns></returns>
-        public string StartTimeTable()
+        public void StartTimeTable()
         {
             var command = provider.GetCommand(AmpsCommandType.TimeTableStart);
             this.communicator.Write(command.Value);
-
-            return "\tStarting time table.";
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+            }
         }
 
         public string LastTable { get; private set; }
 
         /// <summary>
-        /// Tells the AMPS Box how to repeat (if at all) 
+        /// Sets the table mode for the amps / mips box.
         /// </summary>
-        /// <param name="iterations">
-        /// </param>
-        /// <returns>
-        /// The <see cref="Task"/>.
-        /// </returns>
         public void SetMode()
         {
             var command = provider.GetCommand(AmpsCommandType.Mode);
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+            }
             this.communicator.Write(command.Value);
         }
         /// <summary>
@@ -78,6 +81,10 @@ namespace AmpsBoxSdk.Modules
         public void StopTable()
         {
             var command = provider.GetCommand(AmpsCommandType.TimeTableStop);
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+            }
             this.communicator.Write(command.Value);
         }
 
@@ -91,10 +98,16 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public void LoadTimeTable(AmpsSignalTable table)
         {
-            string command = AmpsBoxSignalTableCommandFormatter.FormatTable(table, null);
+            string command = table.FormatTable();
+
             this.LastTable = command;
 
             this.communicator.Write(command);
+
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+            }
         }
 
         /// <summary>
@@ -107,17 +120,13 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public void SetClock(ClockType clockType)
         {
-            var command = provider.GetCommand(AmpsCommandType.TimeTableClockSync);
-            switch (clockType)
-            {
-                
-                case ClockType.External:
-                    this.communicator.Write(string.Format(command.Value, "EXT"));
-                    break;
+            var command = new AmpsCommand("STBLCLK", "STBLCLK");
+            command = command.AddParameter(",", clockType.ToString());
+            this.communicator.Write(command);
 
-                case ClockType.Internal:
-                    this.communicator.Write(string.Format(command.Value, "INT"));
-                    break;
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
             }
         }
 
@@ -130,6 +139,13 @@ namespace AmpsBoxSdk.Modules
         {
             var command = provider.GetCommand(AmpsCommandType.CommandSetTrigger);
             this.communicator.Write(string.Format(command.Value, startTriggerType));
+
+            if (this.communicator.IsError)
+            {
+                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
+            }
         }
+
+
     }
 }

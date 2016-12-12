@@ -1,35 +1,29 @@
 ﻿using System;
 using System.ComponentModel.Composition;
-using System.Runtime.Serialization;
-using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
-using FalkorSDK.Channel;
-using FalkorSDK.Data.Signals;
 
 namespace AmpsBoxSdk.Modules
 {
     [InheritedExport]
     public interface IRfDriverModule
     {
-        void SetFrequency(ChannelAddress address, int frequency);
-        int GetFrequency(ChannelAddress address);
-        void SetRfPeaktoPeakLevel(ChannelAddress address, double voltagePeakToPeak);
-        double GetRfPositiveVpp(ChannelAddress address);
-        double GetRfNegativeVpp(ChannelAddress address);
+        void Setint(string address, int frequency);
+        int Getint(string address);
+        void SetRfPeaktoPeakLevel(string address, double voltagePeakToPeak);
+        double GetRfPositiveVpp(string address);
+        double GetRfNegativeVpp(string address);
         int RfChannelCount();
-        int GetDriveLevel(ChannelAddress channel);
-        void SetRadioFrequencyOutputVoltage(ChannelAddress address, int voltage);
+        int GetDriveLevel(string channel);
+        void SetRadiointOutputdouble(string address, int voltage);
     }
 
     public class RfDriverModule : IRfDriverModule
     {
         private readonly IAmpsBoxCommunicator communicator;
-        private readonly AmpsCommandProvider provider;
 
         [ImportingConstructor]
-        public RfDriverModule(AmpsCommandProvider provider, IAmpsBoxCommunicator communicator)
+        public RfDriverModule(IAmpsBoxCommunicator communicator)
         {
-            this.provider = provider;
             this.communicator = communicator;
         }
 
@@ -38,7 +32,7 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         /// <param name="address"></param>
         /// <param name="voltage"></param>
-        public void SetRadioFrequencyOutputVoltage(ChannelAddress address, int voltage)
+        public void SetRadiointOutputdouble(string address, int voltage)
         {
             var command = provider.GetCommand(AmpsCommandType.SetDriveLevel);
         }
@@ -48,15 +42,15 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         /// <param name="address"></param>
         /// <param name="frequency"></param>
-        public void SetFrequency(ChannelAddress address, int frequency)
+        public void Setint(string address, int frequency)
         {
-            var command = provider.GetCommand(AmpsCommandType.SetFrequency);
+            var command = provider.GetCommand(AmpsCommandType.Setint);
 
         }
 
-        public int GetFrequency(ChannelAddress address)
+        public int Getint(string address)
         {
-           var command = provider.GetCommand(AmpsCommandType.GetFrequency);
+           var command = provider.GetCommand(AmpsCommandType.Getint);
             this.communicator.Write(string.Format("{1}{0}{2}", provider.CommandSeparator, command.Value, address.Address));
 
             var data = this.communicator.Response.Split(new[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
@@ -74,9 +68,9 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public Voltage GetRfOutputVoltage(ChannelAddress address)
+        public double GetRfOutputdouble(string address)
         {
-            var command = provider.GetCommand(AmpsCommandType.GetRfVoltage);
+            var command = provider.GetCommand(AmpsCommandType.GetRfdouble);
 
 
             double resultValue;
@@ -84,17 +78,17 @@ namespace AmpsBoxSdk.Modules
             return resultValue;
         }
 
-        public void SetRfPeaktoPeakLevel(ChannelAddress address, double voltagePeakToPeak)
+        public void SetRfPeaktoPeakLevel(string address, double voltagePeakToPeak)
         {
             throw new System.NotImplementedException();
         }
 
-        public double GetRfPositiveVpp(ChannelAddress address)
+        public double GetRfPositiveVpp(string address)
         {
             throw new System.NotImplementedException();
         }
 
-        public double GetRfNegativeVpp(ChannelAddress address)
+        public double GetRfNegativeVpp(string address)
         {
             throw new System.NotImplementedException();
         }
@@ -111,7 +105,7 @@ namespace AmpsBoxSdk.Modules
             return result;
         }
 
-        public int GetDriveLevel(ChannelAddress channel)
+        public int GetDriveLevel(string channel)
         {
             var command = provider.GetCommand(AmpsCommandType.GetDriveLevel);
             this.communicator.Write(string.Format(command.Value, channel.Address));

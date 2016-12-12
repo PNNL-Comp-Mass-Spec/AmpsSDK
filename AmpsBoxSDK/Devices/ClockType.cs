@@ -21,12 +21,12 @@ namespace AmpsBoxSdk.Devices
         /// Externally driven clock
         /// </summary>
         [EnumMember]
-        External,
+        EXT,
 
         /// <summary>
         /// Internally driven clock
         /// </summary>
         [EnumMember]
-        Internal
+        INT
     }
 }

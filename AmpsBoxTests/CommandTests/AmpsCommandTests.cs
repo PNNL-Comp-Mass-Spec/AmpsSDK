@@ -1,4 +1,6 @@
-﻿namespace AmpsBoxTests.CommandTests
+﻿
+
+namespace AmpsBoxTests.CommandTests
 {
     using System;
     using System.IO.Ports;
@@ -9,8 +11,6 @@
 
     using AmpsBoxTests.AmpsService;
 
-    using FalkorSDK.Data.Signals;
-    using FalkorSDK.IO.Ports;
 
     using NUnit.Framework;
 
@@ -20,14 +20,7 @@
         [Test]
         public void TestOne()
         {
-            var table = new AmpsSignalTable();
-            table.AddTimePoint(new PsgPoint("A", 0, new LoopData()));
-            table.AddTimePoint(new PsgPoint("B", 20, new LoopData()));
-            table.AddTimePoint(new PsgPoint("C", 30, new LoopData() { DoLoop = true, LoopCount = 10, LoopToName = table[0].Name}));
-            table[0].ReferenceTimePoint(table.Points.LastOrDefault(), 10);
-
-            var formattedTable = AmpsBoxSignalTableCommandFormatter.FormatTable(table, new AmpsClockConverter(1e6));
-            Console.WriteLine(formattedTable);
+            
         }
 
         [Test]

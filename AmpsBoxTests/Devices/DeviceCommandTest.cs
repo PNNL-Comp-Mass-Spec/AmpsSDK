@@ -1,9 +1,7 @@
 ﻿using System;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
-using FalkorSDK.Data.Signals;
-using FalkorSDK.Data.Elements;
-///
+
 namespace AmpsBoxTests.Devices
 {
     using System.Collections;
@@ -12,11 +10,6 @@ namespace AmpsBoxTests.Devices
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
-
-    using FalkorSDK.Channel;
-    using FalkorSDK.Data;
-    using FalkorSDK.Devices;
-    using FalkorSDK.IO.Ports;
 
     using NUnit.Framework;
 
@@ -43,52 +36,57 @@ namespace AmpsBoxTests.Devices
         {
         //    var serialPort = new SerialPort("COM18", 19200) { Handshake = Handshake.XOnXOff, Parity = Parity.Even};
 
-          var reader = new AmpsBoxCommunicator();
-            reader.Port.PortName = "COM20";
-            reader.Port.BaudRate = 19200;
-            reader.Port.RtsEnable = true;
-            reader.Port.ReadTimeout = 1000;
+       //   var reader = new AmpsBoxCommunicator();
+            //reader.Port.PortName = "COM3";
+            //reader.Port.BaudRate = 19200;
+            //reader.Port.RtsEnable = true;
+            //reader.Port.ReadTimeout = 1000;
+            //reader.Port.Parity = Parity.Even;
 
-         box = new AmpsBox(reader, new GammaCommandProvider());
-            reader.Open();
+         //box = new AmpsBox(reader);
+         //   reader.Open();
           var version =  box.StandardModule.GetVersion();
         }
 
         [Test]
         public void DcBiasTest()
         {
-            box.DcBiasModule.SetDcBias(new ChannelAddress("1"), 5 );
-           var voltage = box.DcBiasModule.GetDcSetPoint(new ChannelAddress("1"));
-            Console.WriteLine(voltage);
+           
+        }
+
+        [Test]
+        public void DigitalIoTest()
+        {
+          
         }
 
         [Test]
         [TestCase(ErrorCodes.Nominal)]
         public void GetVersionTest(ErrorCodes errorCode)
         {
-            var version = box.StandardModule.GetVersion();
-            Console.WriteLine(version);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //var version = box.StandardModule.GetVersion();
+            //Console.WriteLine(version);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
         [TestCase(ErrorCodes.Nominal)]
         public void GetNameTest(ErrorCodes errorCode)
         {
-            var name = box.StandardModule.GetName();
-            Console.WriteLine(name);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //var name = box.StandardModule.GetName();
+            //Console.WriteLine(name);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
         [TestCase("MIPS", ErrorCodes.Nominal)]
         public void SetNameTest(string name, ErrorCodes errorCode)
         {
-            box.StandardModule.SetName(name);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.StandardModule.SetName(name);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
 
@@ -100,9 +98,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(3, ErrorCodes.ArgumentOutOfRange)]
         public void GetTravellingWavePulseVoltageNominalTest(int boardNumber, ErrorCodes errorCode)
         {
-            box.TWaveModule.GetTravellingWavePulseVoltage(boardNumber);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.GetTravellingWavePulseVoltage(boardNumber);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
 
         }
 
@@ -113,9 +111,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, 5.0, ErrorCodes.Nominal)]
         public void SetTravellingWavePulseVoltageTest(int boardNumber, double voltage, ErrorCodes errorCode)
         {
-            box.TWaveModule.SetTravellingWavePulseVoltage(boardNumber, voltage);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.SetTravellingWavePulseVoltage(boardNumber, voltage);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -123,9 +121,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, ErrorCodes.Nominal)]
         public void GetTravellingWaveFrequencyNominalTest(int boardNumber, ErrorCodes errorCode)
         {
-            box.TWaveModule.GetTravellingWaveFrequency(boardNumber);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.GetTravellingWaveFrequency(boardNumber);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -135,9 +133,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, 20000, ErrorCodes.Nominal)]
         public void SetTravellingWaveFrequencyNominalTest(int boardNumber, int frequency, ErrorCodes errorCode)
         {
-            box.TWaveModule.SetTravellingWaveFrequency(boardNumber, frequency);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.SetTravellingWaveFrequency(boardNumber, frequency);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -145,11 +143,11 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, 150, ErrorCodes.Nominal)]
         [TestCase(1, 200, ErrorCodes.Nominal)]
         [TestCase(2, 250, ErrorCodes.Nominal)]
-        public void SetTravellingWaveGuard1Voltage(int boardNumber, Voltage voltage, ErrorCodes errorCode)
+        public void SetTravellingWaveGuard1Voltage(int boardNumber, double voltage, ErrorCodes errorCode)
         {
-            box.TWaveModule.SetGuardOneOutputVoltage(boardNumber, voltage);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.SetGuardOneOutputVoltage(boardNumber, voltage);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -157,11 +155,11 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, 150, ErrorCodes.Nominal)]
         [TestCase(1, 200, ErrorCodes.Nominal)]
         [TestCase(2, 250, ErrorCodes.Nominal)]
-        public void SetTravellingWaveGuard2Voltage(int boardNumber, Voltage voltage, ErrorCodes errorCode)
+        public void SetTravellingWaveGuard2Voltage(int boardNumber, double voltage, ErrorCodes errorCode)
         {
-            box.TWaveModule.SetGuardTwoOutputVoltage(boardNumber, voltage);
-            Console.WriteLine(box.Communicator.Response);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //box.TWaveModule.SetGuardTwoOutputVoltage(boardNumber, voltage);
+            //Console.WriteLine(box.Communicator.Response);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -169,9 +167,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, ErrorCodes.Nominal)]
         public void GetTravellingWaveGuard1Voltage(int boardNumber, ErrorCodes errorCode)
         {
-           var voltage = box.TWaveModule.GetGuardOneOutputVoltage(boardNumber);
-            Console.WriteLine(voltage);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+           //var voltage = box.TWaveModule.GetGuardOneOutputVoltage(boardNumber);
+           // Console.WriteLine(voltage);
+           // Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -179,9 +177,9 @@ namespace AmpsBoxTests.Devices
         [TestCase(2, ErrorCodes.Nominal)]
         public void GetTravellingWaveGuard2Voltage(int boardNumber, ErrorCodes errorCode)
         {
-            var voltage = box.TWaveModule.GetGuardTwoOutputVoltage(boardNumber);
-            Console.WriteLine(voltage);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            //var voltage = box.TWaveModule.GetGuardTwoOutputVoltage(boardNumber);
+            //Console.WriteLine(voltage);
+            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
 
         [Test]
@@ -191,46 +189,6 @@ namespace AmpsBoxTests.Devices
         {
             var bitArray = new BitArray(new bool[] { true, true, false, false, true, true, false, false});
             box.TWaveModule.SetTWaveOutputSequence(boardNumber, bitArray);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
-        }
-
-        [Test]
-        [TestCase(1, TWaveOutputDirection.FWD, ErrorCodes.Nominal)]
-        [TestCase(1, TWaveOutputDirection.REV, ErrorCodes.Nominal)]
-        [TestCase(2, TWaveOutputDirection.FWD, ErrorCodes.Nominal)]
-        [TestCase(2, TWaveOutputDirection.REV, ErrorCodes.Nominal)]
-        public void SetTravellingWaveDirection(
-            int boardNumber,
-            TWaveOutputDirection direction,
-            ErrorCodes errorCode)
-        {
-            box.TWaveModule.SetTWaveOutputDirection(boardNumber, direction);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
-        }
-
-        [Test]
-        [TestCase(1, ErrorCodes.Nominal)]
-        [TestCase(2, ErrorCodes.Nominal)]
-        public void GetTravellingWaveDirection(int boardNumber, ErrorCodes errorCode)
-        {
-            var outputDirection = box.TWaveModule.GetTWaveOutputDirection(boardNumber);
-            Console.WriteLine(outputDirection);
-            Assert.AreEqual(errorCode, box.StandardModule.GetError());
-        }
-
-
-
-        [Test]
-        [TestCase(1, ErrorCodes.Nominal)]
-        public void GetTravellingWaveSequence(int boardNumber, ErrorCodes errorCode)
-        {
-            var response = box.TWaveModule.GetTWaveOutputSequence(boardNumber);
-            string bits = "";
-            foreach (var bit in response)
-            {
-                bits += bit;
-            }
-            Console.WriteLine(bits);
             Assert.AreEqual(errorCode, box.StandardModule.GetError());
         }
     }

@@ -17,22 +17,13 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     public enum StartTriggerTypes
     {
-        /// <summary>
-        /// TODO The software.
-        /// </summary>
         [EnumMember]
         SW,
 
-        /// <summary>
-        /// TODO The external.
-        /// </summary>
         [EnumMember]
-        EXT,
+        BOTH,
+
         [EnumMember]
-        EDGE,
-        [EnumMember]
-        POS,
-        [EnumMember]
-        NEG
+        EXT
     }
 }

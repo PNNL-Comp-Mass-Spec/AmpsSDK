@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using AmpsBoxSdk.Devices;
+using System.Text;
 
 namespace AmpsBoxSdk.Commands
 {
@@ -21,37 +21,15 @@ namespace AmpsBoxSdk.Commands
     {
         #region Constructors and Destructors
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AmpsCommand"/> class.
-        /// </summary>
-        /// <param name="type">
-        /// TODO The type.
-        /// </param>
-        /// <param name="value">
-        /// TODO The value.
-        /// </param>
-        /// <param name="isSupported">
-        /// TODO The is supported.
-        /// </param>
-        public AmpsCommand(string value, bool isSupported)
+       /// <summary>
+       /// Instantiates a new AmpsCommand object with the provided name and value.
+       /// </summary>
+       /// <param name="name"></param>
+       /// <param name="value"></param>
+        public AmpsCommand(string name, string value)
         {
             this.Value = value;
-            this.IsSupported = isSupported;
-            this.ExpectedResponse = 0x06;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AmpsCommand"/> class.
-        /// </summary>
-        /// <param name="type">
-        /// TODO The type.
-        /// </param>
-        /// <param name="value">
-        /// TODO The value.
-        /// </param>
-        public AmpsCommand(string value)
-            : this(value, true)
-        {
+            this.CommandName = name;
             this.ExpectedResponse = 0x06;
         }
 
@@ -63,21 +41,25 @@ namespace AmpsBoxSdk.Commands
         /// Gets or sets the expected response
         /// </summary>
         [DataMember]
-        public int ExpectedResponse { get; private set; }
-
-        /// <summary>
-        /// Gets or sets whether this command is supported to being phased out.
-        /// </summary>
-        [DataMember]
-        public bool IsSupported { get; set; }
+        public int ExpectedResponse { get; }
 
         /// <summary>
         /// Gets or sets the value of the command
         /// </summary>
         [DataMember]
-        public string Value { get; set; }
+        public string Value { get; }
 
-        public string Name { get; set; }
+        public string CommandName { get; }
+
+        public AmpsCommand AddParameter(string separator, string parameter)
+        {
+            return new AmpsCommand(this.CommandName, this.Value + separator + parameter);
+        }
+
+        public override string ToString()
+        {
+            return this.Value;
+        }
 
         #endregion
     }

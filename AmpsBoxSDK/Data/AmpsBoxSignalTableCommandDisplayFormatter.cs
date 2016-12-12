@@ -9,14 +9,7 @@
 
 namespace AmpsBoxSdk.Data
 {
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
-
-    using FalkorSDK.Data;
-    using FalkorSDK.Data.Elements;
-    using FalkorSDK.Data.Signals;
-    using FalkorSDK.IO.Signals;
 
     /// <summary>
     /// TODO The amps box signal Table command display formatter.
@@ -82,17 +75,17 @@ namespace AmpsBoxSdk.Data
                 foreach (var signal in point.DcBiasElements)
                 {
                     timeBuilder.AppendFormat(
-                           "\t\tChannel\t{0}\tVoltage\t{1:F0}\n",
-                           signal.ChannelIdentifier,
-                           signal.Voltage);
+                           "\t\tChannel\t{0}\tdouble\t{1:F0}\n",
+                           signal.Key,
+                           signal.Value);
                 }
 
                 foreach (var digitalOutputElement in point.DigitalOutputElements)
                 {
                     timeBuilder.AppendFormat(
                            "\t\tChannel\t{0}\tTTL State\t{1:F0}\n",
-                           digitalOutputElement.ChannelIdentifier,
-                           digitalOutputElement.State);
+                           digitalOutputElement.Key,
+                           digitalOutputElement.Value);
                 }
 
                 string events = timeBuilder.ToString().TrimEnd(':');
