@@ -8,7 +8,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using AmpsBoxSdk.Modules;
-using ReactiveUI;
 
 namespace AmpsBoxSdk.Devices
 {
@@ -23,7 +22,7 @@ namespace AmpsBoxSdk.Devices
     /// Non shared parts creation policy so that multiple amps boxes can exist in the system at once.
     /// </summary>
     [DataContract]
-    public sealed class AmpsBox : ReactiveObject, IAmpsBox
+    public sealed class AmpsBox : IAmpsBox
     {
         #region Constants
 
