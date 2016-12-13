@@ -7,6 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Globalization;
 using System.Text;
 
 namespace AmpsBoxSdk.Commands
@@ -26,10 +27,8 @@ namespace AmpsBoxSdk.Commands
        /// </summary>
        /// <param name="name"></param>
        /// <param name="value"></param>
-        public AmpsCommand(string name, string value)
+        public AmpsCommand(string name, string value) : base (name, value)
         {
-            this.Value = value;
-            this.CommandName = name;
             this.ExpectedResponse = 0x06;
         }
 
@@ -43,15 +42,7 @@ namespace AmpsBoxSdk.Commands
         [DataMember]
         public int ExpectedResponse { get; }
 
-        /// <summary>
-        /// Gets or sets the value of the command
-        /// </summary>
-        [DataMember]
-        public string Value { get; }
-
-        public string CommandName { get; }
-
-        public AmpsCommand AddParameter(string separator, string parameter)
+        public override Command AddParameter(string separator, string parameter)
         {
             return new AmpsCommand(this.CommandName, this.Value + separator + parameter);
         }
@@ -59,6 +50,16 @@ namespace AmpsBoxSdk.Commands
         public override string ToString()
         {
             return this.Value;
+        }
+
+        public override Command AddParameter(string separator, int value)
+        {
+            return AddParameter(separator, value.ToString());
+        }
+
+        public override Command AddParameter(string separator, double value)
+        {
+            return AddParameter(separator, value.ToString(CultureInfo.CurrentCulture));
         }
 
         #endregion

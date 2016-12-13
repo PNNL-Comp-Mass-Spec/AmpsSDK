@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.Composition;
+﻿using System;
+using System.ComponentModel.Composition;
+using System.Reactive;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Data;
@@ -9,13 +11,13 @@ namespace AmpsBoxSdk.Modules
     [InheritedExport]
     public interface IPulseSequenceGeneratorModule
     {
-        void AbortTimeTable();
-        void LoadTimeTable(AmpsSignalTable table);
-        void SetClock(ClockType clockType);
-        void SetTrigger(StartTriggerTypes startTriggerType);
-        void SetMode();
-        void StopTable();
-        void StartTimeTable();
+        IObservable<Unit> AbortTimeTable();
+        IObservable<Unit> LoadTimeTable(AmpsSignalTable table);
+        IObservable<Unit> SetClock(ClockType clockType);
+        IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType);
+        IObservable<Unit> SetMode();
+        IObservable<Unit> StopTable();
+        IObservable<Unit> StartTimeTable();
         string LastTable { get; }
 
     }
@@ -34,7 +36,7 @@ namespace AmpsBoxSdk.Modules
        /// <summary>
        /// 
        /// </summary>
-        public void AbortTimeTable()
+        public IObservable<Unit> AbortTimeTable()
        {
            var command = provider.GetCommand(AmpsCommandType.TimeTableAbort);
            string formattedCommand = command.Value;
@@ -50,7 +52,7 @@ namespace AmpsBoxSdk.Modules
         /// Starts execution of time table.
         /// </summary>
         /// <returns></returns>
-        public void StartTimeTable()
+        public IObservable<Unit> StartTimeTable()
         {
             var command = provider.GetCommand(AmpsCommandType.TimeTableStart);
             this.communicator.Write(command.Value);
@@ -65,7 +67,7 @@ namespace AmpsBoxSdk.Modules
         /// <summary>
         /// Sets the table mode for the amps / mips box.
         /// </summary>
-        public void SetMode()
+        public IObservable<Unit> SetMode()
         {
             var command = provider.GetCommand(AmpsCommandType.Mode);
             if (this.communicator.IsError)
@@ -78,7 +80,7 @@ namespace AmpsBoxSdk.Modules
         /// Stop the time table of the device.
         /// </summary>
         /// <returns></returns>
-        public void StopTable()
+        public IObservable<Unit> StopTable()
         {
             var command = provider.GetCommand(AmpsCommandType.TimeTableStop);
             if (this.communicator.IsError)
@@ -96,7 +98,7 @@ namespace AmpsBoxSdk.Modules
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public void LoadTimeTable(AmpsSignalTable table)
+        public IObservable<Unit> LoadTimeTable(AmpsSignalTable table)
         {
             string command = table.FormatTable();
 
@@ -118,7 +120,7 @@ namespace AmpsBoxSdk.Modules
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public void SetClock(ClockType clockType)
+        public IObservable<Unit> SetClock(ClockType clockType)
         {
             var command = new AmpsCommand("STBLCLK", "STBLCLK");
             command = command.AddParameter(",", clockType.ToString());
@@ -135,7 +137,7 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         /// <param name="startTriggerType"></param>
         /// <returns></returns>
-        public void SetTrigger(StartTriggerTypes startTriggerType)
+        public IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType)
         {
             var command = provider.GetCommand(AmpsCommandType.CommandSetTrigger);
             this.communicator.Write(string.Format(command.Value, startTriggerType));

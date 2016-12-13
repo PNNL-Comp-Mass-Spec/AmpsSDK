@@ -17,7 +17,7 @@ namespace AmpsBoxSdk.Modules
 
         IObservable<int> GetDcBiasCurrentReadback(string channel);
 
-        IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber);
+        IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts);
 
         IObservable<int> GetBoardDcBiasOffsetVoltage(int brdNumber);
 
@@ -38,7 +38,7 @@ namespace AmpsBoxSdk.Modules
         {
             return Observable.StartAsync(async () =>
             {
-                var command = new AmpsCommand("SDCB", "SDCB");
+                Command command = new AmpsCommand("SDCB", "SDCB");
                 command = command.AddParameter(",", channel);
                 command = command.AddParameter(",", volts.ToString());
                 await this.communicator.Write(command);
@@ -49,7 +49,7 @@ namespace AmpsBoxSdk.Modules
         {
             return Observable.StartAsync(async () =>
             {
-                var command = new AmpsCommand("GDCB", "GDCB");
+                Command command = new AmpsCommand("GDCB", "GDCB");
                 command = command.AddParameter(",", channel);
                 var response = await this.communicator.Write(command);
                 int dcBiasSetpoint = 0;
@@ -60,27 +60,64 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<int> GetDcBiasReadback(string channel)
         {
-            throw new NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GDCBV", "GDCBV");
+                command = command.AddParameter(",", channel);
+                var response = await this.communicator.Write(command);
+                int dcBiasReadback = 0;
+                int.TryParse(response, out dcBiasReadback);
+                return dcBiasReadback;
+            });
         }
 
         public IObservable<int> GetDcBiasCurrentReadback(string channel)
         {
-            throw new NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GDCBI", "GDCBI");
+                command = command.AddParameter(",", channel);
+                var response = await this.communicator.Write(command);
+                int dcBiasCurrentReadback = 0;
+                int.TryParse(response, out dcBiasCurrentReadback);
+                return dcBiasCurrentReadback;
+            });
         }
 
-        public IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber)
+        public IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
-            throw new NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("SDCBOF", "SDCBOF");
+                command = command.AddParameter(",", brdNumber).AddParameter(",", offsetVolts);
+                var response = await this.communicator.Write(command);
+            });
         }
 
         public IObservable<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
-            throw new NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GDCBOF", "GDCBOF");
+                command = command.AddParameter(",", brdNumber);
+                var response = await this.communicator.Write(command);
+                int dcBiasCurrentReadback = 0;
+                int.TryParse(response, out dcBiasCurrentReadback);
+                return dcBiasCurrentReadback;
+            });
         }
 
         public IObservable<int> GetNumberDcBiasChannels()
         {
-            throw new NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GCHAN", "GCHAN");
+                command = command.AddParameter(",", "DCB");
+                var response = await this.communicator.Write(command);
+                int dcBiasCurrentReadback = 0;
+                int.TryParse(response, out dcBiasCurrentReadback);
+                return dcBiasCurrentReadback;
+            });
         }
     }
 }

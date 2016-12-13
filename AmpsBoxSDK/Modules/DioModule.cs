@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive;
 using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
@@ -12,54 +13,34 @@ namespace AmpsBoxSdk.Modules
             this.communicator = communicator;
         }
 
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <param name="channel"></param>
-       /// <param name="direction"></param>
-        public void ToggleDigitalDirection(string channel, string direction)
+        public IObservable<Unit> SetDigitalState(string channel, bool state)
         {
-            var command = provider.GetCommand(AmpsCommandType.SetDigitalIoDirection);
-           this.communicator.Write(string.Format(command.Value, channel.Address, direction));
+            throw new NotImplementedException();
         }
 
-        public string GetDigitalDirection(string channel)
+        public IObservable<Unit> PulseDigitalSignal(string channel)
         {
-            var command = provider.GetCommand(AmpsCommandType.GetDigitalIoDirection);
-            this.communicator.Write(string.Format(command.Value, channel.Address));
-            return this.communicator.Response;
+            throw new NotImplementedException();
         }
 
-        public bool GetDigitalState(string channel)
+        IObservable<bool> IDioModule.GetDigitalState(string channel)
         {
-            var command = provider.GetCommand(AmpsCommandType.GetDigitalIo);
-            this.communicator.Write(string.Format(command.Value, channel.Address));
-
-            return Convert.ToBoolean(int.Parse(this.communicator.Response));
+            throw new NotImplementedException();
         }
 
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <param name="address"></param>
-       /// <param name="state"></param>
-        public void ToggleDigitalOutput(string address, bool state)
+        public IObservable<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection)
         {
-            var command = provider.GetCommand(AmpsCommandType.SetDigitalIo);
-            this.communicator.Write(string.Format(command.Value, address.Address, Convert.ToInt32(state)));
+            throw new NotImplementedException();
         }
 
-     /// <summary>
-     /// 
-     /// </summary>
-     /// <param name="address"></param>
-        public void PulseDigitalOutput(string address)
+        IObservable<DigitalDirection> IDioModule.GetDigitalDirection(string channel)
         {
-            var pulseParam = "P";
+            throw new NotImplementedException();
+        }
 
-            var command = provider.GetCommand(AmpsCommandType.SetDigitalIo);
-            this.communicator.Write(string.Format(command.Value, address.Address, pulseParam));
-
+        public IObservable<int> GetNumberDigitalChannels()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -120,7 +120,9 @@
   <ItemGroup>
     <Compile Include="Commands\AmpsCommand.cs" />
     <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandProvider.cs" />
     <Compile Include="Commands\DcPowerStates.cs" />
+    <Compile Include="Commands\ICommandProvider.cs" />
     <Compile Include="Commands\SignalSources.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
@@ -148,11 +150,10 @@
     <Compile Include="Devices\AmpsResponseEventArgs.cs" />
     <Compile Include="Devices\ChannelOutOfRangeException.cs" />
     <Compile Include="Devices\ClockType.cs" />
+    <Compile Include="Devices\DigitalDirection.cs" />
     <Compile Include="Devices\ErrorCodes.cs" />
     <Compile Include="Devices\IAmpsBox.cs" />
     <Compile Include="Devices\IAmpsBoxCommunicator.cs" />
-    <Compile Include="Devices\IDcBiasBoard.cs" />
-    <Compile Include="Devices\IRfBoard.cs" />
     <Compile Include="Devices\ISerialPortCommunicator.cs" />
     <Compile Include="Devices\Responses.cs" />
     <Compile Include="Devices\StartTriggerTypes.cs" />
@@ -161,7 +162,6 @@
     <Compile Include="Events\SerialDataReceived.cs" />
     <Compile Include="Modules\AmpsEsiModule.cs" />
     <Compile Include="Modules\DioModule.cs" />
-    <Compile Include="Modules\IClockGenerationModule.cs" />
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
     <Compile Include="Modules\IEsiModule.cs" />

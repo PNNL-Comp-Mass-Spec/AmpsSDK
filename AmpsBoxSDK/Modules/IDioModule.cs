@@ -1,14 +1,19 @@
-﻿using System.ComponentModel.Composition;
+﻿using System;
+using System.ComponentModel.Composition;
+using System.Reactive;
+using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
 {
     [InheritedExport]
     public interface IDioModule
     {
-        void ToggleDigitalDirection(string channel, string direction);
-        string GetDigitalDirection(string channel);
-        bool GetDigitalState(string channel);
-        void ToggleDigitalOutput(string address, bool state);
-        void PulseDigitalOutput(string address);
+        IObservable<Unit> SetDigitalState(string channel, bool state);
+        IObservable<Unit> PulseDigitalSignal(string channel);
+
+        IObservable<bool> GetDigitalState(string channel);
+        IObservable<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection);
+        IObservable<DigitalDirection> GetDigitalDirection(string channel);
+        IObservable<int> GetNumberDigitalChannels();
     }
 }

@@ -79,27 +79,7 @@ namespace AmpsBoxSdk.Modules
                            command.Value);
         }
 
-        public int GetChannelCount(Module module)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Delay(int milliseconds)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public IEnumerable<string> GetCommands()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IEnumerable<bool> GetAnalogInputStatus()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SetAnalogInputStatus(bool status)
         {
             throw new System.NotImplementedException();
         }

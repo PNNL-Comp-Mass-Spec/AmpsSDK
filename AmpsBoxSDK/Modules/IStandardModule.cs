@@ -13,11 +13,6 @@ namespace AmpsBoxSdk.Modules
         void SetName(string name);
         void Reset();
         void Save();
-        int GetChannelCount(Module module);
-        void Delay(int milliseconds);
         IEnumerable<string> GetCommands();
-        IEnumerable<bool> GetAnalogInputStatus();
-        void SetAnalogInputStatus(bool status);
-
     }
 }
