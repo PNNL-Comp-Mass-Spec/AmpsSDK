@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Management;
-using NUnit.Framework;
+using Xunit;
 
 namespace AmpsBoxTests.ManagementObjectTests
 {
-    [TestFixture]
     public class ManagementObjectTests
     {
-        [Test]
+        [Fact]
         public void Test1()
         {
              ManagementObjectSearcher searcher = new ManagementObjectSearcher("Select * from Win32_PnPEntity WHERE Name LIKE '%COM%'");

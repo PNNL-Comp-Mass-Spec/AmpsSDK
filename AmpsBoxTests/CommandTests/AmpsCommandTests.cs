@@ -1,5 +1,7 @@
 ﻿
 
+using Xunit;
+
 namespace AmpsBoxTests.CommandTests
 {
     using System;
@@ -11,19 +13,15 @@ namespace AmpsBoxTests.CommandTests
 
     using AmpsBoxTests.AmpsService;
 
-
-    using NUnit.Framework;
-
-    [TestFixture]
     public class AmpsCommandTests
     {
-        [Test]
+        [Fact]
         public void TestOne()
         {
             
         }
 
-        [Test]
+        [Fact]
         public void ConnectAmps()
         {
 
