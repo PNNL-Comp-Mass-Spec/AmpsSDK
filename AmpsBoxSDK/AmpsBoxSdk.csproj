@@ -123,9 +123,9 @@
     <Compile Include="Commands\CommandProvider.cs" />
     <Compile Include="Commands\DcPowerStates.cs" />
     <Compile Include="Commands\ICommandProvider.cs" />
+    <Compile Include="Commands\Modes.cs" />
     <Compile Include="Commands\SignalSources.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
-    <Compile Include="Data\AmpsBoxSignalTableCommandFormatter.cs" />
     <Compile Include="Data\AmpsBoxSignalTableDisplayFormatter.cs" />
     <Compile Include="Data\AmpsBoxTimeTableWriterPlain.cs" />
     <Compile Include="Data\AmpsSignalTable.cs" />

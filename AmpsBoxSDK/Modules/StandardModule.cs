@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
@@ -15,73 +18,84 @@ namespace AmpsBoxSdk.Modules
         {
             this.communicator = communicator;
         }
-        /// <summary>
-        /// Gets the version of the AMPS box.
-        /// </summary>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public string GetVersion()
+
+        public IObservable<string> GetVersion()
         {
-            var command = provider.GetCommand(AmpsCommandType.GetVersion);
-            this.communicator.Write(command.Value);
-            var match = Regex.Match(this.communicator.Response, @"\d+(\.\d{1,2}(\w))?", RegexOptions.IgnoreCase);
-            return match.Value;
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GVER", "GVER");
+                var version = await this.communicator.Write(command);
+                return version;
+            });
         }
 
-        /// <summary>
-        /// Converts string? response into an int and then parses that to an enum. 
-        /// </summary>
-        /// <returns>
-        /// The <see cref="Task"/>.
-        /// </returns>
-        public ErrorCodes GetError()
+        public IObservable<ErrorCodes> GetError()
         {
-            var command = provider.GetCommand(AmpsCommandType.GetError);
-            this.communicator.Write(command.Value);
-            int responseCode;
-            int.TryParse(this.communicator.Response, out responseCode);
-            var code = (ErrorCodes)Enum.ToObject(typeof(ErrorCodes), responseCode);
-            return code;
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GERR", "GERR");
+                var error = await this.communicator.Write(command);
+                return (ErrorCodes)Enum.Parse(typeof(ErrorCodes), error);
+            });
         }
 
-        public string GetName()
+        public IObservable<string> GetName()
         {
-            var command = provider.GetCommand(AmpsCommandType.GetName);
-            this.communicator.Write(command.Value);
-            return this.communicator.Response;
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GNAME", "GNAME");
+                var name = await this.communicator.Write(command);
+                return name;
+            });
         }
 
-        public void SetName(string name)
+        public IObservable<Unit> SetName(string name)
         {
-            var command = provider.GetCommand(AmpsCommandType.SetName);
-            this.communicator.Write(string.Format(command.Value, name));
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("SNAME", "SNAME");
+                command.AddParameter(",", name);
+                await this.communicator.Write(command);
+            });
         }
 
-        /// <summary>
-        /// Reset the AMPS box.
-        /// </summary>
-        /// <returns></returns>
-        public void Reset()
+        public IObservable<Unit> Reset()
         {
-            var command = provider.GetCommand(AmpsCommandType.Reset);
-            this.communicator.Write(
-               command.Value);
+            throw new NotImplementedException("This is a dangerous function!");
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("RESET", "RESET");
+                await this.communicator.Write(command);
+            });
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Save()
+        public IObservable<Unit> Save()
         {
-            var command = provider.GetCommand(AmpsCommandType.Save);
-            this.communicator.Write(
-                           command.Value);
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("SAVE", "SAVE");
+                await this.communicator.Write(command);
+            });
         }
 
-        public IEnumerable<string> GetCommands()
+        public IObservable<IEnumerable<string>> GetCommands()
         {
-            throw new System.NotImplementedException();
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("GNAME", "GNAME");
+                var commands = await this.communicator.Write(command);
+                return commands.Split(new[] {','});
+            });
+        }
+
+        public IObservable<Unit> SetSerialBaudRate(int baudRate)
+        {
+            return Observable.StartAsync(async () =>
+            {
+                Command command = new AmpsCommand("SBAUD", "SBAUD");
+                command.AddParameter(",", baudRate);
+                await this.communicator.Write(command);
+            });
         }
     }
 }

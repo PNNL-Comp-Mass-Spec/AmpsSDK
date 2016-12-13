@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace AmpsBoxSdk.Data
 {
@@ -12,11 +14,21 @@ namespace AmpsBoxSdk.Data
     public class AmpsSignalTable
     {
         [DataMember]
-        private Collection<PsgPoint> timePoints;
-         
+        private List<PsgPoint> timePoints;
+
+        private string cachedTable;
+
         public AmpsSignalTable()
         {
-            this.timePoints = new Collection<PsgPoint>();
+            this.timePoints = new List<PsgPoint>();
+        }
+
+        private AmpsSignalTable(IList<PsgPoint> timePoints) : this()
+        {
+            for (int i = 0; i < timePoints.Count; i++)
+            {
+                timePoints.Add(timePoints[i]);
+            }
         }
 
         public PsgPoint this[string pointName]
@@ -35,41 +47,45 @@ namespace AmpsBoxSdk.Data
             }
         }
 
-        public void AddTimePoint(PsgPoint point)
+        public AmpsSignalTable AddTimePoint(PsgPoint point)
         {
-            if (!Enumerable.Contains<int>(this.timePoints.Select(x => x.TimePoint), point.TimePoint))
+            if (!this.timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
             {
                 this.timePoints.Add(point);
             }
+            return new AmpsSignalTable(this.timePoints);
         }
 
-        public void AddTimePoint(int clock, LoopData loopData)
+        public AmpsSignalTable AddTimePoint(int clock, LoopData loopData)
         {
-            if (!Enumerable.Contains(this.timePoints.Select(x => x.TimePoint), clock))
+            if (!this.timePoints.Select(x => x.TimePoint).Contains(clock))
             {
                 char[] ap = Enumerable.Range('A', 'Z' - 'A' + 1).Select(i => (char)i).ToArray();
                 this.timePoints.Add(new PsgPoint(ap[this.timePoints.Count].ToString(), clock, loopData));
             }
+            return new AmpsSignalTable(this.timePoints);
         }
 
-        public void RemoveTimePoint(PsgPoint point)
+        public AmpsSignalTable RemoveTimePoint(PsgPoint point)
         {
-            if (Enumerable.Contains<int>(this.timePoints.Select(x => x.TimePoint), point.TimePoint))
+            if (this.timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
             {
                 this.timePoints.Remove(point);
             }
+            return new AmpsSignalTable(this.timePoints);
         }
 
-        public void RemoveTimePoint(int clockToRemove)
+        public AmpsSignalTable RemoveTimePoint(int clockToRemove)
         {
             var timePoint = this.timePoints.FirstOrDefault(x => x.TimePoint == clockToRemove);
             if (timePoint != null)
             {
                 this.timePoints.Remove(timePoint);
             }
+            return new AmpsSignalTable(this.timePoints);
         }
 
-        public void AddSignalTable(AmpsSignalTable signalTable)
+        public AmpsSignalTable AddSignalTable(AmpsSignalTable signalTable)
         {
             // TODO: Make AmpsSignalTables immutable. 
             foreach (var psgPoint in signalTable.Points)
@@ -104,6 +120,129 @@ namespace AmpsBoxSdk.Data
                     this.AddTimePoint(psgPoint);
                 }
             }
+
+            return new AmpsSignalTable(this.timePoints);
+        }
+
+        public string RetrieveTableAsEncodedString()
+        {
+            if (cachedTable != null)
+            {
+                return this.cachedTable;
+            }
+            StringBuilder builder = new StringBuilder();
+            string tableName = "A";
+
+            var points = this.Points.ToList();
+            for (int i = 0; i < points.Count; i++)
+            {
+                // TODO: Move this if / else into separate function calls to speed up for loop evaluation. 
+                if (i == 0)
+                {
+                    var count = GetLoopCount(points, points[i]);
+                    if (count.HasValue)
+                    {
+                        builder.Append("0:[" + tableName);
+                        builder.Append(":" + count.Value + "," + points[i].TimePoint);
+                        tableName = ((int)tableName[0] + 1).ToString();
+                    }
+                    else
+                    {
+                        builder.Append(points[i].TimePoint);
+                    }
+
+                    foreach (var dcBiasElement in points[i].DcBiasElements)
+                    {
+                        builder.Append(":" + dcBiasElement.Key + ":" + Convert.ToInt32(dcBiasElement.Value));
+                    }
+
+                    foreach (var digitalOutputElement in points[i].DigitalOutputElements)
+                    {
+                        builder.Append(
+                                  ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
+                    }
+                }
+
+                else
+                {
+                    var count = GetLoopCount(points, points[i]);
+                    if (count.HasValue)
+                    {
+                        builder.Append("," + points[i].TimePoint + ":[" + tableName + ":");
+
+                        builder.Append(count.Value + ",0");
+                        tableName = char.ToString((char)(tableName[0] + 1));
+                    }
+
+                    else
+                    {
+                        builder.Append("," + points[i].TimePoint);
+                    }
+
+                    foreach (var dcBiasElement in points[i].DcBiasElements)
+                    {
+                        var point =
+                            points[i - 1].DcBiasElements.FirstOrDefault(
+                                x => x.Equals(dcBiasElement));
+                        if (point.Key != default(string))
+                        {
+                            if (Math.Abs(dcBiasElement.Value - point.Value) > 1e-6)
+                            {
+                                builder.Append(":" + dcBiasElement.Key + ":" + dcBiasElement.Value);
+                            }
+                        }
+
+                        else
+                        {
+                            builder.Append(
+                            ":" + dcBiasElement.Key + ":" + dcBiasElement.Value);
+                        }
+                    }
+
+                    foreach (var digitalOutputElement in points[i].DigitalOutputElements)
+                    {
+                        var point =
+                            points[i - 1].DigitalOutputElements.FirstOrDefault(
+                                x => x.Key.Equals(digitalOutputElement.Key));
+                        if (point.Key != default(string))
+                        {
+                            if (digitalOutputElement.Value != point.Value)
+                            {
+                                builder.Append(
+                              ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
+                            }
+                        }
+                        else
+                        {
+                            builder.Append(
+                            ":" + digitalOutputElement.Key + ":" + Convert.ToInt32(digitalOutputElement.Value));
+                        }
+                    }
+
+
+                }
+
+                if (points[i].PsgPointLoopData.DoLoop)
+                {
+                    builder.Append("]");
+                }
+
+            }
+            cachedTable = $"STBLDAT;{builder};";
+            return cachedTable;
+        }
+
+        private static int? GetLoopCount(List<PsgPoint> points, PsgPoint point)
+        {
+            foreach (var psgPoint in points)
+            {
+                var psgPointLoopData = psgPoint.PsgPointLoopData;
+                if (psgPointLoopData.DoLoop && psgPointLoopData.LoopToName.Equals(point.Name))
+                {
+                    return psgPointLoopData.LoopCount;
+                }
+            }
+            return null;
         }
 
         /// <summary>

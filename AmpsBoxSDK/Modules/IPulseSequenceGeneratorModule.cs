@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.Reactive;
+using System.Reactive.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Data;
@@ -15,7 +17,7 @@ namespace AmpsBoxSdk.Modules
         IObservable<Unit> LoadTimeTable(AmpsSignalTable table);
         IObservable<Unit> SetClock(ClockType clockType);
         IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType);
-        IObservable<Unit> SetMode();
+        IObservable<Unit> SetMode(Modes mode);
         IObservable<Unit> StopTable();
         IObservable<Unit> StartTimeTable();
         string LastTable { get; }
@@ -38,14 +40,11 @@ namespace AmpsBoxSdk.Modules
        /// </summary>
         public IObservable<Unit> AbortTimeTable()
        {
-           var command = provider.GetCommand(AmpsCommandType.TimeTableAbort);
-           string formattedCommand = command.Value;
-            this.communicator.Write(
-                                  formattedCommand);
-           if (this.communicator.IsError)
-           {
-               System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-           }
+            return Observable.Start(() =>
+            {
+                Command command = new AmpsCommand("TBLABRT", "TBLABRT");
+                this.communicator.Write(command);
+            });
         }
 
         /// <summary>
@@ -54,12 +53,11 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> StartTimeTable()
         {
-            var command = provider.GetCommand(AmpsCommandType.TimeTableStart);
-            this.communicator.Write(command.Value);
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
+                Command command = new AmpsCommand("TBLSTRT", "TBLSTRT");
+                this.communicator.Write(command);
+            });
         }
 
         public string LastTable { get; private set; }
@@ -67,14 +65,14 @@ namespace AmpsBoxSdk.Modules
         /// <summary>
         /// Sets the table mode for the amps / mips box.
         /// </summary>
-        public IObservable<Unit> SetMode()
+        public IObservable<Unit> SetMode(Modes mode)
         {
-            var command = provider.GetCommand(AmpsCommandType.Mode);
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
-            this.communicator.Write(command.Value);
+                Command command = new AmpsCommand("SMOD", "SMOD");
+                command.AddParameter(",", mode.ToString());
+                this.communicator.Write(command);
+            });
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -82,12 +80,11 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> StopTable()
         {
-            var command = provider.GetCommand(AmpsCommandType.TimeTableStop);
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
-            this.communicator.Write(command.Value);
+                Command command = new AmpsCommand("TBLSTOP", "TBLSTOP");
+                this.communicator.Write(command);
+            });
         }
 
         /// <summary>
@@ -100,16 +97,13 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public IObservable<Unit> LoadTimeTable(AmpsSignalTable table)
         {
-            string command = table.FormatTable();
-
-            this.LastTable = command;
-
-            this.communicator.Write(command);
-
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
+                string formattedTable = table.RetrieveTableAsEncodedString();
+                this.LastTable = formattedTable;
+                Command command = new AmpsCommand("STBLDAT", formattedTable);
+                this.communicator.Write(command);
+            });
         }
 
         /// <summary>
@@ -122,14 +116,12 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public IObservable<Unit> SetClock(ClockType clockType)
         {
-            var command = new AmpsCommand("STBLCLK", "STBLCLK");
-            command = command.AddParameter(",", clockType.ToString());
-            this.communicator.Write(command);
-
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
+                Command command = new AmpsCommand("STBLCLK", "STBLCLK");
+                command = command.AddParameter(",", clockType.ToString());
+                this.communicator.Write(command);
+            });
         }
 
         /// <summary>
@@ -139,13 +131,12 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType)
         {
-            var command = provider.GetCommand(AmpsCommandType.CommandSetTrigger);
-            this.communicator.Write(string.Format(command.Value, startTriggerType));
-
-            if (this.communicator.IsError)
+            return Observable.Start(() =>
             {
-                System.Diagnostics.Trace.WriteLine(this.standardModule.GetError());
-            }
+                Command command = new AmpsCommand("STBLCLK", "STBLCLK");
+                command = command.AddParameter(",", startTriggerType.ToString());
+                this.communicator.Write(command);
+            });
         }
 
 

@@ -13,9 +13,8 @@ namespace AmpsBoxSdk.Devices
 		/// </summary>
 		public AmpsBoxRfData()
 		{
-			this.Rfint = new ChannelData();
-			this.DriveLevel = new ChannelData();
-			this.Outputdouble = new ChannelData();
+			this.Frequency = new ChannelData(500, 5000);
+			this.DriveLevel = new ChannelData(0, 255);
 		}
 
 		#endregion
@@ -30,12 +29,12 @@ namespace AmpsBoxSdk.Devices
 		/// <summary>
 		/// Gets or sets the output voltage.
 		/// </summary>
-		public ChannelData Outputdouble { get; set; }
+		public double Output { get; set; }
 
 		/// <summary>
 		/// Gets or sets the RF int
 		/// </summary>
-		public ChannelData Rfint { get; set; }
+		public ChannelData Frequency { get; set; }
 
 		#endregion
 	}

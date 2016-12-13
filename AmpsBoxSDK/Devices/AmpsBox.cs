@@ -7,6 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Modules;
 
 namespace AmpsBoxSdk.Devices
@@ -123,14 +124,13 @@ namespace AmpsBoxSdk.Devices
 
             var firstOrDefault = table[table.Points.FirstOrDefault()?.Name];
 
-
             this.PulseSequenceGeneratorModule.LoadTimeTable(table);
 
             this.PulseSequenceGeneratorModule.SetClock(clockType);
 
             this.PulseSequenceGeneratorModule.SetTrigger(triggerType);
 
-            this.PulseSequenceGeneratorModule.SetMode();
+            this.PulseSequenceGeneratorModule.SetMode(Modes.TBL);
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace AmpsBoxSdk.Devices
 
             this.PulseSequenceGeneratorModule.LoadTimeTable(table);
 
-            this.PulseSequenceGeneratorModule.SetMode();
+            this.PulseSequenceGeneratorModule.SetMode(Modes.TBL);
         }
         #endregion
     }
