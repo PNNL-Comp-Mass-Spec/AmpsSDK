@@ -63,9 +63,13 @@ namespace AmpsBoxTests.Devices
         public void GetNameTest(ErrorCodes errorCode)
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var version = box.StandardModule.GetName().Timestamp().Wait();
-            output.WriteLine(version.Value);
-            output.WriteLine(version.Timestamp.LocalDateTime.ToString());
+            var version = box.StandardModule.GetName().Timestamp().Subscribe(timestamped =>
+            {
+                output.WriteLine(timestamped.Value);
+                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
+            });
+            Thread.Sleep(500);
+
         }
 
         [Theory]

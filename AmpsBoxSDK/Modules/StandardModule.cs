@@ -38,54 +38,43 @@ namespace AmpsBoxSdk.Modules
             Command command = new AmpsCommand("GERR", "GERR");
 
             var messagePacket = this.communicator.MessageSources;
-            string error = "";
             this.communicator.Write(command);
            return messagePacket.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
-                return (ErrorCodes)Enum.Parse(typeof(ErrorCodes), error);
+                return (ErrorCodes)Enum.Parse(typeof(ErrorCodes), s);
             });
-            
         }
 
         public IObservable<string> GetName()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("GNAME", "GNAME");
-               this.communicator.Write(command);
-                string name = string.Empty;
-                return name;
-            });
+            Command command = new AmpsCommand("GNAME", "GNAME");
+            this.communicator.Write(command);
+
+            return this.communicator.MessageSources.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
         }
 
         public IObservable<Unit> SetName(string name)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("SNAME", "SNAME");
-                command.AddParameter(",", name);
-               this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("SNAME", "SNAME");
+            command.AddParameter(",", name);
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(x => Unit.Default);
         }
 
         public IObservable<Unit> Reset()
         {
             throw new NotImplementedException("This is a dangerous function!");
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("RESET", "RESET");
-               this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("RESET", "RESET");
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(x => Unit.Default);
         }
 
         public IObservable<Unit> Save()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("SAVE", "SAVE");
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("SAVE", "SAVE");
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(x => Unit.Default);
         }
 
         public IObservable<string> GetCommands()
@@ -99,12 +88,10 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<Unit> SetSerialBaudRate(int baudRate)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("SBAUD", "SBAUD");
-                command.AddParameter(",", baudRate);
-               this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("SBAUD", "SBAUD");
+            command.AddParameter(",", baudRate);
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(x => Unit.Default);
         }
     }
 }

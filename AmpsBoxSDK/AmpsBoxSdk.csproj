@@ -162,6 +162,7 @@
     <Compile Include="Events\SerialDataReceived.cs" />
     <Compile Include="Io\AmpsBoxCommunicator.cs" />
     <Compile Include="Modules\AmpsEsiModule.cs" />
+    <Compile Include="Modules\DcBiasModule.cs" />
     <Compile Include="Modules\DioModule.cs" />
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
