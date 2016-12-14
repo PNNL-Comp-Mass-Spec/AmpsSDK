@@ -22,7 +22,7 @@ namespace AmpsBoxSdk.Modules
         {
             Command command = new AmpsCommand("SDCB", "SDCB");
             command = command.AddParameter(",", channel);
-            command = command.AddParameter(",", volts.ToString());
+            command = command.AddParameter(",", volts);
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
