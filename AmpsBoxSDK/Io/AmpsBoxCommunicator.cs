@@ -15,7 +15,7 @@ using AmpsBoxSdk.Devices;
 namespace Falkor.Plugin.Amps.Device
 {
     [DataContract]
-    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator, IObservable<string>
+    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator
     {
         #region Members
 
@@ -23,15 +23,12 @@ namespace Falkor.Plugin.Amps.Device
         /// Synchronization object.
         /// </summary>
         private readonly object sync = new object();
-
-        private List<IObserver<string>> observers;
             #endregion
 
         #region Construction and Initialization
 
         public AmpsBoxCommunicator(SerialPort port)
         {
-            this.observers = new List<IObserver<string>>();
             this.port = port;
             this.port.PortName = port.PortName;
             this.port.BaudRate = port.BaudRate;
@@ -40,6 +37,8 @@ namespace Falkor.Plugin.Amps.Device
             this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
 
             this.IsEmulated = false;
+
+            this.MessageSources = ToMessage(this.Read).Publish(); // Only create one connection.
         }
 
         #endregion
@@ -205,15 +204,6 @@ namespace Falkor.Plugin.Amps.Device
             };
         }
 
-        public IDisposable Subscribe(IObserver<string> observer)
-        {
-            if (!observers.Contains(observer))
-            {
-                observers.Add(observer);
-            }
-            return new Unsubscriber(observers, observer);
-        }
-
         private IObservable<byte> Read
         {
             get
@@ -271,33 +261,13 @@ namespace Falkor.Plugin.Amps.Device
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
         }
 
-        public IConnectableObservable<IEnumerable<byte>> MessageSources
-        {
-            get { return ToMessage(this.Read).Publish(); }
-        }
+        public IConnectableObservable<IEnumerable<byte>> MessageSources { get; }
 
 
         public IObservable<string> WhenTableFinished { get; }
 
         #endregion
 
-        private class Unsubscriber : IDisposable
-        {
-            private readonly List<IObserver<string>> observers;
-            private readonly IObserver<string> observer;
-
-            public Unsubscriber(List<IObserver<string>> observers, IObserver<string> observer)
-            {
-                this.observers = observers;
-                this.observer = observer;
-            }
-
-            public void Dispose()
-            {
-                if (observer != null && observers.Contains(observer))
-                    observers.Remove(observer);
-            }
-        }
     }
 
 

@@ -30,8 +30,6 @@ namespace AmpsBoxSdk.Modules
             this.communicator.Write(command);
             var stream = messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
             return stream;
-
-
         }
 
         public IObservable<ErrorCodes> GetError()
