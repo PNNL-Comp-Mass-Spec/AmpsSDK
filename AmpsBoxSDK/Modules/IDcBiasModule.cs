@@ -36,86 +36,105 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<Unit> SetDcBiasVoltage(string channel, int volts)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("SDCB", "SDCB");
                 command = command.AddParameter(",", channel);
                 command = command.AddParameter(",", volts.ToString());
-                await this.communicator.Write(command);
+
+
+                var messagePacket = this.communicator.MessageSources;
+               var connection = messagePacket.Connect();
+                messagePacket.Subscribe(s =>
+                {
+                    connection.Dispose();
+                });
+              
+                this.communicator.Write(command);
             });
         }
 
         public IObservable<int> GetDcBiasSetpoint(string channel)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("GDCB", "GDCB");
                 command = command.AddParameter(",", channel);
-                var response = await this.communicator.Write(command);
+
+                var messagePacket = this.communicator.MessageSources;
+                var connection = messagePacket.Connect();
                 int dcBiasSetpoint = 0;
-                int.TryParse(response, out dcBiasSetpoint);
+                messagePacket.Subscribe(s =>
+                {
+                    
+                    int.TryParse(s.ToString(), out dcBiasSetpoint);
+                    connection.Dispose();
+                });
+
+                this.communicator.Write(command);
+               
                 return dcBiasSetpoint;
             });
         }
 
         public IObservable<int> GetDcBiasReadback(string channel)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("GDCBV", "GDCBV");
                 command = command.AddParameter(",", channel);
-                var response = await this.communicator.Write(command);
+                this.communicator.Write(command);
                 int dcBiasReadback = 0;
-                int.TryParse(response, out dcBiasReadback);
+               // int.TryParse(response, out dcBiasReadback);
                 return dcBiasReadback;
             });
         }
 
         public IObservable<int> GetDcBiasCurrentReadback(string channel)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("GDCBI", "GDCBI");
                 command = command.AddParameter(",", channel);
-                var response = await this.communicator.Write(command);
+                this.communicator.Write(command);
                 int dcBiasCurrentReadback = 0;
-                int.TryParse(response, out dcBiasCurrentReadback);
+            //    int.TryParse(response, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
             });
         }
 
         public IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("SDCBOF", "SDCBOF");
                 command = command.AddParameter(",", brdNumber).AddParameter(",", offsetVolts);
-                var response = await this.communicator.Write(command);
+                this.communicator.Write(command);
             });
         }
 
         public IObservable<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("GDCBOF", "GDCBOF");
                 command = command.AddParameter(",", brdNumber);
-                var response = await this.communicator.Write(command);
+                this.communicator.Write(command);
                 int dcBiasCurrentReadback = 0;
-                int.TryParse(response, out dcBiasCurrentReadback);
+             //   int.TryParse(response, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
             });
         }
 
         public IObservable<int> GetNumberDcBiasChannels()
         {
-            return Observable.StartAsync(async () =>
+            return Observable.Start(() =>
             {
                 Command command = new AmpsCommand("GCHAN", "GCHAN");
                 command = command.AddParameter(",", "DCB");
-                var response = await this.communicator.Write(command);
+               this.communicator.Write(command);
                 int dcBiasCurrentReadback = 0;
-                int.TryParse(response, out dcBiasCurrentReadback);
+                //int.TryParse(response, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
             });
         }

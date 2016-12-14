@@ -1,27 +1,36 @@
 ﻿using System;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 using Falkor.Plugin.Amps.Device;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace AmpsBoxTests.Devices
 {
     using System.Collections;
     using System.IO.Ports;
-   public class DeviceCommandTest
+   public class DeviceCommandTest : IDisposable
     {
         private AmpsBox box;
+        private AmpsBoxCommunicator reader;
+        private ITestOutputHelper output;
 
-        public DeviceCommandTest()
+        public DeviceCommandTest(ITestOutputHelper output)
         {
-            var serialPort = new SerialPort("COM3", 19200) { Handshake = Handshake.XOnXOff, Parity = Parity.Even };
+            this.output = output;
+            var serialPort = new SerialPort("COM3", 19200*2) { Handshake = Handshake.XOnXOff, Parity = Parity.Even };
+            serialPort.RtsEnable = true;
 
-            var reader = new AmpsBoxCommunicator(serialPort);
+            reader = new AmpsBoxCommunicator(serialPort);
 
             box = new AmpsBox(reader);
-           reader.Open();
-            var version = box.StandardModule.GetVersion();
-            version.Subscribe(s => Console.WriteLine(s));
+            reader.Open();
+            
         }
 
         [Fact]
@@ -40,35 +49,48 @@ namespace AmpsBoxTests.Devices
         [InlineData(ErrorCodes.Nominal)]
         public void GetVersionTest(ErrorCodes errorCode)
         {
-            //var version = box.StandardModule.GetVersion();
-            //Console.WriteLine(version);
-            //Console.WriteLine(box.Communicator.Response);
-            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
+            var subscription = box.StandardModule.GetVersion().Timestamp().Subscribe(timestamped =>
+            {
+                output.WriteLine(timestamped.Value);
+                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
+            });
+            Thread.Sleep(500);
         }
 
         [Theory]
         [InlineData(ErrorCodes.Nominal)]
         public void GetNameTest(ErrorCodes errorCode)
         {
-            //var name = box.StandardModule.GetName();
-            //Console.WriteLine(name);
-            //Console.WriteLine(box.Communicator.Response);
-            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
+            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
+            var version = box.StandardModule.GetName().Timestamp().Wait();
+            output.WriteLine(version.Value);
+            output.WriteLine(version.Timestamp.LocalDateTime.ToString());
         }
 
         [Theory]
         [InlineData("AMPS-Groot", ErrorCodes.Nominal)]
         public void SetNameTest(string name, ErrorCodes errorCode)
         {
-            //box.StandardModule.SetName(name);
-            //Console.WriteLine(box.Communicator.Response);
-            //Assert.AreEqual(errorCode, box.StandardModule.GetError());
+           
+            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
+           var finished = box.StandardModule.SetName(name).Timestamp().Wait();
+            output.WriteLine(finished.Timestamp.LocalDateTime.ToString());
         }
 
+        [Fact]
         public void GetCommandsTest()
         {
-            
+            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
+            var version = box.StandardModule.GetCommands();
+            version.Subscribe(s => output.WriteLine(s));
+            System.Threading.Thread.Sleep(500);
+
         }
-        
+
+        public void Dispose()
+        {
+            this.reader?.Close();
+        }
     }
 }

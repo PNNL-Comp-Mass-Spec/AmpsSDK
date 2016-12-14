@@ -15,7 +15,7 @@ namespace AmpsBoxSdk.Modules
         IObservable<Unit> SetName(string name);
         IObservable<Unit> Reset();
         IObservable<Unit> Save();
-        IObservable<IEnumerable<string>>  GetCommands();
+        IObservable<string>  GetCommands();
         IObservable<Unit> SetSerialBaudRate(int baudRate);
     }
 }

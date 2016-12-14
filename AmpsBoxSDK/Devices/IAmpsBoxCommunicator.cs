@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Subjects;
 using AmpsBoxSdk.Commands;
 
 namespace AmpsBoxSdk.Devices
@@ -9,15 +11,17 @@ namespace AmpsBoxSdk.Devices
     {
         #region Methods
 
+
         /// <summary>
-        /// Write to the device.
+        /// 
         /// </summary>
         /// <param name="command"></param>
-        /// <returns></returns>
-        IObservable<string> Write(Command command);
+        void Write(Command command);
 
         IObservable<string> WhenTableFinished { get; }
-        
+
+         IConnectableObservable<IEnumerable<byte>> MessageSources { get; }
+
         /// <summary>
         /// Opens connection and allows 
         /// </summary>

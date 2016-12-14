@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
+using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Text.RegularExpressions;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
@@ -45,31 +49,25 @@ namespace Falkor.Plugin.Amps.Device
         /// Writes the command to the device.
         /// </summary>
         /// <param name="command"></param>
-        public IObservable<string> Write(Command command)
+        public void Write(Command command)
         {
             if (command == null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
-            return Observable.Start(() =>
+            lock (this.sync)
             {
-                string response;
-                lock (this.sync)
-                {
-                    this.port.WriteLine(command.ToString());
-                    response = this.port.ReadLine();
-                    this.port.DiscardInBuffer();
-                    this.port.DiscardOutBuffer();
-                }
-                if (!ValidateResponse(response))
-                {
-                    foreach (var observer in observers)
-                    {
-                        observer.OnError(new Exception());
-                    }
-                }
-                return ParseResponse(response, true);
-            });
+                this.port.WriteLine(command.ToString());
+
+                 //
+                //{
+                //    foreach (var observer in observers)
+                //    {
+                //        observer.OnError(new Exception());
+                //    }
+                //}
+                //return ParseResponse(response, true);
+            }
         }
         /// <summary>
         /// Determine if the response is valid.
@@ -105,7 +103,7 @@ namespace Falkor.Plugin.Amps.Device
         /// <param name="response"></param>
         /// <param name="shouldValidateResponse"></param>
         /// <returns></returns>
-        private string ParseResponse(string response, bool shouldValidateResponse)
+        private static string ParseResponse(string response)
         {
             if (string.IsNullOrEmpty(response))
             {
@@ -215,6 +213,69 @@ namespace Falkor.Plugin.Amps.Device
             }
             return new Unsubscriber(observers, observer);
         }
+
+        private IObservable<byte> Read
+        {
+            get
+            {
+                return
+                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                              h => this.port.DataReceived += h, h => this.port.DataReceived -= h).SelectMany(_ =>
+                              {
+                                  var buffer = new byte[1024];
+                                  var ret = new List<byte>();
+                                  int bytesRead;
+                                  do
+                                  {
+                                      bytesRead = this.port.Read(buffer, 0, buffer.Length);
+                                      ret.AddRange(buffer.Take(bytesRead));
+                                  } while (bytesRead >= buffer.Length);
+                                  return ret;
+                              });
+            }
+        }
+
+        private class FillingCollection
+        {
+            public byte LineEnding { get; }
+            public List<byte> Message { get; set; }
+            public bool Complete { get; set; }
+
+            public FillingCollection()
+            {
+                LineEnding = Encoding.ASCII.GetBytes("\n")[0];
+            }
+        }
+
+        private static IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        {
+            return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
+            {
+
+                if (buffer.Complete)
+                {
+                    buffer.Message.Clear();
+                    buffer.Complete = false;
+                }
+
+
+                if (newByte == buffer.LineEnding)
+                {
+                    buffer.Complete = true;
+                }
+                else
+                {
+                    buffer.Message.Add(newByte);
+                }
+                return buffer;
+            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+        }
+
+        public IConnectableObservable<IEnumerable<byte>> MessageSources
+        {
+            get { return ToMessage(this.Read).Publish(); }
+        }
+
 
         public IObservable<string> WhenTableFinished { get; }
 
