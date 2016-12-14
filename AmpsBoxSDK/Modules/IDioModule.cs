@@ -5,7 +5,6 @@ using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
 {
-    [InheritedExport]
     public interface IDioModule
     {
         IObservable<Unit> SetDigitalState(string channel, bool state);

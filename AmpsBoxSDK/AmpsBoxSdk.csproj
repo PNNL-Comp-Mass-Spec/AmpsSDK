@@ -167,11 +167,12 @@
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
     <Compile Include="Modules\IEsiModule.cs" />
-    <Compile Include="Modules\IMacroModule.cs" />
     <Compile Include="Modules\IPulseSequenceGeneratorModule.cs" />
     <Compile Include="Modules\IRfDriverModule.cs" />
     <Compile Include="Modules\IStandardModule.cs" />
     <Compile Include="Modules\Module.cs" />
+    <Compile Include="Modules\PulseSequenceGeneratorModule.cs" />
+    <Compile Include="Modules\RfDriverModule.cs" />
     <Compile Include="Modules\StandardModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

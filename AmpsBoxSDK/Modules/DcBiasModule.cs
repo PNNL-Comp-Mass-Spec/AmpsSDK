@@ -13,7 +13,6 @@ namespace AmpsBoxSdk.Modules
     {
         private readonly IAmpsBoxCommunicator communicator;
 
-        [ImportingConstructor]
         public DcBiasModule(IAmpsBoxCommunicator communicator)
         {
             this.communicator = communicator;
