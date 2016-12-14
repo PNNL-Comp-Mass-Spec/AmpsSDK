@@ -15,7 +15,7 @@ using AmpsBoxSdk.Devices;
 namespace Falkor.Plugin.Amps.Device
 {
     [DataContract]
-    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator
+    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator, IDisposable
     {
         #region Members
 
@@ -38,7 +38,7 @@ namespace Falkor.Plugin.Amps.Device
 
             this.IsEmulated = false;
 
-            this.MessageSources = ToMessage(this.Read).Publish(); // Only create one connection.
+            this.messageSources = ToMessage(this.Read).Publish(); // Only create one connection.
         }
 
         #endregion
@@ -57,15 +57,6 @@ namespace Falkor.Plugin.Amps.Device
             lock (this.sync)
             {
                 this.port.WriteLine(command.ToString());
-
-                 //
-                //{
-                //    foreach (var observer in observers)
-                //    {
-                //        observer.OnError(new Exception());
-                //    }
-                //}
-                //return ParseResponse(response, true);
             }
         }
         /// <summary>
@@ -129,6 +120,7 @@ namespace Falkor.Plugin.Amps.Device
                 if (this.port.IsOpen)
                 {
                     this.port.Close();
+                    this.connection.Dispose();
                 }
             }
         }
@@ -195,12 +187,15 @@ namespace Falkor.Plugin.Amps.Device
 
 
         public SerialPort Port { get { return this.port; } }
+
+        private IDisposable connection;
         public void Open()
         {
             lock (this.sync)
             {
                 if (this.port.IsOpen) return;
                 this.port.Open();
+                connection = this.messageSources.Connect();
             };
         }
 
@@ -261,10 +256,15 @@ namespace Falkor.Plugin.Amps.Device
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
         }
 
-        public IConnectableObservable<IEnumerable<byte>> MessageSources { get; }
+        private readonly IConnectableObservable<IEnumerable<byte>> messageSources;
 
+        public IObservable<IEnumerable<byte>> MessageSources => this.messageSources;
 
-        public IObservable<string> WhenTableFinished { get; }
+        public void Dispose()
+        {
+            port?.Dispose();
+            connection?.Dispose();
+        }
 
         #endregion
 

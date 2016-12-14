@@ -83,9 +83,14 @@ namespace AmpsBoxTests.Devices
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
             var version = box.StandardModule.GetCommands();
-            version.Subscribe(s => output.WriteLine(s));
-            System.Threading.Thread.Sleep(500);
-
+            int count = 0;
+            version.Subscribe(s =>
+            {
+               //output.WriteLine(s);
+                count++;
+            });
+            System.Threading.Thread.Sleep(1000);
+            output.WriteLine(count.ToString());
         }
 
         public void Dispose()

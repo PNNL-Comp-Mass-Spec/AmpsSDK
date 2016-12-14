@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 
@@ -36,43 +38,28 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<Unit> SetDcBiasVoltage(string channel, int volts)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("SDCB", "SDCB");
-                command = command.AddParameter(",", channel);
-                command = command.AddParameter(",", volts.ToString());
+            Command command = new AmpsCommand("SDCB", "SDCB");
+            command = command.AddParameter(",", channel);
+            command = command.AddParameter(",", volts.ToString());
 
 
-                var messagePacket = this.communicator.MessageSources;
-               var connection = messagePacket.Connect();
-                messagePacket.Subscribe(s =>
-                {
-                    connection.Dispose();
-                });
-              
-                this.communicator.Write(command);
-            });
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes => Unit.Default);
         }
 
         public IObservable<int> GetDcBiasSetpoint(string channel)
         {
-            return Observable.Start(() =>
+            Command command = new AmpsCommand("GDCB", "GDCB");
+            command = command.AddParameter(",", channel);
+
+            var messagePacket = this.communicator.MessageSources;
+            int dcBiasSetpoint = 0;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes =>
             {
-                Command command = new AmpsCommand("GDCB", "GDCB");
-                command = command.AddParameter(",", channel);
-
-                var messagePacket = this.communicator.MessageSources;
-                var connection = messagePacket.Connect();
-                int dcBiasSetpoint = 0;
-                messagePacket.Subscribe(s =>
-                {
-                    
-                    int.TryParse(s.ToString(), out dcBiasSetpoint);
-                    connection.Dispose();
-                });
-
-                this.communicator.Write(command);
-               
+                var s = Encoding.ASCII.GetString(bytes.ToArray());
+                int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
             });
         }

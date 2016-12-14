@@ -15,10 +15,11 @@ namespace AmpsBoxSdk.Modules
     public class StandardModule : IStandardModule
     {
         private IAmpsBoxCommunicator communicator;
-        [ImportingConstructor]
+
         public StandardModule(IAmpsBoxCommunicator communicator)
         {
             this.communicator = communicator;
+            
         }
 
         public IObservable<string> GetVersion()
@@ -26,7 +27,7 @@ namespace AmpsBoxSdk.Modules
             Command command = new AmpsCommand("GVER", "GVER");
             var messagePacket = this.communicator.MessageSources;
 
-            var connection = messagePacket.Connect();
+           // var connection = messagePacket.Connect();
             this.communicator.Write(command);
             var stream = messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
             return stream;
@@ -34,21 +35,17 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<ErrorCodes> GetError()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("GERR", "GERR");
+            Command command = new AmpsCommand("GERR", "GERR");
 
-                var messagePacket = this.communicator.MessageSources;
-                var connection = messagePacket.Connect();
-                string error = "";
-                messagePacket.Subscribe(s =>
-                {
-                    error = s.ToString();
-                    connection.Dispose();
-                });
-                this.communicator.Write(command);
+            var messagePacket = this.communicator.MessageSources;
+            string error = "";
+            this.communicator.Write(command);
+           return messagePacket.Select(bytes =>
+            {
+                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 return (ErrorCodes)Enum.Parse(typeof(ErrorCodes), error);
             });
+            
         }
 
         public IObservable<string> GetName()
@@ -93,11 +90,9 @@ namespace AmpsBoxSdk.Modules
 
         public IObservable<string> GetCommands()
         {
-
             Command command = new AmpsCommand("GCMDS", "GCMDS");
            
             var messagePacket = this.communicator.MessageSources;
-            var connection = messagePacket.Connect();
             this.communicator.Write(command);
             return messagePacket.Select(x => Encoding.ASCII.GetString(x.ToArray()));
         }

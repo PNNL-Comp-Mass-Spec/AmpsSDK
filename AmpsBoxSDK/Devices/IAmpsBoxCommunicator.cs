@@ -18,9 +18,7 @@ namespace AmpsBoxSdk.Devices
         /// <param name="command"></param>
         void Write(Command command);
 
-        IObservable<string> WhenTableFinished { get; }
-
-         IConnectableObservable<IEnumerable<byte>> MessageSources { get; }
+         IObservable<IEnumerable<byte>> MessageSources { get; }
 
         /// <summary>
         /// Opens connection and allows 

@@ -6,7 +6,6 @@ using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
 {
-    [InheritedExport]
     public interface IStandardModule
     {
         IObservable<string> GetVersion();
