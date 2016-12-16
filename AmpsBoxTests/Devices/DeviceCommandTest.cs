@@ -90,10 +90,24 @@ namespace AmpsBoxTests.Devices
             int count = 0;
             version.Subscribe(s =>
             {
-               //output.WriteLine(s);
+               output.WriteLine(s);
                 count++;
             });
             System.Threading.Thread.Sleep(1000);
+            output.WriteLine(count.ToString());
+        }
+
+        [Fact]
+        public void GetPositiveEsiVoltageAndCurrent()
+        {
+            var esi = box.GetPositiveEsi();
+            int count = 0;
+            esi.Subscribe(s =>
+            {
+                output.WriteLine(s.Item1.ToString());
+                output.WriteLine(s.Item2.ToString());
+            });
+            System.Threading.Thread.Sleep(500);
             output.WriteLine(count.ToString());
         }
 

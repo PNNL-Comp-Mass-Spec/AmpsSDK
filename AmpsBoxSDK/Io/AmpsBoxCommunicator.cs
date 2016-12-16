@@ -242,14 +242,21 @@ namespace AmpsBoxSdk.Io
                     buffer.Complete = false;
                 }
 
-
                 if (newByte == buffer.LineEnding)
                 {
                     buffer.Complete = true;
                 }
-                else
+                else switch (newByte)
                 {
-                    buffer.Message.Add(newByte);
+                    case 0x06:
+
+                        break;
+                    case 0x15:
+
+                        break;
+                    default:
+                        buffer.Message.Add(newByte);
+                        break;
                 }
                 return buffer;
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
