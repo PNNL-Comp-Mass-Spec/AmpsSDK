@@ -5,7 +5,6 @@ using System.Reactive;
 
 namespace AmpsBoxSdk.Modules
 {
-    [InheritedExport]
     public interface IDcBiasModule
     {
         IObservable<Unit> SetDcBiasVoltage(string channel, int volts);

@@ -4,7 +4,6 @@ using System.Reactive;
 
 namespace AmpsBoxSdk.Modules
 {
-    [InheritedExport]
     public interface IRfDriverModule
     {
         IObservable<Unit> SetFrequency(string address, int frequency);

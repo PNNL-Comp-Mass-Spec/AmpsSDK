@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 using AmpsBoxSdk.Io;
+using AmpsBoxSdk.Modules;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,7 +28,6 @@ namespace AmpsBoxTests.Devices
             serialPort.RtsEnable = true;
 
             reader = new AmpsBoxCommunicator(serialPort);
-
             box = new AmpsBox(reader);
             reader.Open();
             
@@ -50,7 +50,7 @@ namespace AmpsBoxTests.Devices
         public void GetVersionTest(ErrorCodes errorCode)
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var subscription = box.StandardModule.GetVersion().Timestamp().Subscribe(timestamped =>
+            var subscription = box.GetVersion().Timestamp().Subscribe(timestamped =>
             {
                 output.WriteLine(timestamped.Value);
                 output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
@@ -63,7 +63,7 @@ namespace AmpsBoxTests.Devices
         public void GetNameTest(ErrorCodes errorCode)
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var version = box.StandardModule.GetName().Timestamp().Subscribe(timestamped =>
+            var version = box.GetName().Timestamp().Subscribe(timestamped =>
             {
                 output.WriteLine(timestamped.Value);
                 output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
@@ -78,7 +78,7 @@ namespace AmpsBoxTests.Devices
         {
            
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-           var finished = box.StandardModule.SetName(name).Timestamp().Wait();
+           var finished = box.SetName(name).Timestamp().Wait();
             output.WriteLine(finished.Timestamp.LocalDateTime.ToString());
         }
 
@@ -86,7 +86,7 @@ namespace AmpsBoxTests.Devices
         public void GetCommandsTest()
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var version = box.StandardModule.GetCommands();
+            var version = box.GetCommands();
             int count = 0;
             version.Subscribe(s =>
             {

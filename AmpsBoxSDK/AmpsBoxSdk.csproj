@@ -161,19 +161,14 @@
     <Compile Include="Devices\State.cs" />
     <Compile Include="Events\SerialDataReceived.cs" />
     <Compile Include="Io\AmpsBoxCommunicator.cs" />
-    <Compile Include="Modules\AmpsEsiModule.cs" />
-    <Compile Include="Modules\DcBiasModule.cs" />
-    <Compile Include="Modules\DioModule.cs" />
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
     <Compile Include="Modules\IEsiModule.cs" />
+    <Compile Include="Modules\IHeaterModule.cs" />
     <Compile Include="Modules\IPulseSequenceGeneratorModule.cs" />
     <Compile Include="Modules\IRfDriverModule.cs" />
     <Compile Include="Modules\IStandardModule.cs" />
     <Compile Include="Modules\Module.cs" />
-    <Compile Include="Modules\PulseSequenceGeneratorModule.cs" />
-    <Compile Include="Modules\RfDriverModule.cs" />
-    <Compile Include="Modules\StandardModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,7 +8,6 @@ using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
 {
-    [InheritedExport]
     public interface IPulseSequenceGeneratorModule
     {
         IObservable<Unit> AbortTimeTable();
