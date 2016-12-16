@@ -36,7 +36,12 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void DcBiasTest()
         {
-           
+            var subscription = box.GetDcBiasSetpoint("1").Timestamp().Subscribe(timestamped =>
+            {
+                output.WriteLine(timestamped.Value.ToString());
+                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
+            });
+            Thread.Sleep(500);
         }
 
         [Fact]
