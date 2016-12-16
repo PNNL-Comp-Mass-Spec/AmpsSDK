@@ -30,16 +30,6 @@ namespace AmpsBoxSdk.Devices
     {
         #region Constants
 
-        /// <summary>
-        /// Emulated channel count for RF and HV testing
-        /// </summary>
-        private const int EmulatedChannelCount = 8;
-
-        /// <summary>
-        /// TODO The emulate d_ output.
-        /// </summary>
-        private const int EmulatedOutput = 100;
-
         private IAmpsBoxCommunicator communicator;
 
         /// <summary>
@@ -265,22 +255,66 @@ namespace AmpsBoxSdk.Devices
 
         public IObservable<Unit> SetPositiveHighVoltage(int volts)
         {
-            throw new NotImplementedException();
+            Command command = new AmpsCommand("SPHV", "SPHV");
+            command = command.AddParameter(",", volts);
+
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes => Unit.Default);
         }
 
         public IObservable<Unit> SetNegativeHighVoltage(int volts)
         {
-            throw new NotImplementedException();
+            Command command = new AmpsCommand("SNHV", "SNHV");
+            command = command.AddParameter(",", volts);
+
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes => Unit.Default);
         }
 
         public IObservable<Tuple<double, double>> GetPositiveEsi()
         {
-            throw new NotImplementedException();
+            Command command = new AmpsCommand("GPHVV", "GPHVV");
+
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes =>
+            {
+                var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
+               var splitString = voltageAndCurrent.Split(new[] {','});
+                double voltage = 0;
+                double current = 0;
+                if (splitString.Length >= 2)
+                {
+                    double.TryParse(splitString[0], out voltage);
+                    double.TryParse(splitString[1], out current);
+                }
+                
+                return new Tuple<double, double>(voltage, current);
+            });
         }
 
         public IObservable<Tuple<double, double>> GetNegativeEsi()
         {
-            throw new NotImplementedException();
+            Command command = new AmpsCommand("GNHVV", "GNHVV");
+
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            return messagePacket.Select(bytes =>
+            {
+                var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
+                var splitString = voltageAndCurrent.Split(new[] { ',' });
+                double voltage = 0;
+                double current = 0;
+                if (splitString.Length >= 2)
+                {
+                    double.TryParse(splitString[0], out voltage);
+                    double.TryParse(splitString[1], out current);
+                }
+
+                return new Tuple<double, double>(voltage, current);
+            });
         }
 
         public IObservable<Unit> TurnOnHeater()
