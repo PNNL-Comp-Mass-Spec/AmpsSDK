@@ -17,6 +17,8 @@
 
         public abstract Command AddParameter(string separator, double value);
 
+        public abstract Command AddParameter(string separator, bool state);
+
         public override string ToString()
         {
             return this.Value;

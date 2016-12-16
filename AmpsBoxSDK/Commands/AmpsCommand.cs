@@ -62,6 +62,11 @@ namespace AmpsBoxSdk.Commands
             return AddParameter(separator, value.ToString(CultureInfo.CurrentCulture));
         }
 
+        public override Command AddParameter(string separator, bool state)
+        {
+            return AddParameter(separator, state.ToString());
+        }
+
         #endregion
     }
 }

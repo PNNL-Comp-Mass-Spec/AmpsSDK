@@ -34,10 +34,9 @@ namespace AmpsBoxSdk.Modules
             Command command = new AmpsCommand("GDCB", "GDCB");
             command = command.AddParameter(",", channel);
 
-            var messagePacket = this.communicator.MessageSources;
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
