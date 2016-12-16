@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
-using Falkor.Plugin.Amps.Device;
+using AmpsBoxSdk.Io;
 using Xunit;
 using Xunit.Abstractions;
 
