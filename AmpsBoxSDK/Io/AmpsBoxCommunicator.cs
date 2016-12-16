@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
@@ -12,7 +11,7 @@ using System.Text.RegularExpressions;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 
-namespace Falkor.Plugin.Amps.Device
+namespace AmpsBoxSdk.Io
 {
     [DataContract]
     public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator, IDisposable
@@ -186,7 +185,7 @@ namespace Falkor.Plugin.Amps.Device
         public bool IsEmulated { get; set; }
 
 
-        public SerialPort Port { get { return this.port; } }
+        public SerialPort Port => this.port;
 
         private IDisposable connection;
         public void Open()

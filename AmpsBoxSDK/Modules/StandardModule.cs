@@ -26,8 +26,6 @@ namespace AmpsBoxSdk.Modules
         {
             Command command = new AmpsCommand("GVER", "GVER");
             var messagePacket = this.communicator.MessageSources;
-
-           // var connection = messagePacket.Connect();
             this.communicator.Write(command);
             var stream = messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
             return stream;
