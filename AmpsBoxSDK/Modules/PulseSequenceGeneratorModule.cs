@@ -25,11 +25,9 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         public IObservable<Unit> AbortTimeTable()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("TBLABRT", "TBLABRT");
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("TBLABRT", "TBLABRT");
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
         /// <summary>
@@ -38,11 +36,9 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> StartTimeTable()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("TBLSTRT", "TBLSTRT");
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("TBLSTRT", "TBLSTRT");
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
         public string LastTable { get; private set; }
@@ -52,12 +48,10 @@ namespace AmpsBoxSdk.Modules
         /// </summary>
         public IObservable<Unit> SetMode(Modes mode)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("SMOD", "SMOD");
-                command.AddParameter(",", mode.ToString());
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("SMOD", "SMOD");
+            command.AddParameter(",", mode.ToString());
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -65,11 +59,9 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> StopTable()
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("TBLSTOP", "TBLSTOP");
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("TBLSTOP", "TBLSTOP");
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
         /// <summary>
@@ -82,13 +74,11 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public IObservable<Unit> LoadTimeTable(AmpsSignalTable table)
         {
-            return Observable.Start(() =>
-            {
-                string formattedTable = table.RetrieveTableAsEncodedString();
-                this.LastTable = formattedTable;
-                Command command = new AmpsCommand("STBLDAT", formattedTable);
-                this.communicator.Write(command);
-            });
+            string formattedTable = table.RetrieveTableAsEncodedString();
+            this.LastTable = formattedTable;
+            Command command = new AmpsCommand("STBLDAT", formattedTable);
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
         /// <summary>
@@ -101,12 +91,10 @@ namespace AmpsBoxSdk.Modules
         /// </returns>
         public IObservable<Unit> SetClock(ClockType clockType)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("STBLCLK", "STBLCLK");
-                command = command.AddParameter(",", clockType.ToString());
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("STBLCLK", "STBLCLK");
+            command = command.AddParameter(",", clockType.ToString());
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
         /// <summary>
@@ -116,12 +104,10 @@ namespace AmpsBoxSdk.Modules
         /// <returns></returns>
         public IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType)
         {
-            return Observable.Start(() =>
-            {
-                Command command = new AmpsCommand("STBLCLK", "STBLCLK");
-                command = command.AddParameter(",", startTriggerType.ToString());
-                this.communicator.Write(command);
-            });
+            Command command = new AmpsCommand("STBLCLK", "STBLCLK");
+            command = command.AddParameter(",", startTriggerType.ToString());
+            this.communicator.Write(command);
+            return this.communicator.MessageSources.Select(bytes => Unit.Default);
         }
 
 
