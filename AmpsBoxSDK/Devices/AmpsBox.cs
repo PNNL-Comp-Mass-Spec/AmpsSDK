@@ -7,6 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
@@ -79,7 +80,7 @@ namespace AmpsBoxSdk.Devices
             return ampsBoxData;
         }
 
-        public IObservable<Unit> SetDcBiasVoltage(string channel, int volts)
+        public async Task<Unit> SetDcBiasVoltage(string channel, int volts)
         {
             Command command = new AmpsCommand("SDCB", "SDCB");
             command = command.AddParameter(",", channel);
@@ -87,95 +88,94 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<int> GetDcBiasSetpoint(string channel)
+        public async Task<int> GetDcBiasSetpoint(string channel)
         {
             Command command = new AmpsCommand("GDCB", "GDCB");
             command = command.AddParameter(",", channel);
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<int> GetDcBiasReadback(string channel)
+        public async Task<int> GetDcBiasReadback(string channel)
         {
             Command command = new AmpsCommand("GDCBV", "GDCBV");
             command = command.AddParameter(",", channel);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasReadback = 0;
                 int.TryParse(s, out dcBiasReadback);
                 return dcBiasReadback;
-            });
-
+            }).FirstAsync();
         }
 
-        public IObservable<int> GetDcBiasCurrentReadback(string channel)
+        public async Task<int> GetDcBiasCurrentReadback(string channel)
         {
             Command command = new AmpsCommand("GDCBI", "GDCBI");
             command = command.AddParameter(",", channel);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
                 int.TryParse(s, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
-            });
+            }).FirstAsync();
 
         }
 
-        public IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
+        public async Task<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
             Command command = new AmpsCommand("SDCBOF", "SDCBOF");
             command = command.AddParameter(",", brdNumber).AddParameter(",", offsetVolts);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
+        public async Task<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
             Command command = new AmpsCommand("GDCBOF", "GDCBOF");
             command = command.AddParameter(",", brdNumber);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
                 int.TryParse(s, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
-            });
+            }).FirstAsync();
 
 
         }
 
-        public IObservable<int> GetNumberDcBiasChannels()
+        public async Task<int> GetNumberDcBiasChannels()
         {
             Command command = new AmpsCommand("GCHAN", "GCHAN");
             command = command.AddParameter(",", "DCB");
             this.communicator.Write(command);
 
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var response = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
                 int.TryParse(response, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
-            });
+            }).FirstAsync();
 
         }
 
-        public IObservable<Unit> SetDigitalState(string channel, bool state)
+        public async Task<Unit> SetDigitalState(string channel, bool state)
         {
             Command command = new AmpsCommand("SDIO", "SDIO");
             command = command.AddParameter(",", channel);
@@ -183,10 +183,10 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Unit> PulseDigitalSignal(string channel)
+        public async Task<Unit> PulseDigitalSignal(string channel)
         {
             Command command = new AmpsCommand("SDIO", "SDIO");
             command = command.AddParameter(",", channel);
@@ -194,25 +194,25 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<bool> GetDigitalState(string channel)
+        public async Task<bool> GetDigitalState(string channel)
         {
             Command command = new AmpsCommand("GDIO", "GDIO");
             command.AddParameter(",", channel);
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 bool digitalState;
                 bool.TryParse(s, out digitalState);
                 return digitalState;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection)
+        public async Task<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection)
         {
             Command command = new AmpsCommand("SDIODR", "SDIODR");
             command = command.AddParameter(",", channel);
@@ -220,66 +220,70 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<DigitalDirection> GetDigitalDirection(string channel)
+        public async Task<DigitalDirection> GetDigitalDirection(string channel)
         {
             Command command = new AmpsCommand("GDIODR", "GDIODR");
             command = command.AddParameter(",", channel);
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 var direction = (DigitalDirection)Enum.Parse(typeof(DigitalDirection), s);
                 return direction;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<int> GetNumberDigitalChannels()
+        public async Task<int> GetNumberDigitalChannels()
         {
             Command command = new AmpsCommand("GCHAN", "GCHAN");
             command.AddParameter(",", "DIO");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
+                if (bytes.Any())
+                {
+                    return 0;
+                }
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int numberOfChannels = 0;
                 int.TryParse(s, out numberOfChannels);
                 return numberOfChannels;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Unit> SetPositiveHighVoltage(int volts)
+        public async Task<Unit> SetPositiveHighVoltage(int volts)
         {
             Command command = new AmpsCommand("SPHV", "SPHV");
             command = command.AddParameter(",", volts);
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Unit> SetNegativeHighVoltage(int volts)
+        public async Task<Unit> SetNegativeHighVoltage(int volts)
         {
             Command command = new AmpsCommand("SNHV", "SNHV");
             command = command.AddParameter(",", volts);
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Tuple<double, double>> GetPositiveEsi()
+        public async Task<Tuple<double, double>> GetPositiveEsi()
         {
             Command command = new AmpsCommand("GPHVV", "GPHVV");
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
                 var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
                var splitString = voltageAndCurrent.Split(new[] {','});
@@ -292,16 +296,16 @@ namespace AmpsBoxSdk.Devices
                 }
                 
                 return new Tuple<double, double>(voltage, current);
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Tuple<double, double>> GetNegativeEsi()
+        public async Task<Tuple<double, double>> GetNegativeEsi()
         {
             Command command = new AmpsCommand("GNHVV", "GNHVV");
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
                 var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
                 var splitString = voltageAndCurrent.Split(new[] { ',' });
@@ -314,105 +318,118 @@ namespace AmpsBoxSdk.Devices
                 }
 
                 return new Tuple<double, double>(voltage, current);
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Unit> TurnOnHeater()
+        public Task<Unit> TurnOnHeater()
         {
             throw new NotImplementedException();
         }
 
-        public IObservable<Unit> TurnOffHeater()
+        public Task<Unit> TurnOffHeater()
         {
             throw new NotImplementedException();
         }
 
-        public IObservable<Unit> SetTemperatureSetpoint(int temperature)
+        public Task<Unit> SetTemperatureSetpoint(int temperature)
         {
             throw new NotImplementedException();
         }
 
-        public IObservable<int> ReadTemperature()
+        public Task<int> ReadTemperature()
         {
             throw new NotImplementedException();
         }
 
-        public IObservable<Unit> SetPidGain(int gain)
+        public Task<Unit> SetPidGain(int gain)
         {
             throw new NotImplementedException();
         }
 
-        public IObservable<string> GetVersion()
+        public async Task<string> GetVersion()
         {
             Command command = new AmpsCommand("GVER", "GVER");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            var stream = messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
+            var stream = await messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray())).FirstAsync();
             return stream;
         }
 
-        public IObservable<ErrorCodes> GetError()
+        public async Task<ErrorCodes> GetError()
         {
             Command command = new AmpsCommand("GERR", "GERR");
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes =>
+            return await messagePacket.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
-                return (ErrorCodes)Enum.Parse(typeof(ErrorCodes), s);
-            });
+                int error = 0;
+                int.TryParse(s, out error);
+                return (ErrorCodes) error;
+            }).FirstAsync();
         }
 
-        public IObservable<string> GetName()
+        public async Task<string> GetName()
         {
             Command command = new AmpsCommand("GNAME", "GNAME");
             this.communicator.Write(command);
 
-            return this.communicator.MessageSources.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
+            return await this.communicator.MessageSources.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray())).FirstAsync();
         }
 
-        public IObservable<Unit> SetName(string name)
+        public async Task<Unit> SetName(string name)
         {
             Command command = new AmpsCommand("SNAME", "SNAME");
             command.AddParameter(",", name);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(x => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Unit> Reset()
+        public async Task<Unit> Reset()
         {
             throw new NotImplementedException("This is a dangerous function!");
             Command command = new AmpsCommand("RESET", "RESET");
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(x => Unit.Default);
+            return await this.communicator.MessageSources.Select(x => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Unit> Save()
+        public async Task<Unit> Save()
         {
             Command command = new AmpsCommand("SAVE", "SAVE");
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(x => Unit.Default);
+            return await this.communicator.MessageSources.Select(x => Unit.Default).FirstAsync();
         }
 
-        public IObservable<string> GetCommands()
+        public async Task<IEnumerable<string>> GetCommands()
         {
             Command command = new AmpsCommand("GCMDS", "GCMDS");
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(x => Encoding.ASCII.GetString(x.ToArray()));
+            var aggregator = await messagePacket.Select(x => Encoding.ASCII.GetString(x.ToArray())).Scan(new List<string>(),
+                (list, s) =>
+                {
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        list.Add(s);
+                    }
+                    
+                    return list;
+                })
+                .Where(list => list.Count == 50).FirstAsync();
+            return aggregator;
         }
 
-        public IObservable<Unit> SetSerialBaudRate(int baudRate)
+        public async Task<Unit> SetSerialBaudRate(int baudRate)
         {
             Command command = new AmpsCommand("SBAUD", "SBAUD");
             command.AddParameter(",", baudRate);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(x => Unit.Default);
+            return await this.communicator.MessageSources.Select(x => Unit.Default).FirstAsync();
         }
 
-        public IObservable<Unit> SetFrequency(string address, int frequency)
+        public async Task<Unit> SetFrequency(string address, int frequency)
         {
             // TODO: figure out if all values of frequency are already in kHz
             // if(frequency < 500 || frequency > 5000)
@@ -422,25 +439,25 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<int> GetFrequencySetting(string address)
+        public async Task<int> GetFrequencySetting(string address)
         {
             Command command = new AmpsCommand("GRFFRQ", "GRFFRQ");
             command = command.AddParameter(",", address);
 
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int frequency = 0;
                 int.TryParse(s, out frequency);
                 return frequency;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Unit> SetRfDriveSetting(string address, int drive)
+        public async Task<Unit> SetRfDriveSetting(string address, int drive)
         {
             if (drive < 0 || drive > 255)
             {
@@ -452,55 +469,55 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return messagePacket.Select(bytes => Unit.Default);
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public IObservable<int> GetRfDriveSetting(string address)
+        public async Task<int> GetRfDriveSetting(string address)
         {
             Command command = new AmpsCommand("GRFDRV", "GRFDRV");
             command = command.AddParameter(",", address);
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<int> GetRfChannelNumber()
+        public async Task<int> GetRfChannelNumber()
         {
             Command command = new AmpsCommand("GCHAN", "GCHAN");
             command = command.AddParameter(",", "RF");
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(bytes =>
             {
                 var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
-            });
+            }).FirstAsync();
         }
 
-        public IObservable<Unit> AbortTimeTable()
+        public async Task<Unit> AbortTimeTable()
         {
             Command command = new AmpsCommand("TBLABRT", "TBLABRT");
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
         /// Starts execution of time table.
         /// </summary>
         /// <returns></returns>
-        public IObservable<Unit> StartTimeTable()
+        public async Task<Unit> StartTimeTable()
         {
             Command command = new AmpsCommand("TBLSTRT", "TBLSTRT");
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public string LastTable { get; private set; }
@@ -508,22 +525,22 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Sets the table mode for the amps / mips box.
         /// </summary>
-        public IObservable<Unit> SetMode(Modes mode)
+        public async Task<Unit> SetMode(Modes mode)
         {
             Command command = new AmpsCommand("SMOD", "SMOD");
             command.AddParameter(",", mode.ToString());
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
         /// <summary>
         /// Stop the time table of the device.
         /// </summary>
         /// <returns></returns>
-        public IObservable<Unit> StopTable()
+        public async Task<Unit> StopTable()
         {
             Command command = new AmpsCommand("TBLSTOP", "TBLSTOP");
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -534,13 +551,13 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public IObservable<Unit> LoadTimeTable(AmpsSignalTable table)
+        public async Task<Unit> LoadTimeTable(AmpsSignalTable table)
         {
             string formattedTable = table.RetrieveTableAsEncodedString();
             this.LastTable = formattedTable;
             Command command = new AmpsCommand("STBLDAT", formattedTable);
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -551,12 +568,12 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="Task"/>.
         /// </returns>
-        public IObservable<Unit> SetClock(ClockType clockType)
+        public async Task<Unit> SetClock(ClockType clockType)
         {
             Command command = new AmpsCommand("STBLCLK", "STBLCLK");
             command = command.AddParameter(",", clockType.ToString());
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -564,12 +581,12 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         /// <param name="startTriggerType"></param>
         /// <returns></returns>
-        public IObservable<Unit> SetTrigger(StartTriggerTypes startTriggerType)
+        public async Task<Unit> SetTrigger(StartTriggerTypes startTriggerType)
         {
             Command command = new AmpsCommand("STBLCLK", "STBLCLK");
             command = command.AddParameter(",", startTriggerType.ToString());
             this.communicator.Write(command);
-            return this.communicator.MessageSources.Select(bytes => Unit.Default);
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
 
         #endregion

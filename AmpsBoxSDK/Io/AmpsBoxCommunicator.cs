@@ -34,7 +34,8 @@ namespace AmpsBoxSdk.Io
             this.port.NewLine = "\n";
             this.port.ErrorReceived += PortErrorReceived;
             this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
-
+            this.port.WriteTimeout = 250;
+            this.port.ReadTimeout = 250;
             this.IsEmulated = false;
 
             this.messageSources = ToMessage(this.Read).Publish(); // Only create one connection.
@@ -225,13 +226,15 @@ namespace AmpsBoxSdk.Io
             public List<byte> Message { get; set; }
             public bool Complete { get; set; }
 
+            public bool IsError { get; set; }
+
             public FillingCollection()
             {
                 LineEnding = Encoding.ASCII.GetBytes("\n")[0];
             }
         }
 
-        private static IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
         {
             return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
             {
@@ -240,6 +243,7 @@ namespace AmpsBoxSdk.Io
                 {
                     buffer.Message.Clear();
                     buffer.Complete = false;
+                    buffer.IsError = false;
                 }
 
                 if (newByte == buffer.LineEnding)
@@ -252,7 +256,11 @@ namespace AmpsBoxSdk.Io
 
                         break;
                     case 0x15:
-
+                        buffer.IsError = true;
+                        break;
+                        case 63:
+                        break;
+                        case 13:
                         break;
                     default:
                         buffer.Message.Add(newByte);

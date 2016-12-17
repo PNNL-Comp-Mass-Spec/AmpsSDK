@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reactive;
+using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Modules
 {
     public interface IDcBiasModule
     {
-        IObservable<Unit> SetDcBiasVoltage(string channel, int volts);
-        IObservable<int> GetDcBiasSetpoint(string channel);
-        IObservable<int> GetDcBiasReadback(string channel);
+        Task<Unit> SetDcBiasVoltage(string channel, int volts);
+        Task<int> GetDcBiasSetpoint(string channel);
+        Task<int> GetDcBiasReadback(string channel);
 
-        IObservable<int> GetDcBiasCurrentReadback(string channel);
+        Task<int> GetDcBiasCurrentReadback(string channel);
 
-        IObservable<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts);
+        Task<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts);
 
-        IObservable<int> GetBoardDcBiasOffsetVoltage(int brdNumber);
+        Task<int> GetBoardDcBiasOffsetVoltage(int brdNumber);
 
-        IObservable<int> GetNumberDcBiasChannels();
+        Task<int> GetNumberDcBiasChannels();
     }
 }

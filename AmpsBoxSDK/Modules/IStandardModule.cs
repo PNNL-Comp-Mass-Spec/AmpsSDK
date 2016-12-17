@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reactive;
+using System.Threading.Tasks;
 using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Modules
 {
     public interface IStandardModule
     {
-        IObservable<string> GetVersion();
-        IObservable<ErrorCodes> GetError();
-        IObservable<string> GetName();
-        IObservable<Unit> SetName(string name);
-        IObservable<Unit> Reset();
-        IObservable<Unit> Save();
-        IObservable<string>  GetCommands();
-        IObservable<Unit> SetSerialBaudRate(int baudRate);
+        Task<string> GetVersion();
+        Task<ErrorCodes> GetError();
+        Task<string> GetName();
+        Task<Unit> SetName(string name);
+        Task<Unit> Reset();
+        Task<Unit> Save();
+        Task<IEnumerable<string>>  GetCommands();
+        Task<Unit> SetSerialBaudRate(int baudRate);
     }
 }

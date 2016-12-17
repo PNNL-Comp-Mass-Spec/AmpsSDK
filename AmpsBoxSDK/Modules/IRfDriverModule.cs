@@ -1,13 +1,14 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.Reactive;
+using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Modules
 {
     public interface IRfDriverModule
     {
-        IObservable<Unit> SetFrequency(string address, int frequency);
-        IObservable<int> GetFrequencySetting(string address);
+        Task<Unit> SetFrequency(string address, int frequency);
+        Task<int> GetFrequencySetting(string address);
 
         /// <summary>
         /// 
@@ -15,10 +16,10 @@ namespace AmpsBoxSdk.Modules
         /// <param name="address"></param>
         /// <param name="drive">Between 0-255</param>
         /// <returns></returns>
-        IObservable<Unit> SetRfDriveSetting(string address, int drive);
+        Task<Unit> SetRfDriveSetting(string address, int drive);
 
-        IObservable<int> GetRfDriveSetting(string address);
+        Task<int> GetRfDriveSetting(string address);
 
-        IObservable<int> GetRfChannelNumber();
+        Task<int> GetRfChannelNumber();
     }
 }

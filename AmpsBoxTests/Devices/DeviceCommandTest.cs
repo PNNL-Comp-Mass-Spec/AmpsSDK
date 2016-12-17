@@ -36,12 +36,10 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void DcBiasTest()
         {
-            var subscription = box.GetDcBiasSetpoint("1").Timestamp().Subscribe(timestamped =>
-            {
-                output.WriteLine(timestamped.Value.ToString());
-                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
-            });
-            Thread.Sleep(500);
+            var subscription = box.GetDcBiasSetpoint("1").Result;
+            output.WriteLine(subscription.ToString());
+            var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
         }
 
         [Fact]
@@ -54,13 +52,8 @@ namespace AmpsBoxTests.Devices
         [InlineData(ErrorCodes.Nominal)]
         public void GetVersionTest(ErrorCodes errorCode)
         {
-            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var subscription = box.GetVersion().Timestamp().Subscribe(timestamped =>
-            {
-                output.WriteLine(timestamped.Value);
-                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
-            });
-            Thread.Sleep(500);
+            var version = box.GetVersion().Result;
+            output.WriteLine(version);
         }
 
         [Theory]
@@ -68,13 +61,9 @@ namespace AmpsBoxTests.Devices
         public void GetNameTest(ErrorCodes errorCode)
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var version = box.GetName().Timestamp().Subscribe(timestamped =>
-            {
-                output.WriteLine(timestamped.Value);
-                output.WriteLine(timestamped.Timestamp.LocalDateTime.ToString());
-            });
+            var version = box.GetName().Result;
+            output.WriteLine(version);
             Thread.Sleep(500);
-
         }
 
         [Theory]
@@ -83,37 +72,35 @@ namespace AmpsBoxTests.Devices
         {
            
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-           var finished = box.SetName(name).Timestamp().Wait();
-            output.WriteLine(finished.Timestamp.LocalDateTime.ToString());
+           
+           
         }
 
         [Fact]
         public void GetCommandsTest()
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-            var version = box.GetCommands();
-            int count = 0;
-            version.Subscribe(s =>
+            var commands = box.GetCommands().Result;
+            foreach (var command in commands)
             {
-               output.WriteLine(s);
-                count++;
-            });
-            System.Threading.Thread.Sleep(1000);
-            output.WriteLine(count.ToString());
+                output.WriteLine(command);
+            }
         }
 
         [Fact]
         public void GetPositiveEsiVoltageAndCurrent()
         {
-            var esi = box.GetPositiveEsi();
-            int count = 0;
-            esi.Subscribe(s =>
-            {
-                output.WriteLine(s.Item1.ToString());
-                output.WriteLine(s.Item2.ToString());
-            });
-            System.Threading.Thread.Sleep(500);
-            output.WriteLine(count.ToString());
+            var esi = box.GetPositiveEsi().Result;
+            output.WriteLine(esi.ToString());
+        }
+
+        [Fact]
+        public void GetNumberOfDigitalChannelsTest()
+        {
+            var digitalChannels = box.GetNumberDigitalChannels().Result;
+            output.WriteLine(digitalChannels.ToString());
+            var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
         }
 
         public void Dispose()
