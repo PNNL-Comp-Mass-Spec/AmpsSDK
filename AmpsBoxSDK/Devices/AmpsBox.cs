@@ -417,7 +417,7 @@ namespace AmpsBoxSdk.Devices
                     
                     return list;
                 })
-                .Where(list => list.Count == 50).FirstAsync();
+                .Where(list => list.Count == 50).FirstAsync(); // hardcoded hack
             return aggregator;
         }
 
@@ -587,6 +587,11 @@ namespace AmpsBoxSdk.Devices
             command = command.AddParameter(",", startTriggerType.ToString());
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
+        }
+
+        public IAmpsBoxCommunicator Communicator
+        {
+            get { return this.communicator; }
         }
 
         #endregion

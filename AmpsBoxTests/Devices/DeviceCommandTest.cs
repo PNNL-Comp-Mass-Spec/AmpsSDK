@@ -47,7 +47,6 @@ namespace AmpsBoxTests.Devices
         {
           
         }
-
         [Theory]
         [InlineData(ErrorCodes.Nominal)]
         public void GetVersionTest(ErrorCodes errorCode)

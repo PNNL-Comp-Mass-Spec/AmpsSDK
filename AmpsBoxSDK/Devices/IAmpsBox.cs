@@ -6,5 +6,7 @@ namespace AmpsBoxSdk.Devices
     {
         string GetConfig();
 
+        IAmpsBoxCommunicator Communicator { get; }
+
     }
 }

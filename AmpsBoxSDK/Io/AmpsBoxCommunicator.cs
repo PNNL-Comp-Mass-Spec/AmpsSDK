@@ -141,15 +141,8 @@ namespace AmpsBoxSdk.Io
             switch (e.EventType)
             {
                 case SerialError.Frame:
-                    throw new IOException(sender.ToString() + "IO Frame Error");
-                case SerialError.Overrun:
-                    throw new IOException("IO Overrun Error");
-                case SerialError.RXOver:
-                    throw new IOException("IO RXOver Error");
-                case SerialError.RXParity:
-                    throw new IOException("IO RXParity Error");
-                case SerialError.TXFull:
-                    throw new IOException("IO TXFull Error");
+                    System.Diagnostics.Trace.WriteLine(e.EventType.ToString());
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
