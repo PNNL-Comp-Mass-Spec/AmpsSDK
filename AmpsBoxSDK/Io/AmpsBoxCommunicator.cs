@@ -208,7 +208,18 @@ namespace AmpsBoxSdk.Io
 
         private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
         {
-            return input.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
+            return input.Select(bytes =>
+            {
+                if (bytes.Any())
+                {
+                   return Encoding.ASCII.GetString(bytes.ToArray());
+                }
+                else
+                {
+                    return string.Empty;
+                }
+                
+            });
         }
 
         private readonly IConnectableObservable<string> messageSources;
