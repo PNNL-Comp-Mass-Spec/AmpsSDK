@@ -10,18 +10,18 @@ namespace Mips.Io
             this.RespondingFromCommand = command;
         }
 
-        private ResponseMessage(MipsCommand command, IEnumerable<byte> payload)
+        private ResponseMessage(MipsCommand command, string payload)
         {
             this.RespondingFromCommand = command;
-            this.ResponsePayload = new List<byte>(payload).AsReadOnly();
+            this.ResponsePayload = payload;
         }
 
-        public ResponseMessage WithPayload(IEnumerable<byte> payload)
+        public ResponseMessage WithPayload(string payload)
         {
             return new ResponseMessage(this.RespondingFromCommand, payload);
         }
 
-        public IReadOnlyList<byte> ResponsePayload { get; }
+        public string ResponsePayload { get; }
         public MipsCommand RespondingFromCommand { get; }
     }
 }

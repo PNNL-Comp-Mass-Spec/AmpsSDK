@@ -18,7 +18,8 @@ namespace Mips.Io
         /// Synchronization object.
         /// </summary>
         private readonly object sync = new object();
-        private readonly Queue<ResponseMessage> commmandQueue = new Queue<ResponseMessage>();
+        private readonly Queue<ResponseMessage> responseQueue = new Queue<ResponseMessage>();
+
         #endregion
 
         #region Construction and Initialization
@@ -35,7 +36,7 @@ namespace Mips.Io
             this.port.ReadTimeout = 250;
             this.IsEmulated = false;
 
-            this.messageSources = ToMessage(this.Read).Publish(); // Only create one connection.
+            this.messageSources = ToResponseMessage(ToDecodedMessage(ToMessage(this.Read))).Publish(); // Only create one connection.
         }
 
         #endregion
@@ -51,18 +52,13 @@ namespace Mips.Io
             {
                 throw new ArgumentNullException(nameof(command));
             }
+            if (command.Value == null)
+            {
+                throw new Exception("Command value cannot be null!");
+            }
             lock (this.sync)
             {
-                this.commmandQueue.Enqueue(new ResponseMessage(command));
-                try
-                {
-                    this.port.WriteLine(command.ToString());
-                }
-                catch (TimeoutException exception)
-                {
-                    this.commmandQueue.Dequeue();
-                    throw;
-                }
+                this.port.WriteLine(command.ToString());
             }
         }
 
@@ -132,6 +128,7 @@ namespace Mips.Io
         public SerialPort Port => this.port;
 
         private IDisposable connection;
+
         public void Open()
         {
             lock (this.sync)
@@ -139,7 +136,8 @@ namespace Mips.Io
                 if (this.port.IsOpen) return;
                 this.port.Open();
                 connection = this.messageSources.Connect();
-            };
+            }
+            ;
         }
 
         private IObservable<byte> Read
@@ -147,19 +145,19 @@ namespace Mips.Io
             get
             {
                 return
-                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                              h => this.port.DataReceived += h, h => this.port.DataReceived -= h).SelectMany(_ =>
-                              {
-                                  var buffer = new byte[1024];
-                                  var ret = new List<byte>();
-                                  int bytesRead;
-                                  do
-                                  {
-                                      bytesRead = this.port.Read(buffer, 0, buffer.Length);
-                                      ret.AddRange(buffer.Take(bytesRead));
-                                  } while (bytesRead >= buffer.Length);
-                                  return ret;
-                              });
+                    Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                        h => this.port.DataReceived += h, h => this.port.DataReceived -= h).SelectMany(_ =>
+                    {
+                        var buffer = new byte[1024];
+                        var ret = new List<byte>();
+                        int bytesRead;
+                        do
+                        {
+                            bytesRead = this.port.Read(buffer, 0, buffer.Length);
+                            ret.AddRange(buffer.Take(bytesRead));
+                        } while (bytesRead >= buffer.Length);
+                        return ret;
+                    });
             }
         }
 
@@ -177,9 +175,9 @@ namespace Mips.Io
             }
         }
 
-        private IObservable<ResponseMessage> ToMessage(IObservable<byte> input)
+        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
         {
-            return input.Scan(new FillingCollection { Message = new List<byte>() }, (buffer, newByte) =>
+            return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
             {
 
                 if (buffer.Complete)
@@ -193,7 +191,8 @@ namespace Mips.Io
                 {
                     buffer.Complete = true;
                 }
-                else switch (newByte)
+                else
+                    switch (newByte)
                     {
                         case 0x06:
 
@@ -210,22 +209,42 @@ namespace Mips.Io
                             break;
                     }
                 return buffer;
-            }).Where(fc => fc.Complete).Select(fc =>
+            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+        }
+
+        private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
+        {
+            return input.Select(bytes =>
             {
-                var any = this.commmandQueue.Any();
-                if (any)
+                if (bytes.Any())
                 {
-                   var command = this.commmandQueue.Dequeue();
-                    command.WithPayload(fc.Message);
-                    return command;
+                    return Encoding.ASCII.GetString(bytes.ToArray());
                 }
                 else
                 {
-                    return new ResponseMessage(new MipsCommand("Mips", "Mips")).WithPayload(fc.Message);
+                    return string.Empty;
                 }
+
             });
         }
 
+
+        private IObservable<ResponseMessage> ToResponseMessage(IObservable<string> input)
+        {
+            return input.Select(s =>
+            {
+                // If there is a command in the queue, the MIPS box would have responded in a FIFO ordering. 
+                if (responseQueue.Any())
+                {
+                    var response = responseQueue.Dequeue();
+                    return response.WithPayload(s);
+                }
+                else
+                {
+                    return new ResponseMessage(new MipsCommand("MIPS", "MIPS")).WithPayload(s);
+                }
+            });
+        }
         private readonly IConnectableObservable<ResponseMessage> messageSources;
 
         public IObservable<ResponseMessage> MessageSources => this.messageSources;
