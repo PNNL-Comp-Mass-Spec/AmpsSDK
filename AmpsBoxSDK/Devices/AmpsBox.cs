@@ -98,9 +98,8 @@ namespace AmpsBoxSdk.Devices
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
             }).FirstAsync();
@@ -111,9 +110,8 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GDCBV", "GDCBV");
             command = command.AddParameter(",", channel);
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasReadback = 0;
                 int.TryParse(s, out dcBiasReadback);
                 return dcBiasReadback;
@@ -125,9 +123,8 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GDCBI", "GDCBI");
             command = command.AddParameter(",", channel);
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
                 int.TryParse(s, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
@@ -148,9 +145,8 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GDCBOF", "GDCBOF");
             command = command.AddParameter(",", brdNumber);
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
                 int.TryParse(s, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
@@ -165,11 +161,10 @@ namespace AmpsBoxSdk.Devices
             command = command.AddParameter(",", "DCB");
             this.communicator.Write(command);
 
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var response = Encoding.ASCII.GetString(bytes.ToArray());
                 int dcBiasCurrentReadback = 0;
-                int.TryParse(response, out dcBiasCurrentReadback);
+                int.TryParse(s, out dcBiasCurrentReadback);
                 return dcBiasCurrentReadback;
             }).FirstAsync();
 
@@ -203,9 +198,8 @@ namespace AmpsBoxSdk.Devices
             command.AddParameter(",", channel);
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 bool digitalState;
                 bool.TryParse(s, out digitalState);
                 return digitalState;
@@ -230,9 +224,8 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 var direction = (DigitalDirection)Enum.Parse(typeof(DigitalDirection), s);
                 return direction;
             }).FirstAsync();
@@ -244,13 +237,12 @@ namespace AmpsBoxSdk.Devices
             command.AddParameter(",", "DIO");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                if (bytes.Any())
+                if (string.IsNullOrEmpty(s))
                 {
                     return 0;
                 }
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int numberOfChannels = 0;
                 int.TryParse(s, out numberOfChannels);
                 return numberOfChannels;
@@ -283,10 +275,9 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
-               var splitString = voltageAndCurrent.Split(new[] {','});
+               var splitString = s.Split(new[] {','});
                 double voltage = 0;
                 double current = 0;
                 if (splitString.Length >= 2)
@@ -305,10 +296,9 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                var voltageAndCurrent = Encoding.ASCII.GetString(bytes.ToArray());
-                var splitString = voltageAndCurrent.Split(new[] { ',' });
+                var splitString = s.Split(new[] { ',' });
                 double voltage = 0;
                 double current = 0;
                 if (splitString.Length >= 2)
@@ -351,7 +341,7 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GVER", "GVER");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            var stream = await messagePacket.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray())).FirstAsync();
+            var stream = await messagePacket.Select(s => s).FirstAsync();
             return stream;
         }
 
@@ -361,9 +351,8 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes =>
+            return await messagePacket.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int error = 0;
                 int.TryParse(s, out error);
                 return (ErrorCodes) error;
@@ -375,7 +364,7 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GNAME", "GNAME");
             this.communicator.Write(command);
 
-            return await this.communicator.MessageSources.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray())).FirstAsync();
+            return await this.communicator.MessageSources.Select(s => s).FirstAsync();
         }
 
         public async Task<Unit> SetName(string name)
@@ -407,7 +396,7 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            var aggregator = await messagePacket.Select(x => Encoding.ASCII.GetString(x.ToArray())).Scan(new List<string>(),
+            var aggregator = await messagePacket.Select(s => s).Scan(new List<string>(),
                 (list, s) =>
                 {
                     if (!string.IsNullOrEmpty(s))
@@ -448,9 +437,8 @@ namespace AmpsBoxSdk.Devices
             command = command.AddParameter(",", address);
 
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int frequency = 0;
                 int.TryParse(s, out frequency);
                 return frequency;
@@ -479,9 +467,8 @@ namespace AmpsBoxSdk.Devices
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
             }).FirstAsync();
@@ -494,9 +481,8 @@ namespace AmpsBoxSdk.Devices
 
             int dcBiasSetpoint = 0;
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes =>
+            return await this.communicator.MessageSources.Select(s =>
             {
-                var s = Encoding.ASCII.GetString(bytes.ToArray());
                 int.TryParse(s, out dcBiasSetpoint);
                 return dcBiasSetpoint;
             }).FirstAsync();

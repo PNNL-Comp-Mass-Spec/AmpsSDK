@@ -37,7 +37,7 @@ namespace AmpsBoxSdk.Io
             this.port.ReadTimeout = 250;
             this.IsEmulated = false;
 
-            this.messageSources = ToMessage(this.Read).Publish(); // Only create one connection.
+            this.messageSources = ToDecodedMessage(ToMessage(this.Read)).Publish(); // Only create one connection.
         }
 
         #endregion
@@ -206,9 +206,14 @@ namespace AmpsBoxSdk.Io
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
         }
 
-        private readonly IConnectableObservable<IEnumerable<byte>> messageSources;
+        private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
+        {
+            return input.Select(bytes => Encoding.ASCII.GetString(bytes.ToArray()));
+        }
 
-        public IObservable<IEnumerable<byte>> MessageSources => this.messageSources;
+        private readonly IConnectableObservable<string> messageSources;
+
+        public IObservable<string> MessageSources => this.messageSources;
 
         public void Dispose()
         {
