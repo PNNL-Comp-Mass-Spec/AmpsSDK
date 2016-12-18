@@ -109,7 +109,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\AmpsCommand.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandProvider.cs" />
     <Compile Include="Commands\DcPowerStates.cs" />

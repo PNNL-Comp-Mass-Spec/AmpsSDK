@@ -1,27 +1,74 @@
-﻿namespace AmpsBoxSdk.Commands
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="Command.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   AMPS Box command structure for supporting multiple versions of the software.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+using System.Globalization;
+using System.Text;
+
+namespace AmpsBoxSdk.Commands
 {
-    public abstract class Command
+    using System.Runtime.Serialization;
+
+    /// <summary>
+    /// AMPS Box command structure for supporting multiple versions of the software.
+    /// </summary>
+    public class Command 
     {
-        protected Command(string name, string value)
+        #region Constructors and Destructors
+
+       /// <summary>
+       /// Instantiates a new Command object with the provided name and value.
+       /// </summary>
+       /// <param name="name"></param>
+       /// <param name="value"></param>
+        public Command(string name, string value)
         {
-            this.Value = name;
-            this.Value = value;
+            this.ExpectedResponse = 0x06;
         }
-        public string Value { get; }
+
+        #endregion
+
+        #region Public Properties
 
         public string CommandName { get; }
 
-        public abstract Command AddParameter(string separator, string parameter);
+        public string Value { get; }
 
-        public abstract Command AddParameter(string separator, int value);
+        /// <summary>
+        /// Gets or sets the expected response
+        /// </summary>
+        public int ExpectedResponse { get; }
 
-        public abstract Command AddParameter(string separator, double value);
-
-        public abstract Command AddParameter(string separator, bool state);
+        public Command AddParameter(string separator, string parameter)
+        {
+            return new Command(this.CommandName, this.Value + separator + parameter);
+        }
 
         public override string ToString()
         {
             return this.Value;
         }
+
+        public Command AddParameter(string separator, int value)
+        {
+            return AddParameter(separator, value.ToString());
+        }
+
+        public Command AddParameter(string separator, double value)
+        {
+            return AddParameter(separator, value.ToString(CultureInfo.CurrentCulture));
+        }
+
+        public Command AddParameter(string separator, bool state)
+        {
+            return AddParameter(separator, state.ToString());
+        }
+
+        #endregion
     }
 }

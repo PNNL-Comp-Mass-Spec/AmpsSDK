@@ -5,15 +5,12 @@ using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.RegularExpressions;
-using AmpsBoxSdk.Commands;
-using AmpsBoxSdk.Devices;
+using Mips.Commands;
 
-namespace AmpsBoxSdk.Io
+namespace Mips.Io
 {
-    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator, IDisposable
+    public class MipsCommunicator : IMipsCommunicator
     {
         #region Members
 
@@ -21,11 +18,12 @@ namespace AmpsBoxSdk.Io
         /// Synchronization object.
         /// </summary>
         private readonly object sync = new object();
-            #endregion
+        private readonly Queue<MipsCommand> commmandQueue = new Queue<MipsCommand>();
+        #endregion
 
         #region Construction and Initialization
 
-        public AmpsBoxCommunicator(SerialPort port)
+        public MipsCommunicator(SerialPort port)
         {
             this.port = port;
             this.port.PortName = port.PortName;
@@ -42,12 +40,12 @@ namespace AmpsBoxSdk.Io
 
         #endregion
 
-       
+
         /// <summary>
         /// Writes the command to the device.
         /// </summary>
         /// <param name="command"></param>
-        public void Write(Command command)
+        public void Write(MipsCommand command)
         {
             if (command == null)
             {
@@ -172,7 +170,7 @@ namespace AmpsBoxSdk.Io
 
         private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
         {
-            return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
+            return input.Scan(new FillingCollection { Message = new List<byte>() }, (buffer, newByte) =>
             {
 
                 if (buffer.Complete)
@@ -187,21 +185,21 @@ namespace AmpsBoxSdk.Io
                     buffer.Complete = true;
                 }
                 else switch (newByte)
-                {
-                    case 0x06:
+                    {
+                        case 0x06:
 
-                        break;
-                    case 0x15:
-                        buffer.IsError = true;
-                        break;
+                            break;
+                        case 0x15:
+                            buffer.IsError = true;
+                            break;
                         case 63:
-                        break;
+                            break;
                         case 13:
-                        break;
-                    default:
-                        buffer.Message.Add(newByte);
-                        break;
-                }
+                            break;
+                        default:
+                            buffer.Message.Add(newByte);
+                            break;
+                    }
                 return buffer;
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
         }
@@ -219,6 +217,4 @@ namespace AmpsBoxSdk.Io
         #endregion
 
     }
-
-
 }
