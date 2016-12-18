@@ -53,6 +53,10 @@ namespace AmpsBoxSdk.Io
             {
                 throw new ArgumentNullException(nameof(command));
             }
+            if (command.Value == null)
+            {
+                throw new Exception("Command value cannot be null!");
+            }
             lock (this.sync)
             {
                 this.port.WriteLine(command.ToString());

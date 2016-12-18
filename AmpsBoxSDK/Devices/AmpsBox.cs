@@ -406,7 +406,7 @@ namespace AmpsBoxSdk.Devices
                     
                     return list;
                 })
-                .Where(list => list.Count == 50).FirstAsync(); // hardcoded hack
+                .Where(list => list.Count == 51).FirstAsync(); // hardcoded hack
             return aggregator;
         }
 

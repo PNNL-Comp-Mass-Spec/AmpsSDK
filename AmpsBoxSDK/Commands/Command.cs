@@ -27,7 +27,9 @@ namespace AmpsBoxSdk.Commands
        /// <param name="name"></param>
        /// <param name="value"></param>
         public Command(string name, string value)
-        {
+       {
+           this.CommandName = name;
+           this.Value = value;
             this.ExpectedResponse = 0x06;
         }
 

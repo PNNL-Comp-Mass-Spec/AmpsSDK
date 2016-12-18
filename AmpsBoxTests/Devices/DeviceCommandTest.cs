@@ -80,6 +80,7 @@ namespace AmpsBoxTests.Devices
         {
             output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
             var commands = box.GetCommands().Result;
+            output.WriteLine(commands.Count().ToString());
             foreach (var command in commands)
             {
                 output.WriteLine(command);
