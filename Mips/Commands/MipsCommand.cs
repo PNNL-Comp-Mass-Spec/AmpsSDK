@@ -5,24 +5,17 @@ namespace Mips.Commands
 {
     public class MipsCommand
     {
-        private List<byte> response;
         public MipsCommand(string name, string value)
         {
             this.CommandName = name;
             this.Value = value;
-            this.ExpectedResponse = 0x06;
-            this.response = new List<byte>();
-        }
-
-        private MipsCommand(string name, string value, IEnumerable<byte> response) : this(name, value)
-        {
-            this.response.AddRange(response);
+            this.Ack = 0x06;
         }
 
         /// <summary>
         /// Gets or sets the expected response
         /// </summary>
-        public int ExpectedResponse { get; }
+        public int Ack { get; }
 
         public string CommandName { get; }
 

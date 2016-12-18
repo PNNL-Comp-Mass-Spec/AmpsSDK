@@ -55,6 +55,7 @@
     <Compile Include="Commands\MipsCommand.cs" />
     <Compile Include="Io\IMipsCommunicator.cs" />
     <Compile Include="Io\MipsCommunicator.cs" />
+    <Compile Include="Io\ResponseMessage.cs" />
     <Compile Include="Module\IStandardModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

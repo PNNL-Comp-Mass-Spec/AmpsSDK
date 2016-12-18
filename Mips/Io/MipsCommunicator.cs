@@ -18,7 +18,7 @@ namespace Mips.Io
         /// Synchronization object.
         /// </summary>
         private readonly object sync = new object();
-        private readonly Queue<MipsCommand> commmandQueue = new Queue<MipsCommand>();
+        private readonly Queue<ResponseMessage> commmandQueue = new Queue<ResponseMessage>();
         #endregion
 
         #region Construction and Initialization
@@ -53,7 +53,16 @@ namespace Mips.Io
             }
             lock (this.sync)
             {
-                this.port.WriteLine(command.ToString());
+                this.commmandQueue.Enqueue(new ResponseMessage(command));
+                try
+                {
+                    this.port.WriteLine(command.ToString());
+                }
+                catch (TimeoutException exception)
+                {
+                    this.commmandQueue.Dequeue();
+                    throw;
+                }
             }
         }
 
@@ -168,7 +177,7 @@ namespace Mips.Io
             }
         }
 
-        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        private IObservable<ResponseMessage> ToMessage(IObservable<byte> input)
         {
             return input.Scan(new FillingCollection { Message = new List<byte>() }, (buffer, newByte) =>
             {
@@ -201,12 +210,25 @@ namespace Mips.Io
                             break;
                     }
                 return buffer;
-            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+            }).Where(fc => fc.Complete).Select(fc =>
+            {
+                var any = this.commmandQueue.Any();
+                if (any)
+                {
+                   var command = this.commmandQueue.Dequeue();
+                    command.WithPayload(fc.Message);
+                    return command;
+                }
+                else
+                {
+                    return new ResponseMessage(new MipsCommand("Mips", "Mips")).WithPayload(fc.Message);
+                }
+            });
         }
 
-        private readonly IConnectableObservable<IEnumerable<byte>> messageSources;
+        private readonly IConnectableObservable<ResponseMessage> messageSources;
 
-        public IObservable<IEnumerable<byte>> MessageSources => this.messageSources;
+        public IObservable<ResponseMessage> MessageSources => this.messageSources;
 
         public void Dispose()
         {
