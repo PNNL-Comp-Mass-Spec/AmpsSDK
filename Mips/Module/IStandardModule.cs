@@ -1,4 +1,5 @@
-﻿using System.Reactive;
+﻿using System.Collections.Generic;
+using System.Reactive;
 using System.Threading.Tasks;
 
 namespace Mips.Module
@@ -13,6 +14,7 @@ namespace Mips.Module
         Task<Unit> SetModuleRevisionLevel(int board, string moduleAddress, string level);
         Task<Unit> Rest();
         Task<Unit> Save();
+        Task<IEnumerable<string>> GetCommands();
 
     }
 }

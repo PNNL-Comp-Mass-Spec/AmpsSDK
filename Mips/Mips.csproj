@@ -53,7 +53,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\MipsCommand.cs" />
+    <Compile Include="Device\CompressorMode.cs" />
+    <Compile Include="Device\DigitalEdge.cs" />
     <Compile Include="Device\Mips.cs" />
+    <Compile Include="Device\State.cs" />
+    <Compile Include="Device\SwitchState.cs" />
+    <Compile Include="Device\TWaveDirection.cs" />
     <Compile Include="Io\IMipsCommunicator.cs" />
     <Compile Include="Io\MipsCommunicator.cs" />
     <Compile Include="Io\ResponseMessage.cs" />
