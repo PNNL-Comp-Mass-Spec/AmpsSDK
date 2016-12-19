@@ -53,15 +53,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\MipsCommand.cs" />
+    <Compile Include="Device\Mips.cs" />
     <Compile Include="Io\IMipsCommunicator.cs" />
     <Compile Include="Io\MipsCommunicator.cs" />
     <Compile Include="Io\ResponseMessage.cs" />
+    <Compile Include="Module\IArbModule.cs" />
+    <Compile Include="Module\IClockGenerationModule.cs" />
+    <Compile Include="Module\IDcBiasModule.cs" />
+    <Compile Include="Module\IDcBiasProfileModule.cs" />
+    <Compile Include="Module\IDioModule.cs" />
+    <Compile Include="Module\IEsiModule.cs" />
+    <Compile Include="Module\IFrequencySweepModule.cs" />
+    <Compile Include="Module\IMacroModule.cs" />
+    <Compile Include="Module\IPulseSequenceGeneratorModule.cs" />
+    <Compile Include="Module\IRfDriverModule.cs" />
     <Compile Include="Module\IStandardModule.cs" />
+    <Compile Include="Module\ITwaveModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Device\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
