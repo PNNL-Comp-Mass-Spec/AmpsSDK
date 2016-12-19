@@ -36,10 +36,11 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void DcBiasTest()
         {
+          //  box.SetDcBiasVoltage("1", 10).Wait();
             var subscription = box.GetDcBiasSetpoint("1").Result;
+            var readback = box.GetDcBiasReadback("1").Result;
             output.WriteLine(subscription.ToString());
-            var error = box.GetError().Result;
-            output.WriteLine(error.ToString());
+            output.WriteLine(readback.ToString());
         }
 
         [Fact]
