@@ -31,7 +31,7 @@ namespace AmpsBoxSdk.Devices
     {
         #region Constants
 
-        private IAmpsBoxCommunicator communicator;
+        private readonly IAmpsBoxCommunicator communicator;
 
         /// <summary>
         /// 
