@@ -234,7 +234,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<int> GetNumberDigitalChannels()
         {
             Command command = new Command("GCHAN", "GCHAN");
-            command.AddParameter(",", "DIO");
+            command = command.AddParameter(",", "DIO");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
             return await messagePacket.Select(s =>
