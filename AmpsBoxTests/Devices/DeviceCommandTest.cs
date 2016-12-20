@@ -89,6 +89,13 @@ namespace AmpsBoxTests.Devices
         }
 
         [Fact]
+        public void GetNumberDcBias()
+        {
+            var numberDcBias = box.GetNumberDcBiasChannels().Result;
+            output.WriteLine(numberDcBias.ToString());
+        }
+
+        [Fact]
         public void GetPositiveEsiVoltageAndCurrent()
         {
             var esi = box.GetPositiveEsi().Result;
@@ -100,8 +107,6 @@ namespace AmpsBoxTests.Devices
         {
             var digitalChannels = box.GetNumberDigitalChannels().Result;
             output.WriteLine(digitalChannels.ToString());
-            var error = box.GetError().Result;
-            output.WriteLine(error.ToString());
         }
 
         public void Dispose()
