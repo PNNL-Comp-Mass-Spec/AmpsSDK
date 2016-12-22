@@ -48,15 +48,20 @@ namespace AmpsBoxTests.Devices
             output.WriteLine(encodedString);
 
             box.LoadTimeTable(signalTable).Wait();
-            box.SetClock(ClockType.INT).Wait();
-            box.SetTrigger(StartTriggerTypes.SW).Wait();
-            box.SetMode(Modes.TBL).Wait();
             var error = box.GetError().Result;
             output.WriteLine(error.ToString());
+            box.SetClock(ClockType.INT).Wait();
+            error = box.GetError().Result;
+            output.WriteLine(error.ToString());
+            box.SetTrigger(StartTriggerTypes.SW).Wait();
+            error = box.GetError().Result;
+            output.WriteLine(error.ToString());
+            box.SetMode(Modes.TBL).Wait();
+            error = box.GetError().Result;
+            output.WriteLine(error.ToString());
             box.StartTimeTable().Wait();
-            box.AbortTimeTable().Wait();
-            box.SetMode(Modes.LOC).Wait();
-
+            error = box.GetError().Result;
+            output.WriteLine(error.ToString());
         }
 
         [Fact]

@@ -541,7 +541,7 @@ namespace AmpsBoxSdk.Devices
         {
             string formattedTable = table.RetrieveTableAsEncodedString();
             this.LastTable = formattedTable;
-            Command command = new Command("STBLDAT","STBLDAT;" + formattedTable + ";");
+            Command command = new Command("STBLDAT",$"STBLDAT;{formattedTable};");
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }
@@ -569,7 +569,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> SetTrigger(StartTriggerTypes startTriggerType)
         {
-            Command command = new Command("STBLCLK", "STBLCLK");
+            Command command = new Command("STBLTRG", "STBLTRG");
             command = command.AddParameter(",", startTriggerType.ToString());
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
