@@ -514,7 +514,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<Unit> SetMode(Modes mode)
         {
             Command command = new Command("SMOD", "SMOD");
-            command.AddParameter(",", mode.ToString());
+            command = command.AddParameter(",", mode.ToString());
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }

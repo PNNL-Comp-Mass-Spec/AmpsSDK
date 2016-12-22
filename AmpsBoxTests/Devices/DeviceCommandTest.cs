@@ -72,6 +72,8 @@ namespace AmpsBoxTests.Devices
             var readback = box.GetDcBiasReadback("1").Result;
             output.WriteLine(subscription.ToString());
             output.WriteLine(readback.ToString());
+            var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
         }
 
         [Fact]

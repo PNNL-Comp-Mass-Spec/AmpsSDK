@@ -60,6 +60,7 @@ namespace AmpsBoxSdk.Io
             lock (this.sync)
             {
                 this.port.WriteLine(command.ToString());
+                System.Diagnostics.Debug.WriteLine(command.ToString());
             }
         }
 
