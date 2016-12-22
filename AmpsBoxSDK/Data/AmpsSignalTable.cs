@@ -23,12 +23,9 @@ namespace AmpsBoxSdk.Data
             this.timePoints = new List<PsgPoint>();
         }
 
-        private AmpsSignalTable(IList<PsgPoint> timePoints) : this()
+        private AmpsSignalTable(IEnumerable<PsgPoint> timePoints) : this()
         {
-            for (int i = 0; i < timePoints.Count; i++)
-            {
-                timePoints.Add(timePoints[i]);
-            }
+            this.timePoints.AddRange(timePoints);
         }
 
         public PsgPoint this[string pointName]
@@ -133,7 +130,7 @@ namespace AmpsBoxSdk.Data
             StringBuilder builder = new StringBuilder();
             string tableName = "A";
 
-            var points = this.Points.ToList();
+            var points = this.Points.OrderBy(x => x.TimePoint).ToList();
             for (int i = 0; i < points.Count; i++)
             {
                 // TODO: Move this if / else into separate function calls to speed up for loop evaluation. 
@@ -228,7 +225,7 @@ namespace AmpsBoxSdk.Data
                 }
 
             }
-            cachedTable = $"STBLDAT;{builder};";
+            cachedTable = builder.ToString();
             return cachedTable;
         }
 

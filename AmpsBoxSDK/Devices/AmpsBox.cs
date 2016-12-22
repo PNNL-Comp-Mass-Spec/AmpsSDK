@@ -541,7 +541,7 @@ namespace AmpsBoxSdk.Devices
         {
             string formattedTable = table.RetrieveTableAsEncodedString();
             this.LastTable = formattedTable;
-            Command command = new Command("STBLDAT", formattedTable);
+            Command command = new Command("STBLDAT","STBLDAT;" + formattedTable + ";");
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
         }

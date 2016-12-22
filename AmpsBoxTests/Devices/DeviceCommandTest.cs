@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
+using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Devices;
 using AmpsBoxSdk.Io;
 using AmpsBoxSdk.Modules;
@@ -31,6 +32,31 @@ namespace AmpsBoxTests.Devices
             box = new AmpsBox(reader);
             reader.Open();
             
+        }
+
+        [Fact]
+        public void AmpsSignalTableTest()
+        {
+            var signalTable = new AmpsSignalTable();
+            signalTable = signalTable.AddTimePoint(0, new LoopData());
+            signalTable[0].CreateOutput("1", 10);
+           signalTable= signalTable.AddTimePoint(10, new LoopData());
+            signalTable[10].CreateOutput("1", 5);
+
+            signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 10);
+            var encodedString = signalTable.RetrieveTableAsEncodedString();
+            output.WriteLine(encodedString);
+
+            box.LoadTimeTable(signalTable).Wait();
+            box.SetClock(ClockType.INT).Wait();
+            box.SetTrigger(StartTriggerTypes.SW).Wait();
+            box.SetMode(Modes.TBL).Wait();
+            var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
+            box.StartTimeTable().Wait();
+            box.AbortTimeTable().Wait();
+            box.SetMode(Modes.LOC).Wait();
+
         }
 
         [Fact]

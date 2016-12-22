@@ -55,9 +55,9 @@ namespace AmpsBoxSdk.Data
         [DataMember]
         public LoopData PsgPointLoopData { get; private set; }
 
-        public PsgPoint UpdatePsgPointLoopData(LoopData data)
+        public void UpdatePsgPointLoopData(LoopData data)
         {
-            return new PsgPoint(this.Name, this.TimePoint, data);
+            this.PsgPointLoopData = data;
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace AmpsBoxSdk.Data
             {
                 throw new ArgumentOutOfRangeException(nameof(loopCount), "Loop count cannot be < 1!");
             }
-            this.UpdatePsgPointLoopData(new LoopData(loopCount, point.Name, true));
+           this.UpdatePsgPointLoopData(new LoopData(loopCount, point.Name, true));
         }
 
         public IEnumerable<KeyValuePair<string, double>> DcBiasElements
