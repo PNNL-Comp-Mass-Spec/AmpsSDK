@@ -226,8 +226,10 @@ namespace AmpsBoxSdk.Devices
             this.communicator.Write(command);
             return await messagePacket.Select(s =>
             {
-                var direction = (DigitalDirection)Enum.Parse(typeof(DigitalDirection), s);
-                return direction;
+                DigitalDirection direction;
+                var success = Enum.TryParse(s, true, out direction);
+                if (success) return direction;
+                else return DigitalDirection.OUT;
             }).FirstAsync();
         }
 
