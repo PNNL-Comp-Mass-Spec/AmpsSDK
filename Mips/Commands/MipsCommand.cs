@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace Mips.Commands
 {
@@ -23,7 +24,9 @@ namespace Mips.Commands
 
         public MipsCommand AddParameter(string separator, string parameter)
         {
-            return new MipsCommand(this.CommandName, this.Value + separator + parameter);
+            var stringBuilder = new StringBuilder();
+            var command = stringBuilder.Append(this.Value).Append(separator).Append(parameter);
+            return new MipsCommand(this.CommandName, command.ToString());
         }
 
         public override string ToString()

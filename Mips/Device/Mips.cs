@@ -30,24 +30,45 @@ namespace Mips.Device
             return stream;
         }
 
-        public Task<string> GetError()
+        public async Task<string> GetError()
         {
-            throw new System.NotImplementedException();
+            MipsCommand command = new MipsCommand("GERR", "GERR");
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
+                Select(s => s.ResponsePayload).FirstAsync();
+            return stream;
         }
 
-        public Task<string> GetName()
+        public async Task<string> GetName()
         {
-            throw new System.NotImplementedException();
+            MipsCommand command = new MipsCommand("GNAME", "GNAME");
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
+                Select(s => s.ResponsePayload).FirstAsync();
+            return stream;
         }
 
-        public Task<Unit> SetName(string name)
+        public async Task<Unit> SetName(string name)
         {
-            throw new System.NotImplementedException();
+            MipsCommand command = new MipsCommand("SNAME", "SNAME");
+            command = command.AddParameter(",", name);
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
+                Select(s => Unit.Default).FirstAsync();
+            return stream;
         }
 
-        public Task<string> GetConfiguration()
+        public async Task<string> GetConfiguration()
         {
-            throw new System.NotImplementedException();
+            MipsCommand command = new MipsCommand("ABOUT", "ABOUT");
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
+                Select(s => s.ResponsePayload).FirstAsync();
+            return stream;
         }
 
         public Task<Unit> SetModuleRevisionLevel(int board, string moduleAddress, string level)
@@ -60,12 +81,17 @@ namespace Mips.Device
             throw new System.NotImplementedException();
         }
 
-        public Task<Unit> Save()
+        public async Task<Unit> Save()
         {
-            throw new System.NotImplementedException();
+            MipsCommand command = new MipsCommand("SAVE", "SAVE");
+            var messagePacket = this.communicator.MessageSources;
+            this.communicator.Write(command);
+            var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
+                Select(s => Unit.Default).FirstAsync();
+            return stream;
         }
 
-        public Task<IEnumerable<string>> GetCommands()
+        public async Task<IEnumerable<string>> GetCommands()
         {
             throw new System.NotImplementedException();
         }

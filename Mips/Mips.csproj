@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\MipsCommand.cs" />
+    <Compile Include="Device\ArbMode.cs" />
     <Compile Include="Device\CompressorMode.cs" />
     <Compile Include="Device\DigitalEdge.cs" />
     <Compile Include="Device\Mips.cs" />
