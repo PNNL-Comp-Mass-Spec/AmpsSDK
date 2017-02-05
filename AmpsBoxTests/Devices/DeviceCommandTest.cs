@@ -79,7 +79,11 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void DigitalIoTest()
         {
-          
+          var result = box.GetDigitalState("A").Result;
+            output.WriteLine(result.ToString());
+             box.SetDigitalState("A", true).Wait();
+            result = box.GetDigitalState("A").Result;
+            output.WriteLine(result.ToString());
         }
         [Theory]
         [InlineData(ErrorCodes.Nominal)]

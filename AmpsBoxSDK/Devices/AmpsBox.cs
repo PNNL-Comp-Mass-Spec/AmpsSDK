@@ -174,7 +174,7 @@ namespace AmpsBoxSdk.Devices
         {
             Command command = new Command("SDIO", "SDIO");
             command = command.AddParameter(",", channel);
-            command = command.AddParameter(",", state);
+            command = command.AddParameter(",", Convert.ToInt32(state));
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
