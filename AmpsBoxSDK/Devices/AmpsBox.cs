@@ -195,7 +195,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<bool> GetDigitalState(string channel)
         {
             Command command = new Command("GDIO", "GDIO");
-            command.AddParameter(",", channel);
+            command = command.AddParameter(",", channel);
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
             return await messagePacket.Select(s =>
