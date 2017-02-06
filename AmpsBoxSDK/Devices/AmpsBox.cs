@@ -415,7 +415,7 @@ namespace AmpsBoxSdk.Devices
         public async Task<Unit> SetSerialBaudRate(int baudRate)
         {
             Command command = new Command("SBAUD", "SBAUD");
-            command.AddParameter(",", baudRate);
+            command = command.AddParameter(",", baudRate);
             this.communicator.Write(command);
             return await this.communicator.MessageSources.Select(x => Unit.Default).FirstAsync();
         }
