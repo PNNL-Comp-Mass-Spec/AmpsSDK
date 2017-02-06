@@ -10,6 +10,7 @@
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Modules;
@@ -343,8 +344,7 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GVER", "GVER");
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            var stream = await messagePacket.Select(s => s).FirstAsync();
-            return stream;
+            return await messagePacket.FirstAsync().ToTask();
         }
 
         public async Task<ErrorCodes> GetError()
@@ -366,7 +366,7 @@ namespace AmpsBoxSdk.Devices
             Command command = new Command("GNAME", "GNAME");
             this.communicator.Write(command);
 
-            return await this.communicator.MessageSources.Select(s => s).FirstAsync();
+            return await this.communicator.MessageSources.FirstAsync().ToTask();
         }
 
         public async Task<Unit> SetName(string name)
