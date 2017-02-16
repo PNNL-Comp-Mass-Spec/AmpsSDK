@@ -179,7 +179,7 @@ namespace AmpsBoxSdk.Devices
 
             var messagePacket = this.communicator.MessageSources;
             this.communicator.Write(command);
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync().Timeout(TimeSpan.FromMilliseconds(500)).ToTask();
         }
 
         public async Task<Unit> PulseDigitalSignal(string channel)
@@ -272,7 +272,7 @@ namespace AmpsBoxSdk.Devices
             return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public async Task<Tuple<double, double>> GetPositiveEsi()
+        public async Task<(double Voltage, double Current)> GetPositiveEsi()
         {
             Command command = new Command("GPHVV", "GPHVV");
 
@@ -288,12 +288,12 @@ namespace AmpsBoxSdk.Devices
                     double.TryParse(splitString[0], out voltage);
                     double.TryParse(splitString[1], out current);
                 }
-                
-                return new Tuple<double, double>(voltage, current);
+
+                return (voltage, current);
             }).FirstAsync();
         }
 
-        public async Task<Tuple<double, double>> GetNegativeEsi()
+        public async Task<(double Voltage, double Current)> GetNegativeEsi()
         {
             Command command = new Command("GNHVV", "GNHVV");
 
@@ -310,7 +310,7 @@ namespace AmpsBoxSdk.Devices
                     double.TryParse(splitString[1], out current);
                 }
 
-                return new Tuple<double, double>(voltage, current);
+                return (voltage, current);
             }).FirstAsync();
         }
 
@@ -545,7 +545,7 @@ namespace AmpsBoxSdk.Devices
             this.LastTable = formattedTable;
             Command command = new Command("STBLDAT",$"STBLDAT;{formattedTable};");
             this.communicator.Write(command);
-            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync();
+            return await this.communicator.MessageSources.Select(bytes => Unit.Default).FirstAsync().ToTask();
         }
 
         /// <summary>
