@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Threading.Tasks;
 
 namespace AmpsBoxSdk.Modules

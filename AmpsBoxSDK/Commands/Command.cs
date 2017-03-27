@@ -8,12 +8,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Globalization;
-using System.Text;
 
 namespace AmpsBoxSdk.Commands
 {
-    using System.Runtime.Serialization;
-
     /// <summary>
     /// AMPS Box command structure for supporting multiple versions of the software.
     /// </summary>

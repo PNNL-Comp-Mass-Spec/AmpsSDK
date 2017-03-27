@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
+﻿using System.Collections.Generic;
 using System.Reactive;
 using System.Threading.Tasks;
 using AmpsBoxSdk.Devices;

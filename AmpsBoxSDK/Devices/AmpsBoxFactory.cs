@@ -1,6 +1,4 @@
-﻿using System.IO.Ports;
-
-namespace AmpsBoxSdk.Devices
+﻿namespace AmpsBoxSdk.Devices
 {
     public class AmpsBoxFactory
     {

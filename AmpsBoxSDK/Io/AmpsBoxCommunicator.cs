@@ -5,9 +5,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.RegularExpressions;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
 

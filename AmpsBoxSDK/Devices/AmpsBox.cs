@@ -11,15 +11,12 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Modules;
 
 namespace AmpsBoxSdk.Devices
 {
     using System;
-    using System.ComponentModel.Composition;
-    using System.Linq;
     using System.Runtime.Serialization;
     using System.Threading.Tasks;
     using AmpsBoxSdk.Data;

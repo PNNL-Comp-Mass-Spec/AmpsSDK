@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmpsBoxSdk", "AmpsBoxSDK\AmpsBoxSdk.csproj", "{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}"
 EndProject
@@ -28,16 +28,16 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|x64.ActiveCfg = Debug|x64
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|x64.Build.0 = Debug|x64
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|Any CPU.ActiveCfg = PNNLRelease|Any CPU
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|Any CPU.Build.0 = PNNLRelease|Any CPU
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|x64.ActiveCfg = PNNLRelease|x64
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|x64.Build.0 = PNNLRelease|x64
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Debug|x64.Build.0 = Debug|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|Any CPU.Build.0 = Release|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|x64.ActiveCfg = Release|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.PNNLRelease|x64.Build.0 = Release|Any CPU
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.ActiveCfg = Release|x64
-		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.Build.0 = Release|x64
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.ActiveCfg = Release|Any CPU
+		{50ADBFB4-0493-4DEB-899F-4A5603F63BBF}.Release|x64.Build.0 = Release|Any CPU
 		{F8715B58-EDCD-4750-9125-20B08CFA3728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F8715B58-EDCD-4750-9125-20B08CFA3728}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8715B58-EDCD-4750-9125-20B08CFA3728}.Debug|x64.ActiveCfg = Debug|Any CPU
