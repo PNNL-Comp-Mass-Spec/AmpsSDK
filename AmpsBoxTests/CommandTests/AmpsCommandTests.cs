@@ -11,7 +11,6 @@ namespace AmpsBoxTests.CommandTests
     using AmpsBoxSdk.Data;
     using AmpsBoxSdk.Devices;
 
-    using AmpsBoxTests.AmpsService;
 
     public class AmpsCommandTests
     {
@@ -25,15 +24,6 @@ namespace AmpsBoxTests.CommandTests
         public void ConnectAmps()
         {
 
-            AmpsService.AmpsCommunicationClient client = new AmpsCommunicationClient();
-            client.Open();
-
-            var name = "Device1";
-            var response = client.OpenCommunication(name, "COM25");
-            Console.WriteLine(response);
-            var version = client.GetVersion(name);
-            Console.WriteLine(version);
-            client.CloseAmpsBox(name);
         }
 
     }

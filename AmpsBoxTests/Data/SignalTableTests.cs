@@ -5,7 +5,6 @@ namespace AmpsBoxTests.Data
     using System;
     using System.IO.Ports;
     using System.Text;
-    using System.Windows.Forms;
     using System.Windows.Media;
 
     using AmpsBoxSdk.Commands;

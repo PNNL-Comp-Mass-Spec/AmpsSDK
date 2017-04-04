@@ -269,7 +269,7 @@ namespace AmpsBoxSdk.Devices
             return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public async Task<(double Voltage, double Current)> GetPositiveEsi()
+        public async Task<(double, double)> GetPositiveEsi()
         {
             Command command = new Command("GPHVV", "GPHVV");
 
@@ -290,7 +290,7 @@ namespace AmpsBoxSdk.Devices
             }).FirstAsync();
         }
 
-        public async Task<(double Voltage, double Current)> GetNegativeEsi()
+        public async Task<(double, double)> GetNegativeEsi()
         {
             Command command = new Command("GNHVV", "GNHVV");
 

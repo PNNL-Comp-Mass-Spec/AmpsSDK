@@ -57,6 +57,10 @@ namespace AmpsBoxSdk.Io
             }
             lock (this.sync)
             {
+                if (!this.port.IsOpen)
+                {
+                    return;
+                }
                 this.port.WriteLine(command.ToString());
                 System.Diagnostics.Debug.WriteLine(command.ToString());
             }
@@ -69,8 +73,8 @@ namespace AmpsBoxSdk.Io
                 if (this.port.IsOpen)
                 {
                     this.port.Close();
-                    this.connection.Dispose();
                 }
+                this.connection.Dispose();
             }
         }
 
@@ -135,7 +139,7 @@ namespace AmpsBoxSdk.Io
                 if (this.port.IsOpen) return;
                 this.port.Open();
                 connection = this.messageSources.Connect();
-            };
+            }
         }
 
         private IObservable<byte> Read

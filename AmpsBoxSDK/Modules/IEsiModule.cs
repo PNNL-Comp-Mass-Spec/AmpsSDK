@@ -7,7 +7,7 @@ namespace AmpsBoxSdk.Modules
     {
         Task<Unit> SetPositiveHighVoltage(int volts);
         Task<Unit> SetNegativeHighVoltage(int volts);
-        Task<(double Voltage, double Current)> GetPositiveEsi();
-        Task<(double Voltage, double Current)> GetNegativeEsi();
+        Task<(double, double)> GetPositiveEsi();
+        Task<(double, double)> GetNegativeEsi();
     }
 }
