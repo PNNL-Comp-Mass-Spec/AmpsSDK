@@ -75,6 +75,7 @@ namespace AmpsBoxSdk.Io
                     this.port.Close();
                 }
                 this.connection.Dispose();
+                this.connection = null;
             }
         }
 
@@ -136,9 +137,14 @@ namespace AmpsBoxSdk.Io
         {
             lock (this.sync)
             {
+                if (connection == null)
+                {
+                    connection = this.messageSources.Connect();
+                }
                 if (this.port.IsOpen) return;
+
                 this.port.Open();
-                connection = this.messageSources.Connect();
+                
             }
         }
 
