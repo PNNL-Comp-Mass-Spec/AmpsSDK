@@ -1,10 +1,14 @@
-﻿namespace AmpsBoxSdk.Devices
+﻿using System;
+using System.IO.Ports;
+using AmpsBoxSdk.Io;
+
+namespace AmpsBoxSdk.Devices
 {
-    public class AmpsBoxFactory
+    public static class AmpsBoxFactory
     {
-        public AmpsBox CreateAmpsBox(IAmpsBoxCommunicator communicator)
+        public static IAmpsBox CreateAmpsBox(SerialPort port)
         {
-            return new AmpsBox(communicator);
+            return new AmpsBox(new AmpsBoxCommunicator(port));
         }
     }
 }

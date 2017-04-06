@@ -18,8 +18,7 @@ namespace AmpsBoxTests.Devices
     using System.IO.Ports;
    public class DeviceCommandTest : IDisposable
     {
-        private AmpsBox box;
-        private AmpsBoxCommunicator reader;
+        private IAmpsBox box;
         private ITestOutputHelper output;
 
         public DeviceCommandTest(ITestOutputHelper output)
@@ -28,10 +27,7 @@ namespace AmpsBoxTests.Devices
             var serialPort = new SerialPort("COM3", 19200*2) { Handshake = Handshake.XOnXOff, Parity = Parity.Even };
             serialPort.RtsEnable = true;
 
-            reader = new AmpsBoxCommunicator(serialPort);
-            box = new AmpsBox(reader);
-            reader.Open();
-            
+            box = AmpsBoxFactory.CreateAmpsBox(serialPort);
         }
 
         [Fact]
@@ -148,7 +144,7 @@ namespace AmpsBoxTests.Devices
 
         public void Dispose()
         {
-            this.reader?.Close();
+            
         }
     }
 }

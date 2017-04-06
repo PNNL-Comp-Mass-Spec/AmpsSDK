@@ -11,7 +11,7 @@ using AmpsBoxSdk.Devices;
 
 namespace AmpsBoxSdk.Io
 {
-    public class AmpsBoxCommunicator :  IAmpsBoxCommunicator, ISerialPortCommunicator, IDisposable
+    internal sealed class AmpsBoxCommunicator : IDisposable
     {
         #region Members
 
@@ -19,6 +19,8 @@ namespace AmpsBoxSdk.Io
         /// Synchronization object.
         /// </summary>
         private readonly object sync = new object();
+
+        private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
             #endregion
 
         #region Construction and Initialization
@@ -40,29 +42,60 @@ namespace AmpsBoxSdk.Io
 
         #endregion
 
-       
+
         /// <summary>
-        /// Writes the command to the device.
+        /// Writes ASCII Encoded value to stream
         /// </summary>
-        /// <param name="command"></param>
-        public void Write(Command command)
+        /// <param name="value"></param>
+        internal void Write(byte[] value, string separator)
         {
-            if (command == null)
+            if (!this.port.IsOpen)
             {
-                throw new ArgumentNullException(nameof(command));
+                return;
             }
-            if (command.Value == null)
+            lock (sync)
             {
-                throw new Exception("Command value cannot be null!");
-            }
-            lock (this.sync)
-            {
-                if (!this.port.IsOpen)
+                foreach (var b in value)
                 {
-                    return;
+                    this.port.BaseStream.WriteByte(b);
                 }
-                this.port.WriteLine(command.ToString());
-                System.Diagnostics.Debug.WriteLine(command.ToString());
+
+                if (string.IsNullOrEmpty(separator)) return;
+
+                var bytes = Encoding.ASCII.GetBytes(separator);
+                foreach (var b in bytes)
+                {
+                    this.port.BaseStream.WriteByte(b);
+                }
+            }
+        }
+
+        internal void WriteEnd()
+        {
+            lock (sync)
+            {
+                foreach (var b in _lf)
+                {
+                    this.port.BaseStream.WriteByte(b);
+                }
+            }
+        }
+
+
+
+        internal void WriteHeader(AmpsCommand command)
+        {
+            
+
+            var commandBytes = CommandMap.Default.GetBytes(command);
+            if (commandBytes == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            foreach (var commandByte in commandBytes)
+            {
+                this.port.BaseStream.WriteByte(commandByte);
             }
         }
 
@@ -129,9 +162,6 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-
-        public SerialPort Port => this.port;
-
         private IDisposable connection;
         public void Open()
         {
@@ -161,7 +191,7 @@ namespace AmpsBoxSdk.Io
                                   int bytesRead;
                                   do
                                   {
-                                      bytesRead = this.port.Read(buffer, 0, buffer.Length);
+                                      bytesRead = this.port.BaseStream.Read(buffer, 0, buffer.Length);
                                       ret.AddRange(buffer.Take(bytesRead));
                                   } while (bytesRead >= buffer.Length);
                                   return ret;
@@ -201,17 +231,17 @@ namespace AmpsBoxSdk.Io
                 }
                 else switch (newByte)
                 {
-                    case 0x06:
+                        case 0x06:
 
-                        break;
-                    case 0x15:
-                        buffer.IsError = true;
-                        break;
+                            break;
+                        case 0x15:
+                            buffer.IsError = true;
+                            break;
                         case 63:
-                        break;
+                            break;
                         case 13:
-                        break;
-                    default:
+                            break;
+                        default:
                         buffer.Message.Add(newByte);
                         break;
                 }

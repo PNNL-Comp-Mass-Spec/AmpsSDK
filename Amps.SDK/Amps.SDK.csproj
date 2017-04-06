@@ -41,10 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\CommandProvider.cs" />
+    <Compile Include="Commands\AmpsCommand.cs" />
+    <Compile Include="Commands\CommandMap.cs" />
     <Compile Include="Commands\DcPowerStates.cs" />
-    <Compile Include="Commands\ICommandProvider.cs" />
+    <Compile Include="Commands\Message.cs" />
     <Compile Include="Commands\Modes.cs" />
     <Compile Include="Commands\SignalSources.cs" />
     <Compile Include="Data\AmpsBoxSignalTableCommandDisplayFormatter.cs" />
@@ -61,7 +61,6 @@
     <Compile Include="Data\TimeUnits.cs" />
     <Compile Include="Devices\AmpsBox.cs" />
     <Compile Include="Devices\AmpsBoxDeviceData.cs" />
-    <Compile Include="Devices\AmpsBoxExtensionMethods.cs" />
     <Compile Include="Devices\AmpsBoxFactory.cs" />
     <Compile Include="Devices\AmpsBoxRfData.cs" />
     <Compile Include="Devices\AmpsClockConverter.cs" />
@@ -76,13 +75,12 @@
     <Compile Include="Devices\DigitalDirection.cs" />
     <Compile Include="Devices\ErrorCodes.cs" />
     <Compile Include="Devices\IAmpsBox.cs" />
-    <Compile Include="Devices\IAmpsBoxCommunicator.cs" />
-    <Compile Include="Devices\ISerialPortCommunicator.cs" />
     <Compile Include="Devices\Responses.cs" />
     <Compile Include="Devices\StartTriggerTypes.cs" />
     <Compile Include="Devices\State.cs" />
     <Compile Include="Events\SerialDataReceived.cs" />
     <Compile Include="Io\AmpsBoxCommunicator.cs" />
+    <Compile Include="Io\AmpsBoxCommunicatorFactory.cs" />
     <Compile Include="Modules\IDcBiasModule.cs" />
     <Compile Include="Modules\IDioModule.cs" />
     <Compile Include="Modules\IEsiModule.cs" />
