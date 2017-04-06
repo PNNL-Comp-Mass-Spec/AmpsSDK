@@ -44,7 +44,7 @@ namespace AmpsBoxSdk.Io
 
 
         /// <summary>
-        /// Writes ASCII Encoded value to stream
+        /// Writes ASCII / UTF8 Encoded value to stream
         /// </summary>
         /// <param name="value"></param>
         internal void Write(byte[] value, string separator)
@@ -55,15 +55,15 @@ namespace AmpsBoxSdk.Io
             }
             lock (sync)
             {
-                foreach (var b in value)
-                {
-                    this.port.BaseStream.WriteByte(b);
-                }
-
                 if (string.IsNullOrEmpty(separator)) return;
 
                 var bytes = Encoding.ASCII.GetBytes(separator);
                 foreach (var b in bytes)
+                {
+                    this.port.BaseStream.WriteByte(b);
+                }
+
+                foreach (var b in value)
                 {
                     this.port.BaseStream.WriteByte(b);
                 }
@@ -85,8 +85,6 @@ namespace AmpsBoxSdk.Io
 
         internal void WriteHeader(AmpsCommand command)
         {
-            
-
             var commandBytes = CommandMap.Default.GetBytes(command);
             if (commandBytes == null)
             {
