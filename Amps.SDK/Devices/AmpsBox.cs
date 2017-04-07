@@ -44,6 +44,12 @@ namespace AmpsBoxSdk.Devices
             {
                 this.communicator.Open();
             }
+
+            if (this.communicator.IsOpen)
+            {
+                var channels = this.GetNumberDcBiasChannels().Result;
+
+            }
             ClockFrequency = 16000000;
         }
 
@@ -120,7 +126,15 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetNumberDcBiasChannels()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int channels);
+                return channels;
+            }).FirstAsync();
 
         }
 
@@ -210,7 +224,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<ErrorCodes> GetError()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GVER);
+            var ampsmessage = Message.Create(AmpsCommand.GERR);
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
@@ -223,7 +237,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<string> GetName()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GVER);
+            var ampsmessage = Message.Create(AmpsCommand.GNAME);
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
@@ -232,8 +246,12 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetName(string name)
         {
-            throw new NotImplementedException();
-        }
+            var ampsmessage = Message.Create(AmpsCommand.SNAME, name);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+    }
 
         public async Task<Unit> Reset()
         {
@@ -242,7 +260,11 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> Save()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SAVE);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<IEnumerable<string>> GetCommands()
@@ -250,12 +272,18 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.GCMDS);
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
+            var aggregator = await messagePacket.Select(s => s).Scan(new List<string>(),
+                    (list, s) =>
+                    {
+                        if (!string.IsNullOrEmpty(s))
+                        {
+                            list.Add(s);
+                        }
 
-            return await messagePacket.Select(bytes =>
-            {
-               var s = bytes.ToArray();
-                return Enumerable.Empty<string>();
-            }).FirstAsync();
+                        return list;
+                    })
+                .Where(list => list.Count == 51).FirstAsync(); // hardcoded hack
+            return aggregator;
         }
 
         public async Task<Unit> SetSerialBaudRate(int baudRate)
