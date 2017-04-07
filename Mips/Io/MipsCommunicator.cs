@@ -34,9 +34,9 @@ namespace Mips.Io
             this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
             this.port.WriteTimeout = 250;
             this.port.ReadTimeout = 250;
-            this.IsEmulated = false;
+            IsEmulated = false;
 
-            this.messageSources = ToResponseMessage(ToDecodedMessage(ToMessage(this.Read))).Publish(); // Only create one connection.
+            messageSources = ToResponseMessage(ToDecodedMessage(ToMessage(Read))).Publish(); // Only create one connection.
         }
 
         #endregion
@@ -56,20 +56,20 @@ namespace Mips.Io
             {
                 throw new Exception("Command value cannot be null!");
             }
-            lock (this.sync)
+            lock (sync)
             {
-                this.port.WriteLine(command.ToString());
+                port.WriteLine(command.ToString());
             }
         }
 
         public void Close()
         {
-            lock (this.sync)
+            lock (sync)
             {
-                if (this.port.IsOpen)
+                if (port.IsOpen)
                 {
-                    this.port.Close();
-                    this.connection.Dispose();
+                    port.Close();
+                    connection.Dispose();
                 }
             }
         }
@@ -125,17 +125,17 @@ namespace Mips.Io
         public bool IsEmulated { get; set; }
 
 
-        public SerialPort Port => this.port;
+        public SerialPort Port => port;
 
         private IDisposable connection;
 
         public void Open()
         {
-            lock (this.sync)
+            lock (sync)
             {
-                if (this.port.IsOpen) return;
-                this.port.Open();
-                connection = this.messageSources.Connect();
+                if (port.IsOpen) return;
+                port.Open();
+                connection = messageSources.Connect();
             }
             ;
         }
@@ -146,14 +146,14 @@ namespace Mips.Io
             {
                 return
                     Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                        h => this.port.DataReceived += h, h => this.port.DataReceived -= h).SelectMany(_ =>
+                        h => port.DataReceived += h, h => port.DataReceived -= h).SelectMany(_ =>
                     {
                         var buffer = new byte[1024];
                         var ret = new List<byte>();
                         int bytesRead;
                         do
                         {
-                            bytesRead = this.port.Read(buffer, 0, buffer.Length);
+                            bytesRead = port.Read(buffer, 0, buffer.Length);
                             ret.AddRange(buffer.Take(bytesRead));
                         } while (bytesRead >= buffer.Length);
                         return ret;
@@ -247,7 +247,7 @@ namespace Mips.Io
         }
         private readonly IConnectableObservable<ResponseMessage> messageSources;
 
-        public IObservable<ResponseMessage> MessageSources => this.messageSources;
+        public IObservable<ResponseMessage> MessageSources => messageSources;
 
         public void Dispose()
         {

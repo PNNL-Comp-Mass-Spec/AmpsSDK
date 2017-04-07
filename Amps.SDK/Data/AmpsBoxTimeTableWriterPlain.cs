@@ -24,7 +24,7 @@ namespace AmpsBoxSdk.Data
         /// </summary>
         public AmpsBoxTimeTableWriterPlain()
         {
-            this.Delimiter = "\t";
+            Delimiter = "\t";
         }
 
         #endregion

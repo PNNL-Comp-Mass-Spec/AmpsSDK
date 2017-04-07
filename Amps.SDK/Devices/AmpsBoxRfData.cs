@@ -13,8 +13,8 @@ namespace AmpsBoxSdk.Devices
 		/// </summary>
 		public AmpsBoxRfData()
 		{
-			this.Frequency = new ChannelData(500, 5000);
-			this.DriveLevel = new ChannelData(0, 255);
+			Frequency = new ChannelData(500, 5000);
+			DriveLevel = new ChannelData(0, 255);
 		}
 
 		#endregion

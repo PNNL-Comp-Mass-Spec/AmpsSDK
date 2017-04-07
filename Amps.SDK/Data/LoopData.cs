@@ -7,16 +7,16 @@ namespace AmpsBoxSdk.Data
     {
         public LoopData()
         {
-            this.LoopCount = 1;
-            this.LoopToName = string.Empty;
-            this.DoLoop = false;
+            LoopCount = 1;
+            LoopToName = string.Empty;
+            DoLoop = false;
         }
 
         public LoopData(int loopCount, string loopToName, bool doLoop)
         {
-            this.LoopCount = loopCount;
-            this.LoopToName = loopToName;
-            this.DoLoop = doLoop;
+            LoopCount = loopCount;
+            LoopToName = loopToName;
+            DoLoop = doLoop;
         }
         [DataMember]
         public bool DoLoop { get; }

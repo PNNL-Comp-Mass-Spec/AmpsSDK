@@ -26,7 +26,7 @@ namespace AmpsBoxSdk.Devices
         /// </param>
         public AmpsResponseEventArgs(string message)
         {
-            this.Message = message;
+            Message = message;
         }
 
         #endregion

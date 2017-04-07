@@ -32,8 +32,8 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public AmpsBoxDeviceData()
         {
-            this.HvData = new Dictionary<int, ChannelData>();
-            this.RfData = new Dictionary<int, AmpsBoxRfData>();
+            HvData = new Dictionary<int, ChannelData>();
+            RfData = new Dictionary<int, AmpsBoxRfData>();
 
             for (int i = 1; i <= NUMBER_OF_MAX_CHANNELS; i++)
             {
@@ -78,8 +78,8 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public void Clear()
         {
-            this.RfData.Clear();
-            this.HvData.Clear();
+            RfData.Clear();
+            HvData.Clear();
         }
 
         /// <summary>
@@ -93,12 +93,12 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public ChannelData GetHvData(int channel)
         {
-            if (channel > this.NumberHvChannels)
+            if (channel > NumberHvChannels)
             {
                 throw new ChannelOutOfRangeException("The RF channel requested is not supported by the device.");
             }
 
-            return this.HvData[channel];
+            return HvData[channel];
         }
 
         /// <summary>
@@ -112,12 +112,12 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public AmpsBoxRfData GetRfData(int channel)
         {
-            if (channel > this.NumberHvChannels)
+            if (channel > NumberHvChannels)
             {
                 throw new ChannelOutOfRangeException("The RF channel requested is not supported by the device.");
             }
 
-            return this.RfData[channel];
+            return RfData[channel];
         }
 
         #endregion

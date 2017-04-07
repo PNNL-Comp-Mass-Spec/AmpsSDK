@@ -23,8 +23,8 @@ namespace Mips.Device
         public async Task<string> GetVersion()
         {
             MipsCommand command = new MipsCommand("GVER", "GVER");
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => s.ResponsePayload).FirstAsync();
             return stream;
@@ -33,8 +33,8 @@ namespace Mips.Device
         public async Task<string> GetError()
         {
             MipsCommand command = new MipsCommand("GERR", "GERR");
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => s.ResponsePayload).FirstAsync();
             return stream;
@@ -43,8 +43,8 @@ namespace Mips.Device
         public async Task<string> GetName()
         {
             MipsCommand command = new MipsCommand("GNAME", "GNAME");
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => s.ResponsePayload).FirstAsync();
             return stream;
@@ -54,8 +54,8 @@ namespace Mips.Device
         {
             MipsCommand command = new MipsCommand("SNAME", "SNAME");
             command = command.AddParameter(",", name);
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => Unit.Default).FirstAsync();
             return stream;
@@ -64,8 +64,8 @@ namespace Mips.Device
         public async Task<string> GetConfiguration()
         {
             MipsCommand command = new MipsCommand("ABOUT", "ABOUT");
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => s.ResponsePayload).FirstAsync();
             return stream;
@@ -73,19 +73,19 @@ namespace Mips.Device
 
         public Task<Unit> SetModuleRevisionLevel(int board, string moduleAddress, string level)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task<Unit> Rest()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public async Task<Unit> Save()
         {
             MipsCommand command = new MipsCommand("SAVE", "SAVE");
-            var messagePacket = this.communicator.MessageSources;
-            this.communicator.Write(command);
+            var messagePacket = communicator.MessageSources;
+            communicator.Write(command);
             var stream = await messagePacket.Where(x => x.RespondingFromCommand.CommandName == command.CommandName).
                 Select(s => Unit.Default).FirstAsync();
             return stream;
@@ -93,7 +93,7 @@ namespace Mips.Device
 
         public async Task<IEnumerable<string>> GetCommands()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

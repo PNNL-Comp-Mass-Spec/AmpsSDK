@@ -7,6 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="reactiveui" Version="7.2.0" />
+    <PackageReference Include="SerialPortStream" Version="2.1.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
   </ItemGroup>
 </Project>

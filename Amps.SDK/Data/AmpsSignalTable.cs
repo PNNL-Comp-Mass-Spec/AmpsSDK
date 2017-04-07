@@ -19,7 +19,7 @@ namespace AmpsBoxSdk.Data
 
         public AmpsSignalTable()
         {
-            this.timePoints = new List<PsgPoint>();
+            timePoints = new List<PsgPoint>();
         }
 
         private AmpsSignalTable(IEnumerable<PsgPoint> timePoints) : this()
@@ -31,7 +31,7 @@ namespace AmpsBoxSdk.Data
         {
             get
             {
-                return this.timePoints.FirstOrDefault(x => x.Name == pointName);
+                return timePoints.FirstOrDefault(x => x.Name == pointName);
             }
         }
 
@@ -39,46 +39,46 @@ namespace AmpsBoxSdk.Data
         {
             get
             {
-               return this.timePoints.FirstOrDefault(x => x.TimePoint == time);
+               return timePoints.FirstOrDefault(x => x.TimePoint == time);
             }
         }
 
         public AmpsSignalTable AddTimePoint(PsgPoint point)
         {
-            if (!this.timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
+            if (!timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
             {
-                this.timePoints.Add(point);
+                timePoints.Add(point);
             }
-            return new AmpsSignalTable(this.timePoints);
+            return new AmpsSignalTable(timePoints);
         }
 
         public AmpsSignalTable AddTimePoint(int clock, LoopData loopData)
         {
-            if (!this.timePoints.Select(x => x.TimePoint).Contains(clock))
+            if (!timePoints.Select(x => x.TimePoint).Contains(clock))
             {
                 char[] ap = Enumerable.Range('A', 'Z' - 'A' + 1).Select(i => (char)i).ToArray();
-                this.timePoints.Add(new PsgPoint(ap[this.timePoints.Count].ToString(), clock, loopData));
+                timePoints.Add(new PsgPoint(ap[timePoints.Count].ToString(), clock, loopData));
             }
-            return new AmpsSignalTable(this.timePoints);
+            return new AmpsSignalTable(timePoints);
         }
 
         public AmpsSignalTable RemoveTimePoint(PsgPoint point)
         {
-            if (this.timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
+            if (timePoints.Select(x => x.TimePoint).Contains<int>(point.TimePoint))
             {
-                this.timePoints.Remove(point);
+                timePoints.Remove(point);
             }
-            return new AmpsSignalTable(this.timePoints);
+            return new AmpsSignalTable(timePoints);
         }
 
         public AmpsSignalTable RemoveTimePoint(int clockToRemove)
         {
-            var timePoint = this.timePoints.FirstOrDefault(x => x.TimePoint == clockToRemove);
+            var timePoint = timePoints.FirstOrDefault(x => x.TimePoint == clockToRemove);
             if (timePoint != null)
             {
-                this.timePoints.Remove(timePoint);
+                timePoints.Remove(timePoint);
             }
-            return new AmpsSignalTable(this.timePoints);
+            return new AmpsSignalTable(timePoints);
         }
 
         public AmpsSignalTable AddSignalTable(AmpsSignalTable signalTable)
@@ -86,7 +86,7 @@ namespace AmpsBoxSdk.Data
             // TODO: Make AmpsSignalTables immutable. 
             foreach (var psgPoint in signalTable.Points)
             {
-                var timePoint = this.Points.FirstOrDefault(x => x.TimePoint == psgPoint.TimePoint);
+                var timePoint = Points.FirstOrDefault(x => x.TimePoint == psgPoint.TimePoint);
                 if (timePoint != null)
                 {
                     foreach (var dcBiasElement in timePoint.DcBiasElements)
@@ -113,23 +113,23 @@ namespace AmpsBoxSdk.Data
                 else
                 {
                     // Time point doesn't exist, add it to the signal table. 
-                    this.AddTimePoint(psgPoint);
+                    AddTimePoint(psgPoint);
                 }
             }
 
-            return new AmpsSignalTable(this.timePoints);
+            return new AmpsSignalTable(timePoints);
         }
 
         public string RetrieveTableAsEncodedString()
         {
             if (cachedTable != null)
             {
-                return this.cachedTable;
+                return cachedTable;
             }
             StringBuilder builder = new StringBuilder();
             string tableName = "A";
 
-            var points = this.Points.OrderBy(x => x.TimePoint).ToList();
+            var points = Points.OrderBy(x => x.TimePoint).ToList();
             for (int i = 0; i < points.Count; i++)
             {
                 // TODO: Move this if / else into separate function calls to speed up for loop evaluation. 
@@ -248,7 +248,7 @@ namespace AmpsBoxSdk.Data
         {
             get
             {
-                return this.timePoints.OrderBy(x => x.TimePoint);
+                return timePoints.OrderBy(x => x.TimePoint);
             }
         }
     }

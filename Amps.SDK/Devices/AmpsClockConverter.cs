@@ -55,7 +55,7 @@ namespace AmpsBoxSdk.Devices
         /// </param>
         public AmpsClockConverter(double frequency)
         {
-            this.Clockint = frequency;
+            Clockint = frequency;
         }
 
         #endregion
@@ -106,7 +106,7 @@ namespace AmpsBoxSdk.Devices
                     scaler = SCALER_SECONDS;
                     break;
                 case TimeUnits.Ticks:
-                    scaler = SCALER_SECONDS / this.Clockint * 1000;
+                    scaler = SCALER_SECONDS / Clockint * 1000;
                     break;
                 default:
                     break;

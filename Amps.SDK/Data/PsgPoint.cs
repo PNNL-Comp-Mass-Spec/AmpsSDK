@@ -17,9 +17,9 @@ namespace AmpsBoxSdk.Data
 
         private PsgPoint()
         {
-            this.digitalOutput = new Dictionary<string, bool>();
-            this.dcBias = new Dictionary<string, double>();
-            this.PsgPointLoopData = new LoopData();
+            digitalOutput = new Dictionary<string, bool>();
+            dcBias = new Dictionary<string, double>();
+            PsgPointLoopData = new LoopData();
         }
 
        /// <summary>
@@ -30,7 +30,7 @@ namespace AmpsBoxSdk.Data
        /// <param name="loopData"></param>
         public PsgPoint(string name, int timePoint, LoopData loopData) : this(name, timePoint)
         {
-            this.PsgPointLoopData = loopData;
+            PsgPointLoopData = loopData;
         }
 
         /// <summary>
@@ -40,9 +40,9 @@ namespace AmpsBoxSdk.Data
         /// <param name="timePoint"></param>
         public PsgPoint(string name, int timePoint) : this()
         {
-            this.Name = name;
-            this.TimePoint = timePoint;
-            this.PsgPointLoopData = new LoopData();
+            Name = name;
+            TimePoint = timePoint;
+            PsgPointLoopData = new LoopData();
 
         }
 
@@ -57,7 +57,7 @@ namespace AmpsBoxSdk.Data
 
         public void UpdatePsgPointLoopData(LoopData data)
         {
-            this.PsgPointLoopData = data;
+            PsgPointLoopData = data;
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace AmpsBoxSdk.Data
         /// <param name="state"></param>
         public void CreateOutput(string address, bool state)
         {
-            if (!this.digitalOutput.ContainsKey(address))
+            if (!digitalOutput.ContainsKey(address))
             {
-                this.digitalOutput.Add(address, state);
+                digitalOutput.Add(address, state);
             }
         }
 
@@ -81,9 +81,9 @@ namespace AmpsBoxSdk.Data
         /// <param name="state"></param>
         public void UpdateOutput(string channelToUpdate, bool state)
         {
-            if (this.digitalOutput.ContainsKey(channelToUpdate))
+            if (digitalOutput.ContainsKey(channelToUpdate))
             {
-                this.digitalOutput[channelToUpdate] = state;
+                digitalOutput[channelToUpdate] = state;
             }
         }
         /// <summary>
@@ -92,27 +92,27 @@ namespace AmpsBoxSdk.Data
         /// <param name="address"></param>
         public void RemoveAnalogSignal(string address)
         {
-            this.dcBias.Remove(address);
+            dcBias.Remove(address);
         }
 
         public void RemoveDigitalSignal(string address)
         {
-            this.digitalOutput.Remove(address);
+            digitalOutput.Remove(address);
         }
 
         public void CreateOutput(string address, double volts)
         {
-            if (!this.dcBias.ContainsKey(address))
+            if (!dcBias.ContainsKey(address))
             {
-                this.dcBias.Add(address, volts);
+                dcBias.Add(address, volts);
             }
         }
 
         public void UpdateOutput(string address, double volts)
         {
-            if (this.dcBias.ContainsKey(address))
+            if (dcBias.ContainsKey(address))
             {
-                this.dcBias[address] = volts;
+                dcBias[address] = volts;
             }
         }
 
@@ -127,14 +127,14 @@ namespace AmpsBoxSdk.Data
             {
                 throw new ArgumentOutOfRangeException(nameof(loopCount), "Loop count cannot be < 1!");
             }
-           this.UpdatePsgPointLoopData(new LoopData(loopCount, point.Name, true));
+           UpdatePsgPointLoopData(new LoopData(loopCount, point.Name, true));
         }
 
         public IEnumerable<KeyValuePair<string, double>> DcBiasElements
         {
             get
             {
-                return this.dcBias.OrderBy(x => x.Key);
+                return dcBias.OrderBy(x => x.Key);
             }
         }
 
@@ -142,7 +142,7 @@ namespace AmpsBoxSdk.Data
         {
             get
             {
-                return this.digitalOutput.OrderBy(x => x.Key);
+                return digitalOutput.OrderBy(x => x.Key);
             }
         } 
     }

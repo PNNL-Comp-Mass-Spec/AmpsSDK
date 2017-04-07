@@ -9,13 +9,12 @@ using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Devices;
 using AmpsBoxSdk.Io;
 using AmpsBoxSdk.Modules;
+using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace AmpsBoxTests.Devices
 {
-    using System.Collections;
-    using System.IO.Ports;
    public class DeviceCommandTest : IDisposable
     {
         private IAmpsBox box;
@@ -24,7 +23,7 @@ namespace AmpsBoxTests.Devices
         public DeviceCommandTest(ITestOutputHelper output)
         {
             this.output = output;
-            var serialPort = new SerialPort("COM3", 19200*2) { Handshake = Handshake.XOnXOff, Parity = Parity.Even };
+            var serialPort = new SerialPortStream("COM3", 19200*2, 8, Parity.Even, StopBits.One);
             serialPort.RtsEnable = true;
 
             box = AmpsBoxFactory.CreateAmpsBox(serialPort);
@@ -61,15 +60,23 @@ namespace AmpsBoxTests.Devices
         }
 
         [Fact]
-        public void DcBiasTest()
+        public void GetDcBiasTest()
         {
-          //  box.SetDcBiasVoltage("1", 10).Wait();
-            var subscription = box.GetDcBiasSetpoint("1").Result;
-            var readback = box.GetDcBiasReadback("1").Result;
+            var subscription = box.GetDcBiasSetpoint(1).Result;
+            var readback = box.GetDcBiasReadback(1).Result;
             output.WriteLine(subscription.ToString());
             output.WriteLine(readback.ToString());
             var error = box.GetError().Result;
             output.WriteLine(error.ToString());
+        }
+
+        [Fact]
+        public void SetDcBiasTest()
+        {
+            int setpointVoltage = 10;
+            var subscription = box.SetDcBiasVoltage(1, setpointVoltage).Result;
+            var readback = box.GetDcBiasSetpoint(1).Result;
+            Assert.Equal(setpointVoltage, readback);
         }
 
         [Fact]

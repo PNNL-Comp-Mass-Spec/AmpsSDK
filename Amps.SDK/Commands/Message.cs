@@ -49,6 +49,18 @@ namespace AmpsBoxSdk.Commands
             return new CommandValueValueMessage(command, value1, value2);
         }
 
+        //internal void SetSource(ResultProcessor resultProcessor, ResultBox resultBox)
+        //{ // note order here reversed to prevent overload resolution errors
+        //    this.resultBox = resultBox;
+        //    this.resultProcessor = resultProcessor;
+        //}
+
+        //internal void SetSource<T>(ResultBox<T> resultBox, ResultProcessor<T> resultProcessor)
+        //{
+        //    this.resultBox = resultBox;
+        //    this.resultProcessor = resultProcessor;
+        //}
+
         internal abstract void WriteImpl(AmpsBoxCommunicator physical);
 
         internal void WriteTo(AmpsBoxCommunicator physical)

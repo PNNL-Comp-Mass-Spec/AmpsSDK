@@ -8,6 +8,10 @@ using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
+using RJCP.IO.Ports;
+using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
+using SerialError = System.IO.Ports.SerialError;
+using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
 
 namespace AmpsBoxSdk.Io
 {
@@ -25,19 +29,24 @@ namespace AmpsBoxSdk.Io
 
         #region Construction and Initialization
 
-        public AmpsBoxCommunicator(SerialPort port)
+        public AmpsBoxCommunicator(SerialPortStream serialPort)
         {
-            this.port = port;
-            this.port.PortName = port.PortName;
-            this.port.BaudRate = port.BaudRate;
-            this.port.NewLine = "\n";
-            this.port.ErrorReceived += PortErrorReceived;
-            this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
-            this.port.WriteTimeout = 250;
-            this.port.ReadTimeout = 250;
-            this.IsEmulated = false;
+            this.serialPort = serialPort;
+            this.serialPort.PortName = this.serialPort.PortName;
+            this.serialPort.BaudRate = this.serialPort.BaudRate;
+            this.serialPort.NewLine = "\n";
+            this.serialPort.ErrorReceived += SerialPort_ErrorReceived;
+            this.serialPort.RtsEnable = true; // must be true for MIPS / AMPS communication.
+            this.serialPort.WriteTimeout = 250;
+            this.serialPort.ReadTimeout = 250;
+            IsEmulated = false;
 
-            this.messageSources = ToDecodedMessage(ToMessage(this.Read)).Publish(); // Only create one connection.
+            messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+        }
+
+        private void SerialPort_ErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
+        {
+            throw new Exception(e.EventType.ToString());
         }
 
         #endregion
@@ -49,7 +58,7 @@ namespace AmpsBoxSdk.Io
         /// <param name="value"></param>
         internal void Write(byte[] value, string separator)
         {
-            if (!this.port.IsOpen)
+            if (!serialPort.IsOpen)
             {
                 return;
             }
@@ -60,12 +69,12 @@ namespace AmpsBoxSdk.Io
                 var bytes = Encoding.ASCII.GetBytes(separator);
                 foreach (var b in bytes)
                 {
-                    this.port.BaseStream.WriteByte(b);
+                    serialPort.WriteByte(b);
                 }
 
                 foreach (var b in value)
                 {
-                    this.port.BaseStream.WriteByte(b);
+                    serialPort.WriteByte(b);
                 }
             }
         }
@@ -76,7 +85,7 @@ namespace AmpsBoxSdk.Io
             {
                 foreach (var b in _lf)
                 {
-                    this.port.BaseStream.WriteByte(b);
+                    serialPort.WriteByte(b);
                 }
             }
         }
@@ -93,43 +102,20 @@ namespace AmpsBoxSdk.Io
 
             foreach (var commandByte in commandBytes)
             {
-                this.port.BaseStream.WriteByte(commandByte);
+                serialPort.WriteByte(commandByte);
             }
         }
 
         public void Close()
         {
-            lock (this.sync)
+            lock (sync)
             {
-                if (this.port.IsOpen)
+                if (serialPort.IsOpen)
                 {
-                    this.port.Close();
+                    serialPort.Close();
                 }
-                this.connection.Dispose();
-                this.connection = null;
-            }
-        }
-
-        /// <summary>
-        /// TODO The m_port_ error received.
-        /// </summary>
-        /// <param name="sender">
-        /// TODO The sender.
-        /// </param>
-        /// <param name="e">
-        /// TODO The e.
-        /// </param>
-        /// <exception cref="IOException">
-        /// </exception>
-        private void PortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            switch (e.EventType)
-            {
-                case SerialError.Frame:
-                    System.Diagnostics.Trace.WriteLine(e.EventType.ToString());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                connection.Dispose();
+                connection = null;
             }
         }
 
@@ -138,12 +124,12 @@ namespace AmpsBoxSdk.Io
         /// <summary>
         /// Gets port open status.
         /// </summary>
-        public bool IsOpen => port.IsOpen;
+        public bool IsOpen => serialPort.IsOpen;
 
         /// <summary>
         /// Gets the serial port
         /// </summary>
-        private SerialPort port;
+        private SerialPortStream serialPort;
 
         /// <summary>
         /// Get or set read timeout for commincator.
@@ -163,15 +149,15 @@ namespace AmpsBoxSdk.Io
         private IDisposable connection;
         public void Open()
         {
-            lock (this.sync)
+            lock (sync)
             {
                 if (connection == null)
                 {
-                    connection = this.messageSources.Connect();
+                    connection = messageSources.Connect();
                 }
-                if (this.port.IsOpen) return;
+                if (serialPort.IsOpen) return;
 
-                this.port.Open();
+                serialPort.Open();
                 
             }
         }
@@ -181,15 +167,15 @@ namespace AmpsBoxSdk.Io
             get
             {
                 return
-                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                              h => this.port.DataReceived += h, h => this.port.DataReceived -= h).SelectMany(_ =>
+                          Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
+                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
                               {
-                                  var buffer = new byte[1024];
+                                  var buffer = new byte[4096];
                                   var ret = new List<byte>();
                                   int bytesRead;
                                   do
                                   {
-                                      bytesRead = this.port.BaseStream.Read(buffer, 0, buffer.Length);
+                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
                                       ret.AddRange(buffer.Take(bytesRead));
                                   } while (bytesRead >= buffer.Length);
                                   return ret;
@@ -199,7 +185,7 @@ namespace AmpsBoxSdk.Io
 
         private class FillingCollection
         {
-            public byte LineEnding { get; }
+            public byte[] LineEnding { get; }
             public List<byte> Message { get; set; }
             public bool Complete { get; set; }
 
@@ -207,7 +193,7 @@ namespace AmpsBoxSdk.Io
 
             public FillingCollection()
             {
-                LineEnding = Encoding.ASCII.GetBytes("\n")[0];
+                LineEnding = Encoding.ASCII.GetBytes("\n\r");
             }
         }
 
@@ -223,9 +209,13 @@ namespace AmpsBoxSdk.Io
                     buffer.IsError = false;
                 }
 
-                if (newByte == buffer.LineEnding)
+                if (newByte == buffer.LineEnding[1])
                 {
                     buffer.Complete = true;
+                }
+                else if (newByte == buffer.LineEnding[0])
+                {
+                   
                 }
                 else switch (newByte)
                 {
@@ -265,11 +255,11 @@ namespace AmpsBoxSdk.Io
 
         private readonly IConnectableObservable<string> messageSources;
 
-        public IObservable<string> MessageSources => this.messageSources;
+        public IObservable<string> MessageSources => messageSources;
 
         public void Dispose()
         {
-            port?.Dispose();
+            serialPort?.Dispose();
             connection?.Dispose();
         }
 

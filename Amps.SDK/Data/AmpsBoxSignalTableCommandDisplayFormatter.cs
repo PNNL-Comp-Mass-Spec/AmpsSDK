@@ -35,7 +35,7 @@ namespace AmpsBoxSdk.Data
         /// </param>
         public AmpsBoxSignalTableCommandDisplayFormatter(string commandFormat)
         {
-            this.m_commandFormat = commandFormat;
+            m_commandFormat = commandFormat;
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace AmpsBoxSdk.Data
         /// </summary>
         public AmpsBoxSignalTableCommandDisplayFormatter()
         {
-            this.m_commandFormat = "TABLE,{0:F0};\n{1}";
+            m_commandFormat = "TABLE,{0:F0};\n{1}";
         }
 
         #endregion
@@ -95,7 +95,7 @@ namespace AmpsBoxSdk.Data
             eventData = eventData.TrimEnd(',');
 
             return string.Format(
-                this.m_commandFormat, 
+                m_commandFormat, 
                 eventData);
         }
 

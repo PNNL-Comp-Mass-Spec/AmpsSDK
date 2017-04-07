@@ -12,8 +12,8 @@ namespace AmpsBoxSdk.Devices
 		/// </summary>
 		public ChannelData(double minimumdouble, double maximumdouble)
 		{
-		    this.Minimum = minimumdouble;
-		    this.Maximum = maximumdouble;
+		    Minimum = minimumdouble;
+		    Maximum = maximumdouble;
 		}
 
 		#endregion

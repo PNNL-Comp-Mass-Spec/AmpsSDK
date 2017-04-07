@@ -6,7 +6,7 @@
     {
         public SerialDataReceived(byte[] receivedBytes)
         {
-            this.ReceivedBytes = receivedBytes;
+            ReceivedBytes = receivedBytes;
         }
 
         public byte[] ReceivedBytes { get; private set; }

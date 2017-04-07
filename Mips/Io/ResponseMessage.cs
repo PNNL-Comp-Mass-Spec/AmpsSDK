@@ -7,18 +7,18 @@ namespace Mips.Io
     {
         public ResponseMessage(MipsCommand command)
         {
-            this.RespondingFromCommand = command;
+            RespondingFromCommand = command;
         }
 
         private ResponseMessage(MipsCommand command, string payload)
         {
-            this.RespondingFromCommand = command;
-            this.ResponsePayload = payload;
+            RespondingFromCommand = command;
+            ResponsePayload = payload;
         }
 
         public ResponseMessage WithPayload(string payload)
         {
-            return new ResponseMessage(this.RespondingFromCommand, payload);
+            return new ResponseMessage(RespondingFromCommand, payload);
         }
 
         public string ResponsePayload { get; }

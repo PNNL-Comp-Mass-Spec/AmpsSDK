@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace AmpsBoxSdk.Devices
     using System;
     using System.Runtime.Serialization;
     using System.Threading.Tasks;
-    using AmpsBoxSdk.Data;
+    using Data;
     /// <summary>
     /// Communicates with a PNNL Amps Box
     /// Non shared parts creation policy so that multiple amps boxes can exist in the system at once.
@@ -29,6 +30,7 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     internal sealed class AmpsBox : IAmpsBox
     {
+        private HashSet<int> dcBiasChannels;
         private AmpsBoxCommunicator communicator;
         #region Constants
 
@@ -37,16 +39,12 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public AmpsBox(AmpsBoxCommunicator communicator)
         {
-            if (communicator == null)
-            {
-                throw new ArgumentNullException(nameof(communicator));
-            }
-            this.communicator = communicator;
+            this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             if (!this.communicator.IsOpen)
             {
                 this.communicator.Open();
             }
-            this.ClockFrequency = 16000000;
+            ClockFrequency = 16000000;
         }
 
         #endregion
@@ -78,32 +76,32 @@ namespace AmpsBoxSdk.Devices
 
             ampsBoxData += "\n";
             ampsBoxData += string.Format("\tTable Settings\n");
-            ampsBoxData += $"\t\tExt. Clock Freq: {this.ClockFrequency}\n";
+            ampsBoxData += $"\t\tExt. Clock Freq: {ClockFrequency}\n";
 
             return ampsBoxData;
         }
 
-        public async Task<Unit> SetDcBiasVoltage(string channel, int volts)
+        public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
            // AmpsMessage ampsMessage = new AmpsMessage("SDCB", "SDCB");
-            var ampsmessage = Message.Create(AmpsCommand.SDCB, channel, volts.ToString());
+            var ampsmessage = Message.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
             ampsmessage.WriteTo(communicator);
-            var messagePacket = this.communicator.MessageSources;
+            var messagePacket = communicator.MessageSources;
 
             return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public async Task<int> GetDcBiasSetpoint(string channel)
+        public async Task<int> GetDcBiasSetpoint(int channel)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<int> GetDcBiasReadback(string channel)
+        public async Task<int> GetDcBiasReadback(int channel)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<int> GetDcBiasCurrentReadback(string channel)
+        public async Task<int> GetDcBiasCurrentReadback(int channel)
         {
             throw new NotImplementedException();
 
@@ -205,19 +203,31 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GVER);
             ampsmessage.WriteTo(communicator);
-            var messagePacket = this.communicator.MessageSources;
+            var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => bytes).Where(x => !string.IsNullOrEmpty(x)).FirstAsync();
+            return await messagePacket.Select(bytes => bytes).FirstAsync();
         }
 
         public async Task<ErrorCodes> GetError()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GVER);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                Enum.TryParse(bytes, true, out ErrorCodes result);
+                return result;
+            }).FirstAsync();
         }
 
         public async Task<string> GetName()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GVER);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => bytes).FirstAsync();
         }
 
         public async Task<Unit> SetName(string name)
@@ -237,7 +247,15 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<IEnumerable<string>> GetCommands()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GCMDS);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+               var s = bytes.ToArray();
+                return Enumerable.Empty<string>();
+            }).FirstAsync();
         }
 
         public async Task<Unit> SetSerialBaudRate(int baudRate)

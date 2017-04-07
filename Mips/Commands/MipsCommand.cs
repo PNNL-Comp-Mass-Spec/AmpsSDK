@@ -8,9 +8,9 @@ namespace Mips.Commands
     {
         public MipsCommand(string name, string value)
         {
-            this.CommandName = name;
-            this.Value = value;
-            this.Ack = 0x06;
+            CommandName = name;
+            Value = value;
+            Ack = 0x06;
         }
 
         /// <summary>
@@ -25,13 +25,13 @@ namespace Mips.Commands
         public MipsCommand AddParameter(string separator, string parameter)
         {
             var stringBuilder = new StringBuilder();
-            var command = stringBuilder.Append(this.Value).Append(separator).Append(parameter);
-            return new MipsCommand(this.CommandName, command.ToString());
+            var command = stringBuilder.Append(Value).Append(separator).Append(parameter);
+            return new MipsCommand(CommandName, command.ToString());
         }
 
         public override string ToString()
         {
-            return this.Value;
+            return Value;
         }
 
         public MipsCommand AddParameter(string separator, int value)
