@@ -602,7 +602,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> SetTrigger(StartTrigger startTrigger)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLCLK, startTrigger.ToString());
+            var ampsmessage = Message.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
