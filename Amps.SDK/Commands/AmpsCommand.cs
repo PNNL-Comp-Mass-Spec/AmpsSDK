@@ -43,6 +43,9 @@
         TBLABRT,
         SMOD,
         TBLRPT,
+        STBLVLT,
+        GTBLVLT,
+
 
 
         SDIO,

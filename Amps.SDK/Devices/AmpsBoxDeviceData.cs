@@ -7,6 +7,9 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.Linq;
+
 namespace AmpsBoxSdk.Devices
 {
 	using System.Collections.Generic;
@@ -26,10 +29,19 @@ namespace AmpsBoxSdk.Devices
         {
             HvData = new Dictionary<uint, ChannelData>();
             RfData = new Dictionary<uint, AmpsBoxRfData>();
+            DioChannels = new Dictionary<uint, string>();
 
             this.NumberHvChannels = analogChannels;
             this.NumberRfChannels = rfChannels;
             this.NumberDigitalChannels = digitalChannels;
+
+            int start = Convert.ToInt32('A');
+            int end = start + (int)NumberDigitalChannels;
+            char[] ap = Enumerable.Range(start, end - start).Select(i => (char)i).ToArray();
+            for (int i = 0; i < ap.Length; i++)
+            {
+                DioChannels.Add((uint)i, ap[i].ToString());
+            }
         }
 
         /// <summary>
@@ -66,6 +78,8 @@ namespace AmpsBoxSdk.Devices
         /// Gets or sets the RF data.
         /// </summary>
         private Dictionary<uint, AmpsBoxRfData> RfData { get; set; }
+
+        private Dictionary<uint, string> DioChannels { get; set; }
 
         #endregion
 
@@ -116,6 +130,16 @@ namespace AmpsBoxSdk.Devices
             }
 
             return RfData[channel];
+        }
+
+        public string GetDioChannel(uint channel)
+        {
+            if (channel > NumberDigitalChannels)
+            {
+                throw new ChannelOutOfRangeException("The RF channel requested is not supported by the device.");
+            }
+
+            return DioChannels[channel];
         }
 
         #endregion

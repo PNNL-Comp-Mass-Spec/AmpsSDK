@@ -11,7 +11,7 @@ namespace AmpsBoxSdk.Devices
     /// <summary>
     /// TODO The state.
     /// </summary>
-    public enum State
+    internal enum State
     {
         /// <summary>
         /// The on.

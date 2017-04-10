@@ -60,7 +60,8 @@ namespace AmpsBoxSdk.Devices
         public int ClockFrequency { get; set; }
 
         [DataMember]
-        public string Name { get; set; }
+        public string Name => GetName().Result;
+
         #endregion
 
         #region Public Methods and Operators
@@ -73,8 +74,8 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public AmpsBoxDeviceData GetConfig()
         {
-            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result, (uint)this.GetNumberDigitalChannels().Result,
-                (uint)this.GetNumberRfChannels().Result));
+            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
+                (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
             if (this.communicator.IsOpen)
             {
                 return this.deviceData.Value;
@@ -204,14 +205,42 @@ namespace AmpsBoxSdk.Devices
             }).FirstAsync();
         }
 
+        /// <summary>
+        /// Changes I/O direction bit on specified channel.
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <param name="digitalDirection"></param>
+        /// <returns></returns>
         public async Task<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection)
         {
-            throw new NotImplementedException();
+            switch (channel)
+            {
+                case "E":
+                case "F":
+                case "G":
+                case "H":
+                    var ampsmessage = Message.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
+                    ampsmessage.WriteTo(communicator);
+                    var messagePacket = communicator.MessageSources;
+
+                    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+                default:
+                    return Unit.Default;
+            }
+            
         }
 
         public async Task<DigitalDirection> GetDigitalDirection(string channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GDIODR, channel);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                Enum.TryParse(bytes, true, out DigitalDirection result);
+                return result;
+            }).FirstAsync();
         }
 
         public async Task<int> GetNumberDigitalChannels()
@@ -229,22 +258,60 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetPositiveHighVoltage(int volts)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SPHV, volts);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<Unit> SetNegativeHighVoltage(int volts)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SNHV, volts);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<(double, double)> GetPositiveEsi()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GPHVV);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                var values = bytes.Split(',');
+                if (values.Length < 2)
+                {
+                    return (0, 0);
+                }
+                int.TryParse(values[0], out int voltage);
+                int.TryParse(values[1], out int current);
+
+                return (voltage, current);
+            }).FirstAsync();
         }
 
         public async Task<(double, double)> GetNegativeEsi()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GNHVV);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                var values = bytes.Split(',');
+                if (values.Length < 2)
+                {
+                    return (0, 0);
+                }
+                int.TryParse(values[0], out int voltage);
+                int.TryParse(values[1], out int current);
+
+                return (voltage, current);
+            }).FirstAsync();
         }
 
         public async Task<Unit> TurnOnHeater()

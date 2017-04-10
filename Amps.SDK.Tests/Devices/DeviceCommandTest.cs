@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
@@ -35,7 +37,7 @@ namespace AmpsBoxTests.Devices
             var signalTable = new AmpsSignalTable();
             signalTable = signalTable.AddTimePoint(0, new LoopData());
             signalTable[0].CreateOutput("1", 10);
-           signalTable= signalTable.AddTimePoint(10, new LoopData());
+            signalTable= signalTable.AddTimePoint(10, new LoopData());
             signalTable[10].CreateOutput("1", 5);
 
             signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 10);
@@ -65,6 +67,46 @@ namespace AmpsBoxTests.Devices
         }
 
         [Fact]
+        public void GetAmpsNameProperty()
+        {
+            var name = box.Name;
+            output.WriteLine(name);
+        }
+
+        [Fact]
+        public void GetPositiveEsiStatusTest()
+        {
+           var status = box.GetPositiveEsi().Result;
+            output.WriteLine("volts: {0}\ncurrent: {1}", status.Item1, status.Item2);
+        }
+
+        [Fact]
+        public void GetNegativeEsiStatusTest()
+        {
+            var status = box.GetNegativeEsi().Result;
+            output.WriteLine("volts: {0}\ncurrent: {1}", status.Item1, status.Item2);
+        }
+
+        [Fact]
+        public void SetPositiveEsiTest()
+        {
+            var status = box.SetPositiveHighVoltage(50).Result;
+        }
+
+        [Fact]
+        public void SetNegativeEsiTest()
+        {
+            var status = box.SetNegativeHighVoltage(50).Result;
+        }
+
+        [Fact]
+        public void GetDcBiasCurrentReadback()
+        {
+            var status = box.GetDcBiasCurrentReadback(1).Result;
+            output.WriteLine("current: {0}", status);
+        }
+
+        [Fact]
         public void GetDcBiasTest()
         {
             var subscription = box.GetDcBiasSetpoint(1).Result;
@@ -73,6 +115,17 @@ namespace AmpsBoxTests.Devices
             output.WriteLine(readback.ToString());
             var error = box.GetError().Result;
             output.WriteLine(error.ToString());
+        }
+
+        [Fact]
+        public void GetDigitalDirectionTest()
+        {
+            var config = box.GetConfig();
+            for (int i = 0; i < config.NumberDigitalChannels; i++)
+            {
+               var direction = box.GetDigitalDirection(config.GetDioChannel((uint) i)).Result;
+                output.WriteLine(direction.ToString());
+            }
         }
 
         [Fact]
@@ -162,13 +215,6 @@ namespace AmpsBoxTests.Devices
         {
             var numberDcBias = box.GetNumberDcBiasChannels().Result;
             output.WriteLine(numberDcBias.ToString());
-        }
-
-        [Fact]
-        public void GetPositiveEsiVoltageAndCurrent()
-        {
-            var esi = box.GetPositiveEsi().Result;
-            output.WriteLine(esi.ToString());
         }
 
         [Fact]
