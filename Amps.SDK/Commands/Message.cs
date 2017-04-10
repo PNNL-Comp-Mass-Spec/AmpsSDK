@@ -49,6 +49,11 @@ namespace AmpsBoxSdk.Commands
             return new CommandValueValueMessage(command, value1, value2);
         }
 
+        public static Message Create(AmpsCommand command, int value, int value2)
+        {
+            return new CommandValueValueMessage(command, value, value2);
+        }
+
         //internal void SetSource(ResultProcessor resultProcessor, ResultBox resultBox)
         //{ // note order here reversed to prevent overload resolution errors
         //    this.resultBox = resultBox;
@@ -62,6 +67,11 @@ namespace AmpsBoxSdk.Commands
         //}
 
         internal abstract void WriteImpl(AmpsBoxCommunicator physical);
+
+        private string Read(AmpsBoxCommunicator physical)
+        {
+           return physical.ReadLine();
+        }
 
         internal void WriteTo(AmpsBoxCommunicator physical)
         {
@@ -119,11 +129,12 @@ namespace AmpsBoxSdk.Commands
             this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
         }
 
+
         internal override void WriteImpl(AmpsBoxCommunicator physical)
         {
             physical.WriteHeader(Command);
             physical.Write(value1, ",");
-            physical.Write(value1, null);
+            physical.Write(value2, ",");
             physical.WriteEnd();
         }
     }

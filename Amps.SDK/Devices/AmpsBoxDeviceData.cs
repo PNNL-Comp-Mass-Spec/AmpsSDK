@@ -16,29 +16,20 @@ namespace AmpsBoxSdk.Devices
     /// </summary>
     public class AmpsBoxDeviceData
     {
-        #region Constants
-
-        /// <summary>
-        /// Maximum number of channels available on any board.
-        /// </summary>
-        private const int NUMBER_OF_MAX_CHANNELS = 8;
-
-        #endregion
 
         #region Constructors and Destructors
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AmpsBoxDeviceData"/> class.
         /// </summary>
-        public AmpsBoxDeviceData()
+        public AmpsBoxDeviceData(uint analogChannels, uint rfChannels, uint digitalChannels)
         {
-            HvData = new Dictionary<int, ChannelData>();
-            RfData = new Dictionary<int, AmpsBoxRfData>();
+            HvData = new Dictionary<uint, ChannelData>();
+            RfData = new Dictionary<uint, AmpsBoxRfData>();
 
-            for (int i = 1; i <= NUMBER_OF_MAX_CHANNELS; i++)
-            {
-
-            }
+            this.NumberHvChannels = analogChannels;
+            this.NumberRfChannels = rfChannels;
+            this.NumberDigitalChannels = digitalChannels;
         }
 
         #endregion
@@ -48,12 +39,14 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets the number of supported HV channels.
         /// </summary>
-        public int NumberHvChannels { get; set; }
+        public uint NumberHvChannels { get; }
 
         /// <summary>
         /// Gets the number of supported RF channels.
         /// </summary>
-        public int NumberRfChannels { get; set; }
+        public uint NumberRfChannels { get; }
+
+        public uint NumberDigitalChannels { get; }
 
         #endregion
 
@@ -62,12 +55,12 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// Gets or sets the high voltage data.
         /// </summary>
-        private Dictionary<int, ChannelData> HvData { get; set; }
+        private Dictionary<uint, ChannelData> HvData { get; set; }
 
         /// <summary>
         /// Gets or sets the RF data.
         /// </summary>
-        private Dictionary<int, AmpsBoxRfData> RfData { get; set; }
+        private Dictionary<uint, AmpsBoxRfData> RfData { get; set; }
 
         #endregion
 
@@ -91,7 +84,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="ChannelData"/>.
         /// </returns>
-        public ChannelData GetHvData(int channel)
+        public ChannelData GetHvData(uint channel)
         {
             if (channel > NumberHvChannels)
             {
@@ -110,7 +103,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="AmpsBoxRfData"/>.
         /// </returns>
-        public AmpsBoxRfData GetRfData(int channel)
+        public AmpsBoxRfData GetRfData(uint channel)
         {
             if (channel > NumberHvChannels)
             {

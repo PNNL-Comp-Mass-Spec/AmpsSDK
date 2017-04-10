@@ -30,8 +30,7 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     internal sealed class AmpsBox : IAmpsBox
     {
-        private HashSet<int> dcBiasChannels;
-        private AmpsBoxCommunicator communicator;
+        private readonly AmpsBoxCommunicator communicator;
         #region Constants
 
         /// <summary>
@@ -47,8 +46,11 @@ namespace AmpsBoxSdk.Devices
 
             if (this.communicator.IsOpen)
             {
-                var channels = this.GetNumberDcBiasChannels().Result;
+                var dcBiasChannels = this.GetNumberDcBiasChannels().Result;
+                var digitalChannels = this.GetNumberDigitalChannels().Result;
+                var rfChannels = this.GetNumberRfChannels().Result;
 
+                DeviceData = new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels);
             }
             ClockFrequency = 16000000;
         }
@@ -65,6 +67,8 @@ namespace AmpsBoxSdk.Devices
 
         [DataMember]
         public string Name { get; set; }
+
+        public AmpsBoxDeviceData DeviceData { get; }
         #endregion
 
         #region Public Methods and Operators
@@ -89,7 +93,6 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
-           // AmpsMessage ampsMessage = new AmpsMessage("SDCB", "SDCB");
             var ampsmessage = Message.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
@@ -99,29 +102,63 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetDcBiasSetpoint(int channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GDCB, channel);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int setPoint);
+                return setPoint;
+            }).FirstAsync();
         }
 
         public async Task<int> GetDcBiasReadback(int channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GDCBV, channel);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int voltageReadback);
+                return voltageReadback;
+            }).FirstAsync();
         }
 
         public async Task<int> GetDcBiasCurrentReadback(int channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GDCBI, channel);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
 
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int currentReadback);
+                return currentReadback;
+            }).FirstAsync();
         }
 
         public async Task<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
 
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int offsetVoltage);
+                return offsetVoltage;
+            }).FirstAsync();
         }
 
         public async Task<int> GetNumberDcBiasChannels()
@@ -140,17 +177,39 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetDigitalState(string channel, bool state)
         {
-            throw new NotImplementedException();
+            var messagePacket = communicator.MessageSources;
+            var stateAsInt = Convert.ToInt32(state).ToString();
+            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, stateAsInt);
+            ampsmessage.WriteTo(communicator);
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<Unit> PulseDigitalSignal(string channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, "P");
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<bool> GetDigitalState(string channel)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GDIO, channel);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                if (string.IsNullOrEmpty(bytes))
+                {
+                    return false;
+                }
+                var result = Convert.ToBoolean(Convert.ToInt16(bytes));
+                return result;
+
+            }).FirstAsync();
         }
 
         public async Task<Unit> SetDigitalDirection(string channel, DigitalDirection digitalDirection)
@@ -165,7 +224,15 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetNumberDigitalChannels()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int channels);
+                return channels;
+            }).FirstAsync();
         }
 
         public async Task<Unit> SetPositiveHighVoltage(int volts)
@@ -317,9 +384,17 @@ namespace AmpsBoxSdk.Devices
             throw new NotImplementedException();
         }
 
-        public async Task<int> GetRfChannelNumber()
+        public async Task<int> GetNumberRfChannels()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.RF.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int channels);
+                return channels;
+            }).FirstAsync();
         }
 
         public async Task<Unit> AbortTimeTable()

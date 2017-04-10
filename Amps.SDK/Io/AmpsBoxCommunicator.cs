@@ -36,12 +36,9 @@ namespace AmpsBoxSdk.Io
             this.serialPort.BaudRate = this.serialPort.BaudRate;
             this.serialPort.NewLine = "\n";
             this.serialPort.ErrorReceived += SerialPort_ErrorReceived;
-            this.serialPort.RtsEnable = true; // must be true for MIPS / AMPS communication.
-            this.serialPort.WriteTimeout = 250;
-            this.serialPort.ReadTimeout = 250;
-            IsEmulated = false;
-
-            messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+            this.serialPort.WriteTimeout = 1000;
+            this.serialPort.ReadTimeout = 1000;
+            IsEmulated = false; 
         }
 
         private void SerialPort_ErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
@@ -81,6 +78,10 @@ namespace AmpsBoxSdk.Io
 
         internal void WriteEnd()
         {
+            if (!serialPort.IsOpen)
+            {
+                return;
+            }
             lock (sync)
             {
                 foreach (var b in _lf)
@@ -104,6 +105,11 @@ namespace AmpsBoxSdk.Io
             {
                 serialPort.WriteByte(commandByte);
             }
+        }
+
+        internal string ReadLine()
+        {
+            return this.serialPort.ReadLine();
         }
 
         public void Close()
@@ -151,14 +157,21 @@ namespace AmpsBoxSdk.Io
         {
             lock (sync)
             {
+
+                if (serialPort.IsOpen) return;
+
+                serialPort.Open();
+                serialPort.DiscardInBuffer();
+                serialPort.DiscardOutBuffer();
+
+                if (messageSources == null)
+                {
+                    messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+                }
                 if (connection == null)
                 {
                     connection = messageSources.Connect();
                 }
-                if (serialPort.IsOpen) return;
-
-                serialPort.Open();
-                
             }
         }
 
@@ -170,7 +183,7 @@ namespace AmpsBoxSdk.Io
                           Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
                               h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
                               {
-                                  var buffer = new byte[4096];
+                                  var buffer = new byte[1024];
                                   var ret = new List<byte>();
                                   int bytesRead;
                                   do
@@ -193,7 +206,7 @@ namespace AmpsBoxSdk.Io
 
             public FillingCollection()
             {
-                LineEnding = Encoding.ASCII.GetBytes("\n\r");
+                LineEnding = Encoding.ASCII.GetBytes("\r\n");
             }
         }
 
@@ -215,7 +228,6 @@ namespace AmpsBoxSdk.Io
                 }
                 else if (newByte == buffer.LineEnding[0])
                 {
-                   
                 }
                 else switch (newByte)
                 {
@@ -243,7 +255,8 @@ namespace AmpsBoxSdk.Io
             {
                 if (bytes.Any())
                 {
-                   return Encoding.ASCII.GetString(bytes.ToArray());
+                    var str = Encoding.ASCII.GetString(bytes.ToArray());
+                   return str;
                 }
                 else
                 {
@@ -253,7 +266,7 @@ namespace AmpsBoxSdk.Io
             });
         }
 
-        private readonly IConnectableObservable<string> messageSources;
+        private IConnectableObservable<string> messageSources;
 
         public IObservable<string> MessageSources => messageSources;
 

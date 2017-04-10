@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -19,12 +20,11 @@ namespace AmpsBoxTests.Devices
     {
         private IAmpsBox box;
         private ITestOutputHelper output;
-
+        private SerialPortStream serialPort;
         public DeviceCommandTest(ITestOutputHelper output)
         {
             this.output = output;
-            var serialPort = new SerialPortStream("COM3", 19200*2, 8, Parity.Even, StopBits.One);
-            serialPort.RtsEnable = true;
+            serialPort = new SerialPortStream("COM3", 19200 * 2, 8, Parity.Even, StopBits.One) {RtsEnable = false, Handshake = Handshake.XOn};
 
             box = AmpsBoxFactory.CreateAmpsBox(serialPort);
         }
@@ -78,15 +78,26 @@ namespace AmpsBoxTests.Devices
             var readback = box.GetDcBiasSetpoint(1).Result;
             Assert.Equal(setpointVoltage, readback);
         }
-
-        [Fact]
-        public void DigitalIoTest()
+         
+        [Theory]
+        [InlineData("A")]
+        public void GetDigitalStateTest(string channel)
         {
-          var result = box.GetDigitalState("A").Result;
+           
+            var result = box.GetDigitalState(channel).Result;
             output.WriteLine(result.ToString());
-             box.SetDigitalState("A", true).Wait();
-            result = box.GetDigitalState("A").Result;
-            output.WriteLine(result.ToString());
+           var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
+        }
+
+        [Theory]
+        [InlineData("A", true)]
+        [InlineData("A", false)]
+        public void SetDigitalStateTest(string channel, bool state)
+        {
+            var unit = box.SetDigitalState(channel, state).Result;
+            var error = box.GetError().Result;
+            output.WriteLine(error.ToString());
         }
         [Theory]
         [InlineData(ErrorCodes.Nominal)]
@@ -94,6 +105,8 @@ namespace AmpsBoxTests.Devices
         {
             var version = box.GetVersion().Result;
             output.WriteLine(version);
+            var error = box.GetError().Result;
+            Assert.Equal(error, ErrorCodes.Nominal);
         }
 
         [Theory]
@@ -119,13 +132,22 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void GetCommandsTest()
         {
-            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
+            var timestamp = Stopwatch.GetTimestamp();
             var commands = box.GetCommands().Result;
+
+            var timestamp2 = Stopwatch.GetTimestamp();
+            output.WriteLine(timestamp.ToString());
             output.WriteLine(commands.Count().ToString());
             foreach (var command in commands)
             {
                 output.WriteLine(command);
             }
+           
+            output.WriteLine(timestamp2.ToString());
+            var difference = timestamp2 - timestamp;
+            output.WriteLine(difference.ToString());
+           var time = 1.0/Stopwatch.Frequency * difference;
+            output.WriteLine(time.ToString());
         }
 
         [Fact]
@@ -149,9 +171,15 @@ namespace AmpsBoxTests.Devices
             output.WriteLine(digitalChannels.ToString());
         }
 
+        [Fact]
+        public void GetDeviceDataTest()
+        {
+            output.WriteLine("{0},{1},{2}", box.DeviceData.NumberHvChannels, box.DeviceData.NumberRfChannels, box.DeviceData.NumberDigitalChannels);
+        }
+
         public void Dispose()
         {
-            
+            serialPort.Dispose();
         }
     }
 }

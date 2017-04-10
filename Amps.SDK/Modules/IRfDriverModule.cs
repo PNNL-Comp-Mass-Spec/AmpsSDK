@@ -18,6 +18,6 @@ namespace AmpsBoxSdk.Modules
 
         Task<int> GetRfDriveSetting(string address);
 
-        Task<int> GetRfChannelNumber();
+        Task<int> GetNumberRfChannels();
     }
 }
