@@ -16,11 +16,11 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// The ack.
         /// </summary>
-        ACK, 
+        ACK = 0x06, 
 
         /// <summary>
         /// The nak.
         /// </summary>
-        NAK
+        NAK = 0x15
     }
 }

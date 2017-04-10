@@ -76,7 +76,7 @@ namespace AmpsBoxSdk.Io
             }
         }
 
-        internal void WriteEnd()
+        internal void WriteEnd(string appendToEnd = null)
         {
             if (!serialPort.IsOpen)
             {
@@ -84,6 +84,14 @@ namespace AmpsBoxSdk.Io
             }
             lock (sync)
             {
+                if (!string.IsNullOrEmpty(appendToEnd))
+                {
+                    var bytes = Encoding.ASCII.GetBytes(appendToEnd);
+                    foreach (var b in bytes)
+                    {
+                        serialPort.WriteByte(b);
+                    }
+                }
                 foreach (var b in _lf)
                 {
                     serialPort.WriteByte(b);
@@ -158,12 +166,6 @@ namespace AmpsBoxSdk.Io
             lock (sync)
             {
 
-                if (serialPort.IsOpen) return;
-
-                serialPort.Open();
-                serialPort.DiscardInBuffer();
-                serialPort.DiscardOutBuffer();
-
                 if (messageSources == null)
                 {
                     messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
@@ -172,6 +174,9 @@ namespace AmpsBoxSdk.Io
                 {
                     connection = messageSources.Connect();
                 }
+                if (serialPort.IsOpen) return;
+
+                serialPort.Open();
             }
         }
 

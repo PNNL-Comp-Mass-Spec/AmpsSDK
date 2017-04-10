@@ -9,6 +9,7 @@
         SNAME,
         GNAME,
         SBAUD,
+        RESET,
 
         SRFFRQ,
         GRFFRQ,
@@ -41,6 +42,7 @@
         TBLSTOP,
         TBLABRT,
         SMOD,
+        TBLRPT,
 
 
         SDIO,

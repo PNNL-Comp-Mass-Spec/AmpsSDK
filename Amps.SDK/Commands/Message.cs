@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Io;
 
 namespace AmpsBoxSdk.Commands
@@ -23,6 +24,11 @@ namespace AmpsBoxSdk.Commands
         public AmpsCommand Command => command;
 
         public virtual string CommandAndKey => Command.ToString();
+
+        public static Message Create(AmpsCommand command, AmpsSignalTable table)
+        {
+            return new CommandSignalTableMessage(command, table);
+        }
 
         public static Message Create(AmpsCommand command)
         {
@@ -155,7 +161,7 @@ namespace AmpsBoxSdk.Commands
 
         public CommandValueMessage(AmpsCommand command, string value) : base(command)
         {
-            this.value = Encoding.ASCII.GetBytes(value.ToString());
+            this.value = Encoding.ASCII.GetBytes(value);
         }
 
         internal override void WriteImpl(AmpsBoxCommunicator physical)
@@ -163,6 +169,25 @@ namespace AmpsBoxSdk.Commands
             physical.WriteHeader(Command);
             physical.Write(value, ",");
             physical.WriteEnd();
+        }
+    }
+
+    sealed class CommandSignalTableMessage : CommandBase
+    {
+        private readonly byte[] value;
+
+        public CommandSignalTableMessage(AmpsCommand command, AmpsSignalTable signalTable) : base(command)
+        {
+            this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
+        }
+
+        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        {
+            //Table format: STBLDAT;<data>;
+            physical.WriteHeader(Command);
+            physical.Write(value, ";");
+            physical.WriteEnd(";");
+
         }
     }
 }

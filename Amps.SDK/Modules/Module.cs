@@ -4,10 +4,6 @@
     {
         RF,
         DCB,
-        DIO,
-        ESI,
-        TWAVE,
-        FAIMS,
-        FIL
+        DIO
     }
 }

@@ -10,7 +10,7 @@
 namespace AmpsBoxSdk.Data
 {
     /// <summary>
-    /// Converts 
+    /// Converts time. 
     /// </summary>
     public class SimpleTimeConverter : ITimeUnitConverter<double>
     {

@@ -13,6 +13,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Text;
+using System.Threading;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Io;
 using AmpsBoxSdk.Modules;
@@ -31,6 +32,8 @@ namespace AmpsBoxSdk.Devices
     internal sealed class AmpsBox : IAmpsBox
     {
         private readonly AmpsBoxCommunicator communicator;
+
+        private Lazy<AmpsBoxDeviceData> deviceData;
         #region Constants
 
         /// <summary>
@@ -42,15 +45,6 @@ namespace AmpsBoxSdk.Devices
             if (!this.communicator.IsOpen)
             {
                 this.communicator.Open();
-            }
-
-            if (this.communicator.IsOpen)
-            {
-                var dcBiasChannels = this.GetNumberDcBiasChannels().Result;
-                var digitalChannels = this.GetNumberDigitalChannels().Result;
-                var rfChannels = this.GetNumberRfChannels().Result;
-
-                DeviceData = new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels);
             }
             ClockFrequency = 16000000;
         }
@@ -67,8 +61,6 @@ namespace AmpsBoxSdk.Devices
 
         [DataMember]
         public string Name { get; set; }
-
-        public AmpsBoxDeviceData DeviceData { get; }
         #endregion
 
         #region Public Methods and Operators
@@ -79,16 +71,16 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public string GetConfig()
+        public AmpsBoxDeviceData GetConfig()
         {
-            string ampsBoxData  = string.Empty;
-            ampsBoxData         += string.Format("\tDevice Settings\n");
+            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result, (uint)this.GetNumberDigitalChannels().Result,
+                (uint)this.GetNumberRfChannels().Result));
+            if (this.communicator.IsOpen)
+            {
+                return this.deviceData.Value;
+            }
 
-            ampsBoxData += "\n";
-            ampsBoxData += string.Format("\tTable Settings\n");
-            ampsBoxData += $"\t\tExt. Clock Freq: {ClockFrequency}\n";
-
-            return ampsBoxData;
+            return AmpsBoxDeviceData.Empty;
         }
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
@@ -255,29 +247,53 @@ namespace AmpsBoxSdk.Devices
             throw new NotImplementedException();
         }
 
-        public Task<Unit> TurnOnHeater()
+        public async Task<Unit> TurnOnHeater()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.ON.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public Task<Unit> TurnOffHeater()
+        public async Task<Unit> TurnOffHeater()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.OFF.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public Task<Unit> SetTemperatureSetpoint(int temperature)
+        public async Task<Unit> SetTemperatureSetpoint(int temperature)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SHTRTMP, temperature);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public Task<int> ReadTemperature()
+        public async Task<int> ReadTemperature()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.GHTRTC);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int temperature);
+                return temperature;
+            }).FirstAsync();
         }
 
-        public Task<Unit> SetPidGain(int gain)
+        public async Task<Unit> SetPidGain(int gain)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SHTRGAIN, gain);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<string> GetVersion()
@@ -322,7 +338,11 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> Reset()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.RESET);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public async Task<Unit> Save()
@@ -358,30 +378,48 @@ namespace AmpsBoxSdk.Devices
             throw new NotImplementedException();
         }
 
-        public async Task<Unit> SetFrequency(string address, int frequency)
+        public async Task<Unit> SetFrequency(int address, int frequency)
         {
-            // TODO: figure out if all values of frequency are already in kHz
-            // if(frequency < 500 || frequency > 5000)
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
-        public async Task<int> GetFrequencySetting(string address)
+        public async Task<int> GetFrequencySetting(int address)
         {
-            throw new NotImplementedException();
-        }
+            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
 
-        public async Task<Unit> SetRfDriveSetting(string address, int drive)
-        {
-            if (drive < 0 || drive > 255)
+            return await messagePacket.Select(bytes =>
             {
-                throw new ArgumentOutOfRangeException(nameof(drive), "Range must be between 0 and 255");
-            }
-            throw new NotImplementedException();
+                int.TryParse(bytes, out int frequencySetting);
+                return frequencySetting;
+            }).FirstAsync();
         }
 
-        public async Task<int> GetRfDriveSetting(string address)
+        public async Task<Unit> SetRfDriveSetting(int address, int drive)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+        }
+
+        public async Task<int> GetRfDriveSetting(int address)
+        {
+            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                int.TryParse(bytes, out int rfDriveSetting);
+                return rfDriveSetting;
+            }).FirstAsync();
         }
 
         public async Task<int> GetNumberRfChannels()
@@ -399,7 +437,11 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> AbortTimeTable()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.TBLABRT);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -408,17 +450,36 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StartTimeTable()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.TBLSTRT);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         public string LastTable { get; private set; }
+        public async Task<string> ReportExecutionStatus()
+        {
+            var ampsmessage = Message.Create(AmpsCommand.TBLRPT);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes =>
+            {
+                return bytes;
+            }).FirstAsync();
+        }
 
         /// <summary>
         /// Sets the table mode for the amps / mips box.
         /// </summary>
         public async Task<Unit> SetMode(Modes mode)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.SMOD, mode.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -426,7 +487,11 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StopTable()
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.TBLSTOP);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -439,7 +504,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> LoadTimeTable(AmpsSignalTable table)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.STBLDAT, table);
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
@@ -452,17 +521,25 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> SetClock(ClockType clockType)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.STBLCLK, clockType.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         /// <summary>
         /// Set the device trigger.
         /// </summary>
-        /// <param name="startTriggerType"></param>
+        /// <param name="startTrigger"></param>
         /// <returns></returns>
-        public async Task<Unit> SetTrigger(StartTriggerTypes startTriggerType)
+        public async Task<Unit> SetTrigger(StartTrigger startTrigger)
         {
-            throw new NotImplementedException();
+            var ampsmessage = Message.Create(AmpsCommand.STBLCLK, startTrigger.ToString());
+            ampsmessage.WriteTo(communicator);
+            var messagePacket = communicator.MessageSources;
+
+            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
         }
 
         #endregion

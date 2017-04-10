@@ -11,11 +11,13 @@ namespace AmpsBoxSdk.Modules
         Task<Unit> AbortTimeTable();
         Task<Unit> LoadTimeTable(AmpsSignalTable table);
         Task<Unit> SetClock(ClockType clockType);
-        Task<Unit> SetTrigger(StartTriggerTypes startTriggerType);
+        Task<Unit> SetTrigger(StartTrigger startTrigger);
         Task<Unit> SetMode(Modes mode);
         Task<Unit> StopTable();
         Task<Unit> StartTimeTable();
         string LastTable { get; }
+
+        Task<string> ReportExecutionStatus();
 
     }
 }

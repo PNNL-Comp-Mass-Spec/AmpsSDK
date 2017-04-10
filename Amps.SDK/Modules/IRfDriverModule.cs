@@ -5,8 +5,8 @@ namespace AmpsBoxSdk.Modules
 {
     public interface IRfDriverModule
     {
-        Task<Unit> SetFrequency(string address, int frequency);
-        Task<int> GetFrequencySetting(string address);
+        Task<Unit> SetFrequency(int address, int frequency);
+        Task<int> GetFrequencySetting(int address);
 
         /// <summary>
         /// 
@@ -14,9 +14,9 @@ namespace AmpsBoxSdk.Modules
         /// <param name="address"></param>
         /// <param name="drive">Between 0-255</param>
         /// <returns></returns>
-        Task<Unit> SetRfDriveSetting(string address, int drive);
+        Task<Unit> SetRfDriveSetting(int address, int drive);
 
-        Task<int> GetRfDriveSetting(string address);
+        Task<int> GetRfDriveSetting(int address);
 
         Task<int> GetNumberRfChannels();
     }

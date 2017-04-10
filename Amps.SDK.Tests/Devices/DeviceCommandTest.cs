@@ -48,7 +48,7 @@ namespace AmpsBoxTests.Devices
             box.SetClock(ClockType.INT).Wait();
             error = box.GetError().Result;
             output.WriteLine(error.ToString());
-            box.SetTrigger(StartTriggerTypes.SW).Wait();
+            box.SetTrigger(StartTrigger.SW).Wait();
             error = box.GetError().Result;
             output.WriteLine(error.ToString());
             box.SetMode(Modes.TBL).Wait();
@@ -57,6 +57,11 @@ namespace AmpsBoxTests.Devices
             box.StartTimeTable().Wait();
             error = box.GetError().Result;
             output.WriteLine(error.ToString());
+            var status = box.ReportExecutionStatus().Result;
+            output.WriteLine(status);
+
+            box.StopTable().Wait();
+            box.AbortTimeTable().Wait();
         }
 
         [Fact]
@@ -106,27 +111,29 @@ namespace AmpsBoxTests.Devices
             var version = box.GetVersion().Result;
             output.WriteLine(version);
             var error = box.GetError().Result;
-            Assert.Equal(error, ErrorCodes.Nominal);
+            output.WriteLine(error.ToString());
+        }
+
+        [Fact]
+        public void GetConfigTest()
+        {
+            var config = box.GetConfig();
+           output.WriteLine("HV: {0}\nDIO: {1}\nRF: {2}", config.NumberHvChannels, config.NumberDigitalChannels, config.NumberRfChannels);
         }
 
         [Theory]
         [InlineData(ErrorCodes.Nominal)]
         public void GetNameTest(ErrorCodes errorCode)
         {
-            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
             var version = box.GetName().Result;
             output.WriteLine(version);
-            Thread.Sleep(500);
         }
 
         [Theory]
         [InlineData("AMPS-Groot", ErrorCodes.Nominal)]
         public void SetNameTest(string name, ErrorCodes errorCode)
         {
-           
-            output.WriteLine(DateTimeOffset.Now.LocalDateTime.ToString());
-           
-           
+            
         }
 
         [Fact]
@@ -169,12 +176,6 @@ namespace AmpsBoxTests.Devices
         {
             var digitalChannels = box.GetNumberDigitalChannels().Result;
             output.WriteLine(digitalChannels.ToString());
-        }
-
-        [Fact]
-        public void GetDeviceDataTest()
-        {
-            output.WriteLine("{0},{1},{2}", box.DeviceData.NumberHvChannels, box.DeviceData.NumberRfChannels, box.DeviceData.NumberDigitalChannels);
         }
 
         public void Dispose()

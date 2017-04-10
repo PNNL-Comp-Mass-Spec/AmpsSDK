@@ -32,6 +32,11 @@ namespace AmpsBoxSdk.Devices
             this.NumberDigitalChannels = digitalChannels;
         }
 
+        /// <summary>
+        /// Initializes empty device data (perhaps useful for emulation at some point)
+        /// </summary>
+        public static AmpsBoxDeviceData Empty { get; } = new AmpsBoxDeviceData(0, 0, 0);
+
         #endregion
 
         #region Public Properties

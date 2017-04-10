@@ -15,7 +15,7 @@ namespace AmpsBoxSdk.Devices
     /// Trigger types for starting a time Table
     /// </summary>
     [DataContract]
-    public enum StartTriggerTypes
+    public enum StartTrigger
     {
         [EnumMember]
         SW,
