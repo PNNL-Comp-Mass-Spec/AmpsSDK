@@ -73,6 +73,15 @@ namespace AmpsBoxTests.Devices
             output.WriteLine(name);
         }
 
+		[Fact]
+        public void GetDescriptorTest()
+        {
+            foreach (var portDescription in SerialPortStream.GetPortDescriptions())
+            {
+                output.WriteLine(portDescription.Description);
+            }
+        }
+
         [Fact]
         public void GetPositiveEsiStatusTest()
         {
