@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amps.SDK", "Amps.SDK\Amps.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amps.SDK.Tests", "Amps.SDK.Tests\Amps.SDK.Tests.csproj", "{EAEADBF2-85C6-4F31-A37E-E6E702A8C691}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mips", "Mips\Mips.csproj", "{A188FDEF-F9EA-4D95-B826-953573D6F6CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{EAEADBF2-85C6-4F31-A37E-E6E702A8C691}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAEADBF2-85C6-4F31-A37E-E6E702A8C691}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAEADBF2-85C6-4F31-A37E-E6E702A8C691}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A188FDEF-F9EA-4D95-B826-953573D6F6CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A188FDEF-F9EA-4D95-B826-953573D6F6CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A188FDEF-F9EA-4D95-B826-953573D6F6CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A188FDEF-F9EA-4D95-B826-953573D6F6CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

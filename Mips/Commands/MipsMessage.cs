@@ -68,6 +68,11 @@ namespace Mips.Commands
 		{
 			
 		}
+
+		internal override void WriteImpl(MipsCommunicator physical)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	internal sealed class CommandMessage : CommandBase
@@ -76,6 +81,11 @@ namespace Mips.Commands
 		public CommandMessage(MipsCommand command) : base(command)
 		{
 
+		}
+
+		internal override void WriteImpl(MipsCommunicator physical)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
