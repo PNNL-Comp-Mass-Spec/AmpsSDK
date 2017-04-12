@@ -137,7 +137,7 @@ namespace AmpsBoxSdk.Commands
 
 
         internal override void WriteImpl(AmpsBoxCommunicator physical)
-        {
+        {         
             physical.WriteHeader(Command);
             physical.Write(value1, ",");
             physical.Write(value2, ",");

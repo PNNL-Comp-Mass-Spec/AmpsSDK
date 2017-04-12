@@ -10,7 +10,7 @@ namespace Mips.Io
         /// 
         /// </summary>
         /// <param name="command"></param>
-        void Write(MipsCommand command);
+        //void Write(MipsMessage command);
 
         IObservable<ResponseMessage> MessageSources { get; }
 
@@ -41,5 +41,6 @@ namespace Mips.Io
         /// Gets whether the port is open.
         /// </summary>
         bool IsOpen { get; }
+		
     }
 }

@@ -10,7 +10,7 @@ using Mips.Commands;
 
 namespace Mips.Io
 {
-    public class MipsCommunicator : IMipsCommunicator
+internal sealed class MipsCommunicator : IMipsCommunicator
     {
         #region Members
 
@@ -39,30 +39,32 @@ namespace Mips.Io
             messageSources = ToResponseMessage(ToDecodedMessage(ToMessage(Read))).Publish(); // Only create one connection.
         }
 
-        #endregion
+		#endregion
 
+		internal string ReadLine()
+		{
+			return this.port.ReadLine();
+		}
 
-        /// <summary>
-        /// Writes the command to the device.
-        /// </summary>
-        /// <param name="command"></param>
-        public void Write(MipsCommand command)
-        {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-            if (command.Value == null)
-            {
-                throw new Exception("Command value cannot be null!");
-            }
-            lock (sync)
-            {
-                port.WriteLine(command.ToString());
-            }
+	    /// <summary>
+	    /// Writes the command to the device.
+	    /// </summary>
+	    /// <param name="value"></param>
+	    /// <param name="separator"></param>
+	    public void Write(byte[] value, string separator)
+		{
+           
         }
+	    public void WriteHeader(MipsMessage command)
+	    {
 
-        public void Close()
+	    }
+	    public void WriteEnd()
+	    {
+
+	    }
+
+		public void Close()
         {
             lock (sync)
             {
@@ -96,6 +98,7 @@ namespace Mips.Io
                     throw new ArgumentOutOfRangeException();
             }
         }
+
 
         #region Properties
 
@@ -241,7 +244,7 @@ namespace Mips.Io
                 }
                 else
                 {
-                    return new ResponseMessage(new MipsCommand("MIPS", "MIPS")).WithPayload(s);
+                    return new ResponseMessage(MipsCommand.ABOUT).WithPayload(s);
                 }
             });
         }
