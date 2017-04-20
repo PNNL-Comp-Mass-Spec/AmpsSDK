@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amps-net", "Amps-net\Amps-n
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mips-net", "Mips-net\Mips-net.csproj", "{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MipsTest", "MipsTest\MipsTest.csproj", "{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

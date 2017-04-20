@@ -72,9 +72,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Mips\Mips.csproj">
-      <Project>{05a7cf08-6885-43f2-8c22-84199f8c0e31}</Project>
-      <Name>Mips</Name>
+    <ProjectReference Include="..\Mips-net\Mips-net.csproj">
+      <Project>{31c174dc-3aa3-4f5c-9046-fa94d1bc7b9d}</Project>
+      <Name>Mips-net</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
