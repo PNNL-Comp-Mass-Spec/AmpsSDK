@@ -7,6 +7,11 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using Mips.Commands;
+using RJCP.IO.Ports;
+using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
+using SerialError = System.IO.Ports.SerialError;
+using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
+
 
 namespace Mips.Io
 {
@@ -17,26 +22,25 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         /// <summary>
         /// Synchronization object.
         /// </summary>
-        private readonly object sync = new object();
-        private readonly Queue<ResponseMessage> responseQueue = new Queue<ResponseMessage>();
+        private readonly object sync = new object();     
+	    private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
+		#endregion
 
-        #endregion
+		#region Construction and Initialization
 
-        #region Construction and Initialization
-
-        public MipsCommunicator(SerialPort port)
+		public MipsCommunicator(SerialPortStream port)
         {
             this.port = port;
             this.port.PortName = port.PortName;
             this.port.BaudRate = port.BaudRate;
             this.port.NewLine = "\n";
-            this.port.ErrorReceived += PortErrorReceived;
+	        this.port.ErrorReceived += PortErrorReceived;
             this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
             this.port.WriteTimeout = 250;
             this.port.ReadTimeout = 250;
             IsEmulated = false;
 
-            messageSources = ToResponseMessage(ToDecodedMessage(ToMessage(Read))).Publish(); // Only create one connection.
+            messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
         }
 
 		#endregion
@@ -53,16 +57,62 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 	    /// <param name="separator"></param>
 	    public void Write(byte[] value, string separator)
 		{
-           
-        }
-	    public void WriteHeader(MipsMessage command)
-	    {
+			if (!port.IsOpen)
+			{
+				return;
+			}
+			lock (sync)
+			{
+				if (string.IsNullOrEmpty(separator)) return;
 
-	    }
-	    public void WriteEnd()
-	    {
+				var bytes = Encoding.ASCII.GetBytes(separator);
+				foreach (var b in bytes)
+				{
+					port.WriteByte(b);
+				}
 
-	    }
+				foreach (var b in value)
+				{
+					port.WriteByte(b);
+				}
+			}
+		}
+	    public void WriteHeader(MipsCommand command)
+	    {
+			var commandBytes = MipsCommandMap.Default.GetBytes(command);
+		    if (commandBytes == null)
+		    {
+			    throw new NotImplementedException();
+		    }
+
+		    foreach (var commandByte in commandBytes)
+		    {
+			 port.WriteByte(commandByte);
+		    }
+
+		}
+	    public void WriteEnd(string appendToEnd=null)
+	    {
+		    if (!port.IsOpen)
+		    {
+			    return;
+		    }
+		    lock (sync)
+		    {
+			    if (!string.IsNullOrEmpty(appendToEnd))
+			    {
+				    var bytes = Encoding.ASCII.GetBytes(appendToEnd);
+				    foreach (var b in bytes)
+				    {
+					    port.WriteByte(b);
+				    }
+			    }
+			    foreach (var b in _lf)
+			    {
+				    port.WriteByte(b);
+			    }
+		    }
+		}
 
 		public void Close()
         {
@@ -87,11 +137,11 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         /// </param>
         /// <exception cref="IOException">
         /// </exception>
-        private void PortErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        private void PortErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
         {
             switch (e.EventType)
             {
-                case SerialError.Frame:
+                case RJCP.IO.Ports.SerialError.Frame:
                     System.Diagnostics.Trace.WriteLine(e.EventType.ToString());
                     break;
                 default:
@@ -110,7 +160,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         /// <summary>
         /// Gets the serial port
         /// </summary>
-        private SerialPort port;
+        private SerialPortStream port;
 
         /// <summary>
         /// Get or set read timeout for commincator.
@@ -127,8 +177,6 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         /// </summary>
         public bool IsEmulated { get; set; }
 
-
-        public SerialPort Port => port;
 
         private IDisposable connection;
 
@@ -148,8 +196,8 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             get
             {
                 return
-                    Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                        h => port.DataReceived += h, h => port.DataReceived -= h).SelectMany(_ =>
+                    Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
+						h => port.DataReceived += h, h => port.DataReceived -= h).SelectMany(_ =>
                     {
                         var buffer = new byte[1024];
                         var ret = new List<byte>();
@@ -231,26 +279,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             });
         }
 
+        private readonly IConnectableObservable<string> messageSources;
 
-        private IObservable<ResponseMessage> ToResponseMessage(IObservable<string> input)
-        {
-            return input.Select(s =>
-            {
-                // If there is a command in the queue, the MIPS box would have responded in a FIFO ordering. 
-                if (responseQueue.Any())
-                {
-                    var response = responseQueue.Dequeue();
-                    return response.WithPayload(s);
-                }
-                else
-                {
-                    return new ResponseMessage(MipsCommand.ABOUT).WithPayload(s);
-                }
-            });
-        }
-        private readonly IConnectableObservable<ResponseMessage> messageSources;
-
-        public IObservable<ResponseMessage> MessageSources => messageSources;
+        public IObservable<string> MessageSources => messageSources;
 
         public void Dispose()
         {

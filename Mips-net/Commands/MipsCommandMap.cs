@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mips.Commands
 {
-public  class MipsCommandMap
+	public  class MipsCommandMap
     {
 	    private readonly byte[][] map;
 	   
@@ -28,7 +28,6 @@ public  class MipsCommandMap
 		    var commands = (MipsCommand[])Enum.GetValues(typeof(MipsCommand));
 
 		    byte[][] map = new byte[commands.Length][];
-		    bool haveDelta = false;
 		    for (int i = 0; i < commands.Length; i++)
 		    {
 			    int idx = (int)commands[i];
@@ -48,13 +47,12 @@ public  class MipsCommandMap
 						    value = tmp;
 					    }
 				    }
-				    if (value != name) haveDelta = true;
-				    haveDelta = true;
+				   
 				    byte[] val = string.IsNullOrWhiteSpace(value) ? null : Encoding.UTF8.GetBytes(value);
 				    map[idx] = val;
 			    }
 		    }
-			if (!haveDelta && Default != null) return Default;
+			if (Default != null) return Default;
 
 			return new MipsCommandMap(map);
 		}
