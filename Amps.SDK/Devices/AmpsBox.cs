@@ -385,16 +385,16 @@ namespace AmpsBoxSdk.Devices
             }).FirstAsync();
         }
 
-        public async Task<string> GetName()
-        {
-            var ampsmessage = Message.Create(AmpsCommand.GNAME);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+		public async Task<string> GetName()
+		{
+			var ampsmessage = Message.Create(AmpsCommand.GNAME);
+			ampsmessage.WriteTo(communicator);
+			var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => bytes).FirstAsync();
-        }
+			return await messagePacket.Select(bytes => bytes).FirstAsync();
+		}
 
-        public async Task<Unit> SetName(string name)
+		public async Task<Unit> SetName(string name)
         {
             var ampsmessage = Message.Create(AmpsCommand.SNAME, name);
             ampsmessage.WriteTo(communicator);

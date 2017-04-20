@@ -49,8 +49,8 @@ namespace AmpsBoxSdk.Commands
         {
             return new CommandValueMessage(command, value);
         }
-
-        public static Message Create(AmpsCommand command, string value1, string value2)
+	   
+		public static Message Create(AmpsCommand command, string value1, string value2)
         {
             return new CommandValueValueMessage(command, value1, value2);
         }

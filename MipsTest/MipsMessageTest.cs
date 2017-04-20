@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mips.Commands;
@@ -10,7 +11,7 @@ namespace MipsTest
 	public class MipsCommadMapTest
 	{
 		private readonly byte[][] map;
-		MipsCommandMap Default = null;
+		Mips.Commands.MipsCommandMap Default = null;
 		
 
 		[TestMethod]
@@ -51,14 +52,12 @@ namespace MipsTest
 							value = tmp;
 						}
 					}
-					if (value != name) haveDelta = true;
-					// TODO: bug?
-					haveDelta = true;
 					byte[] val = string.IsNullOrWhiteSpace(value) ? null : Encoding.UTF8.GetBytes(value);
-					map[idx] = val;
+						map[idx] = val;
+					
 				}
 			}
-			if (!haveDelta && Default != null)
+			if ( Default != null)
 				Default = null;
 			var command = MipsCommand.ABOUT;
 			byte[] vBytes = map[(int)command];
@@ -95,6 +94,23 @@ namespace MipsTest
 		public void IsAvailable(MipsCommand command)
 		{
 			//return map[(int)command] != null;
+		}
+
+		[TestMethod]
+		public void CommandEnumerableValueMessageTest()
+		{
+			var command = MipsCommand.SDCBALL;
+			IEnumerable<int> values = from value in Enumerable.Range(1, 32) select value;
+			byte[][] arrayvalue=new byte[values.Count()][];
+			int i = 0;
+
+			foreach (var value in values)
+			{
+				byte[] result=Encoding.ASCII.GetBytes(value.ToString());
+				arrayvalue[i] = result;
+				i++;
+			}
+
 		}
 	}
 }
