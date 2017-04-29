@@ -32,12 +32,6 @@ namespace AmpsBoxSdk.Io
         public AmpsBoxCommunicator(SerialPortStream serialPort)
         {
             this.serialPort = serialPort;
-            this.serialPort.PortName = this.serialPort.PortName;
-            this.serialPort.BaudRate = this.serialPort.BaudRate;
-            this.serialPort.NewLine = "\n";
-            this.serialPort.ErrorReceived += SerialPort_ErrorReceived;
-            this.serialPort.WriteTimeout = 1000;
-            this.serialPort.ReadTimeout = 1000;
             IsEmulated = false; 
         }
 

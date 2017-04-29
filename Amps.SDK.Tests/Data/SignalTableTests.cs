@@ -3,13 +3,6 @@
 namespace AmpsBoxTests.Data
 {
     using System;
-    using System.IO.Ports;
-    using System.Text;
-    using System.Windows.Media;
-
-    using AmpsBoxSdk.Commands;
-    using AmpsBoxSdk.Data;
-    using AmpsBoxSdk.Devices;
 
     public class SignalTableTests
     {

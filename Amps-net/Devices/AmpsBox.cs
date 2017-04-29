@@ -34,6 +34,7 @@ namespace AmpsBoxSdk.Devices
         private readonly AmpsBoxCommunicator communicator;
 
         private Lazy<AmpsBoxDeviceData> deviceData;
+
         #region Constants
 
         /// <summary>
@@ -74,8 +75,13 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public AmpsBoxDeviceData GetConfig()
         {
-            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
-                (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
+            this.deviceData = new Lazy<AmpsBoxDeviceData>(() =>
+            {
+               var dcBias = (uint) this.GetNumberDcBiasChannels().Result;
+               var rfChannels = (uint) this.GetNumberRfChannels().Result;
+               var digitalChannels = (uint)this.GetNumberDigitalChannels().Result;
+                return new AmpsBoxDeviceData(dcBias, rfChannels, digitalChannels);
+            });
             if (this.communicator.IsOpen)
             {
                 return this.deviceData.Value;

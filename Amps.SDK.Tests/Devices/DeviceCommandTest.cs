@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Devices;
-using AmpsBoxSdk.Io;
-using AmpsBoxSdk.Modules;
 using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;

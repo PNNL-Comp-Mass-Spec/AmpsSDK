@@ -40,8 +40,8 @@
     <Reference Include="dotMemory.Unit, Version=103.0.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.dotMemoryUnit.2.3.20160517.113140\lib\dotMemory.Unit.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI, Version=7.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\reactiveui-core.7.2.0\lib\Net45\ReactiveUI.dll</HintPath>
+    <Reference Include="DynamicData, Version=4.11.3.1209, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicData.4.11.3.1209\lib\net45\DynamicData.dll</HintPath>
     </Reference>
     <Reference Include="RJCP.SerialPortStream, Version=2.0.3.0, Culture=neutral, PublicKeyToken=5f5e7b70c6a74deb, processorArchitecture=MSIL">
       <HintPath>..\packages\SerialPortStream.2.0.3\lib\net45\RJCP.SerialPortStream.dll</HintPath>
@@ -93,6 +93,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Amps-net\Amps-net.csproj">
+      <Project>{b9d88f1e-eceb-4da6-988d-04db9d89d51e}</Project>
+      <Name>Amps-net</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
