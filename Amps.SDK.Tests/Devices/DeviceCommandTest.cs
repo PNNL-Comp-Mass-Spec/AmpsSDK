@@ -19,7 +19,11 @@ namespace AmpsBoxTests.Devices
         {
             this.output = output;
             serialPort = new SerialPortStream("COM3", 19200 * 2, 8, Parity.Even, StopBits.One) {RtsEnable = false, Handshake = Handshake.XOn};
-
+            if (!serialPort.IsOpen)
+            {
+                serialPort.Open();
+            }
+           
             box = AmpsBoxFactory.CreateAmpsBox(serialPort);
         }
 
@@ -121,7 +125,7 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void GetDigitalDirectionTest()
         {
-            var config = box.GetConfig();
+            var config = box.GetAmpsConfigurationAsync().Result;
             for (int i = 0; i < config.NumberDigitalChannels; i++)
             {
                var direction = box.GetDigitalDirection(config.GetDioChannel((uint) i)).Result;
@@ -171,7 +175,7 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void GetConfigTest()
         {
-            var config = box.GetConfig();
+            var config = box.GetAmpsConfigurationAsync().Result;
            output.WriteLine("HV: {0}\nDIO: {1}\nRF: {2}", config.NumberHvChannels, config.NumberDigitalChannels, config.NumberRfChannels);
         }
 

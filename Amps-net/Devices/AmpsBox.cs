@@ -35,6 +35,7 @@ namespace AmpsBoxSdk.Devices
 
         private Lazy<AmpsBoxDeviceData> deviceData;
 
+
         #region Constants
 
         /// <summary>
@@ -43,10 +44,8 @@ namespace AmpsBoxSdk.Devices
         public AmpsBox(AmpsBoxCommunicator communicator)
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
-            if (!this.communicator.IsOpen)
-            {
-                this.communicator.Open();
-            }
+            this.communicator.Open();
+            
             ClockFrequency = 16000000;
         }
 
@@ -73,22 +72,14 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public AmpsBoxDeviceData GetConfig()
+        public async Task<AmpsBoxDeviceData> GetAmpsConfigurationAsync()
         {
-            this.deviceData = new Lazy<AmpsBoxDeviceData>(() =>
-            {
-               var dcBias = (uint) this.GetNumberDcBiasChannels().Result;
-               var rfChannels = (uint) this.GetNumberRfChannels().Result;
-               var digitalChannels = (uint)this.GetNumberDigitalChannels().Result;
-                return new AmpsBoxDeviceData(dcBias, rfChannels, digitalChannels);
-            });
-            if (this.communicator.IsOpen)
-            {
-                return this.deviceData.Value;
-            }
-
-            return AmpsBoxDeviceData.Empty;
-        }
+            var dcBiasChannels = await this.GetNumberDcBiasChannels();
+            var rfChannels = await this.GetNumberRfChannels();
+            var digitalChannels = await this.GetNumberDigitalChannels();
+            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels));
+			return this.deviceData.Value;
+		}
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
