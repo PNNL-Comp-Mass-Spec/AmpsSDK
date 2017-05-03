@@ -3,6 +3,7 @@
     public enum ArbMode
     {
         TWAVE,
-        ARB
+        ARB,
+		ONCE
     }
 }

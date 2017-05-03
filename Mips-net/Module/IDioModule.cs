@@ -6,9 +6,9 @@ namespace Mips.Module
 {
     public interface IDioModule
     {
-        Task<Unit> SetDigitalOutput(string channel, bool state);
-        Task<bool> GetDigitalState(string channel);
-        Task<DigitalEdge> GetDigitalInputState(string channel);
+        Task<Unit> SetDigitalOutput(string channel, int state);
+        Task<int> GetDigitalState(string channel);
+        Task<Unit> ReporInputChannelState(string channel,DigitalEdge edge);
         /// <summary>
         /// Input: Q-X
         /// Output: A-P

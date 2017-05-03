@@ -4,6 +4,7 @@
     {
         RISING,
         FALLING,
-        CHANGE
+        CHANGE,
+		OFF
     }
 }

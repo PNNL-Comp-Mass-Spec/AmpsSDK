@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using Mips.Data;
@@ -38,6 +38,10 @@ namespace Mips.Commands
 		}
 
 		public static MipsMessage Create(MipsCommand command, int value)
+		{
+			return new CommandValueMessage(command, value);
+		}
+		public static MipsMessage Create(MipsCommand command, string value)
 		{
 			return new CommandValueMessage(command, value);
 		}
@@ -81,8 +85,24 @@ namespace Mips.Commands
 		{
 			return new CommandValueValueMessage(command, value1, value2);
 		}
+		public static MipsMessage Create(MipsCommand command, string value1, BitArray value2)
+		{
+			var sb = new StringBuilder();
+
+			foreach (var bit in value2.Cast<bool>())
+			{
+				char c =bit? '1' : '0';
+				sb.Append(c);
+			}
+
+			return new CommandValueValueMessage(command, value1, sb.ToString());
+		}
 
 		public static MipsMessage Create(MipsCommand command, int value1, int value2, int value3)
+		{
+			return new CommandValueValueValueMessage(command, value1, value2, value3);
+		}
+		public static MipsMessage Create(MipsCommand command, int value1, string value2, int value3)
 		{
 			return new CommandValueValueValueMessage(command, value1, value2, value3);
 		}
@@ -97,11 +117,19 @@ namespace Mips.Commands
 		}
 		public static MipsMessage Create(MipsCommand command, string value1,IEnumerable<int> values)
 		{
-			return new CommandEnumerableValueValueMessage(command, value1, values);
+			return new CommandValueEnumerableMessage(command, value1, values);
 		}
 		public static MipsMessage Create(MipsCommand command, IEnumerable<int> values)
 		{
-			return new CommandEnumerableValueMessage(command, values);
+			return new CommandEnumerableMessage(command, values);
+		}
+		public static MipsMessage Create(MipsCommand command, IEnumerable<double> values)
+		{
+			return new CommandEnumerableMessage(command, values);
+		}
+		public static MipsMessage Create(MipsCommand command, int value,IEnumerable<int> values)
+		{
+			return new CommandValueEnumerableMessage(command, value,values);
 		}
 
 		internal abstract void WriteImpl(MipsCommunicator physical);
@@ -124,11 +152,11 @@ namespace Mips.Commands
 		}
 
 	}
-	internal class CommandEnumerableValueMessage : CommandBase
+	internal class CommandEnumerableMessage : CommandBase
 	{
 		private byte[][] bytevalue;
 		
-		public CommandEnumerableValueMessage(MipsCommand command,  IEnumerable<int> values) : base(command)
+		public CommandEnumerableMessage(MipsCommand command,  IEnumerable<int> values) : base(command)
 		{
 			bytevalue = new byte[values.Count()][];
 			int i = 0;
@@ -139,7 +167,17 @@ namespace Mips.Commands
 				i++;
 			}
 		}
-
+		public CommandEnumerableMessage(MipsCommand command, IEnumerable<double> values) : base(command)
+		{
+			bytevalue = new byte[values.Count()][];
+			int i = 0;
+			foreach (var value in values)
+			{
+				byte[] result = Encoding.ASCII.GetBytes(value.ToString());
+				bytevalue[i] = result;
+				i++;
+			}
+		}
 		internal override void WriteImpl(MipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
@@ -151,19 +189,31 @@ namespace Mips.Commands
 		}
 	}
 
-	internal class CommandEnumerableValueValueMessage : CommandBase
+	internal class CommandValueEnumerableMessage : CommandBase
 	{
 		private byte[][] bytevalue;
-		private readonly byte[] value1;
-
-		public CommandEnumerableValueValueMessage(MipsCommand command,string value1, IEnumerable<int> values):base(command)
+		private readonly byte[] value;
+		public CommandValueEnumerableMessage(MipsCommand command,int value, IEnumerable<int> values) : base(command)
 		{
 			bytevalue = new byte[values.Count()][];
 			int i = 0;
-			this.value1= Encoding.ASCII.GetBytes(value1.ToString());
-			foreach (var value in values)
+			this.value = Encoding.ASCII.GetBytes(value.ToString());
+			foreach (var val in values)
 			{
-				bytevalue[i] = Encoding.ASCII.GetBytes(value.ToString());
+				byte[] result = Encoding.ASCII.GetBytes(val.ToString());
+				bytevalue[i] = result;
+				i++;
+			}
+		}
+		public CommandValueEnumerableMessage(MipsCommand command, string value, IEnumerable<int> values) : base(command)
+		{
+			bytevalue = new byte[values.Count()][];
+			int i = 0;
+			this.value = Encoding.ASCII.GetBytes(value);
+			foreach (var val in values)
+			{
+				byte[] result = Encoding.ASCII.GetBytes(val.ToString());
+				bytevalue[i] = result;
 				i++;
 			}
 		}
@@ -171,44 +221,16 @@ namespace Mips.Commands
 		internal override void WriteImpl(MipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
-			physical.Write(value1, ",");
-			foreach (var value in bytevalue)
+			physical.Write(this.value, ",");
+			foreach (var val in bytevalue)
 			{
-				physical.Write(value, ",");
+				physical.Write(val, ",");
 			}
 			physical.WriteEnd();
 		}
 	}
-
-	internal class CommandValuesMessage : CommandBase
-	{
-		private readonly byte[]  value1;
-		private readonly byte[] value2;
-		private readonly byte[] value3;
-		private readonly byte[] value4;
-		private readonly byte[] value5;
-
-		public CommandValuesMessage(MipsCommand command, int value1, int value2, int value3, int value4, int value5):base(command)
-		{
-			this.command = command;
-			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
-			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
-			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
-			this.value4 = Encoding.ASCII.GetBytes(value4.ToString());
-			this.value5 = Encoding.ASCII.GetBytes(value5.ToString());
-		}
-
-		internal override void WriteImpl(MipsCommunicator physical)
-		{
-			physical.WriteHeader(Command);
-			physical.Write(value1, ",");
-			physical.Write(value2, ",");
-			physical.Write(value3, ",");
-			physical.Write(value4, ",");
-			physical.Write(value5, ",");
-			physical.WriteEnd();
-		}
-	}
+	
+	
 
 	internal abstract class CommandBase : MipsMessage
 	{
@@ -233,6 +255,24 @@ namespace Mips.Commands
 		}
 	}
 
+	
+
+	internal sealed class CommandSignalTableMessage : CommandBase
+	{
+		private readonly byte[] value;
+
+		public CommandSignalTableMessage(MipsCommand command, MipsSignalTable signalTable) : base(command)
+		{
+			this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
+		}
+		
+		internal override void WriteImpl(MipsCommunicator physical)
+		{
+			physical.WriteHeader(Command);
+			physical.Write(value, ";");
+			physical.WriteEnd(";");
+		}
+	}
 	internal sealed class CommandValueMessage : CommandBase
 	{
 		private readonly byte[] value;
@@ -257,23 +297,6 @@ namespace Mips.Commands
 			physical.WriteHeader(Command);
 			physical.Write(value, ",");
 			physical.WriteEnd();
-		}
-	}
-
-	internal sealed class CommandSignalTableMessage : CommandBase
-	{
-		private readonly byte[] value;
-
-		public CommandSignalTableMessage(MipsCommand command, MipsSignalTable signalTable) : base(command)
-		{
-			this.value = Encoding.ASCII.GetBytes(value.ToString());
-		}
-
-		internal override void WriteImpl(MipsCommunicator physical)
-		{
-			physical.WriteHeader(Command);
-			physical.Write(value, ";");
-			physical.WriteEnd(";");
 		}
 	}
 	internal class CommandValueValueMessage : CommandBase
@@ -322,6 +345,11 @@ namespace Mips.Commands
 			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
 			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
 		}
+		public CommandValueValueMessage(MipsCommand command, string value1, BitArray value2) : base(command)
+		{
+			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+		}
 
 		internal override void WriteImpl(MipsCommunicator physical)
 		{
@@ -343,6 +371,12 @@ namespace Mips.Commands
 			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
 			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
 		}
+		public CommandValueValueValueMessage(MipsCommand command, int value1, string value2, int value3) : base(command)
+		{
+			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
+		}
 		public CommandValueValueValueMessage(MipsCommand command, int value1, int value2, string value3) : base(command)
 		{
 			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
@@ -356,6 +390,35 @@ namespace Mips.Commands
 			physical.Write(value1, ",");
 			physical.Write(value2, ",");
 			physical.Write(value3, ",");
+			physical.WriteEnd();
+		}
+	}
+	internal class CommandValuesMessage : CommandBase
+	{
+		private readonly byte[] value1;
+		private readonly byte[] value2;
+		private readonly byte[] value3;
+		private readonly byte[] value4;
+		private readonly byte[] value5;
+
+		public CommandValuesMessage(MipsCommand command, int value1, int value2, int value3, int value4, int value5) : base(command)
+		{
+			this.command = command;
+			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
+			this.value4 = Encoding.ASCII.GetBytes(value4.ToString());
+			this.value5 = Encoding.ASCII.GetBytes(value5.ToString());
+		}
+
+		internal override void WriteImpl(MipsCommunicator physical)
+		{
+			physical.WriteHeader(Command);
+			physical.Write(value1, ",");
+			physical.Write(value2, ",");
+			physical.Write(value3, ",");
+			physical.Write(value4, ",");
+			physical.Write(value5, ",");
 			physical.WriteEnd();
 		}
 	}

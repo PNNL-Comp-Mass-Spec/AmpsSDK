@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Mips.Commands
 {
@@ -33,12 +31,12 @@ namespace Mips.Commands
 			    int idx = (int)commands[i];
 			    string name = commands[i].ToString(), value = name;
 
-			    if (exclusions != null && exclusions.Contains(commands[i]))
-			    {
-				    map[idx] = null;
-			    }
-			    else
-			    {
+			    //if (exclusions != null && exclusions.Contains(commands[i]))
+			    //{
+				   // map[idx] = null;
+			    //}
+			    //else
+			    //{
 				    if (caseInsensitiveOverrides != null)
 				    {
 					    string tmp;
@@ -50,7 +48,7 @@ namespace Mips.Commands
 				   
 				    byte[] val = string.IsNullOrWhiteSpace(value) ? null : Encoding.UTF8.GetBytes(value);
 				    map[idx] = val;
-			    }
+			   // }
 		    }
 			if (Default != null) return Default;
 

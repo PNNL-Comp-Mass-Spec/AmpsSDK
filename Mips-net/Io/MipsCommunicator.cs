@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using Mips.Commands;
 using RJCP.IO.Ports;
-using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
-using SerialError = System.IO.Ports.SerialError;
-using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
 
 
 namespace Mips.Io
@@ -279,7 +275,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             });
         }
 
-        private readonly IConnectableObservable<string> messageSources;
+        private IConnectableObservable<string> messageSources;
 
         public IObservable<string> MessageSources => messageSources;
 
@@ -288,8 +284,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             port?.Dispose();
             connection?.Dispose();
         }
+	    
 
-        #endregion
+		#endregion
 
-    }
+	}
 }

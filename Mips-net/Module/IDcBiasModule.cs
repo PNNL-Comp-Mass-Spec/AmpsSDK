@@ -16,14 +16,14 @@ namespace Mips.Module
         Task<double> GetMaximumVoltage(string channel);
         Task<Unit> SetDcPowerState(State state);
         Task<State> GetDcPowerState();
-        Task<Unit> SetAllDcChannels(IDictionary<string, double> channels);
-        Task<IDictionary<string, double>> GetAllDcSetpoints();
-        Task<IDictionary<string, double>> GetAllDcReadbacks();
+        Task<Unit> SetAllDcChannels(IEnumerable<double> channels);
+        Task<IEnumerable<double>> GetAllDcSetpoints();
+        Task<IEnumerable<double>> GetAllDcReadbacks();
         Task<Unit> SetUniversalOffset(double voltageOffset);
         Task<Unit> SetNumberOfChannelsOnboard(int board, int numberChannels);
-        Task<Unit> UseSingleOffsetTwoModules(bool state);
-        Task<Unit> EnableOffsetReadback(bool enableReadback);
-        Task<Unit> EnableBoardOffsetOption(int board, bool enable);
+        Task<Unit> UseSingleOffsetTwoModules(Status state);
+        Task<Unit> EnableOffsetReadback(Status enableReadback);
+        Task<Unit> EnableBoardOffsetOption(int board, Status enable);
 
     }
 }

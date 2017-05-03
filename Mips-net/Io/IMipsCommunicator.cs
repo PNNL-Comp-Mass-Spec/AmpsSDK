@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using Mips.Commands;
 
 namespace Mips.Io
 {

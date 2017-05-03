@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Reactive;
 using System.Threading.Tasks;
 
@@ -16,12 +16,12 @@ namespace Mips.Module
         /// <returns></returns>
         Task<Unit> SetDriveLevel(string channel, int drive);
 
-        Task<int> GetFrequenc(string channel);
-        Task<int> GetPositiveComponent(string channel);
-        Task<int> GetNegativeComponent(string channel);
-        Task<int> GetOutputDriveLevelPercent(string channel);
-        Task<int> GetPeakToPeakVoltageSetpoint(string channel);
+        Task<int> GetFrequency(string channel);
+        Task<double> GetPositiveComponent(string channel);
+        Task<double> GetNegativeComponent(string channel);
+        Task<double> GetOutputDriveLevelPercent(string channel);
+        Task<double> GetPeakToPeakVoltageSetpoint(string channel);
         Task<int> GetChannelPower(string channel);
-        Task<string> GetParameters();
+        Task<IEnumerable<double>> GetParameters();
     }
 }

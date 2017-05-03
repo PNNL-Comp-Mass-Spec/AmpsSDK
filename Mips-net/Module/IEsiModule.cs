@@ -5,10 +5,10 @@ namespace Mips.Module
 {
     public interface IEsiModule
     {
-        Task<Unit> SetEsiVoltage(string channel, int volts);
-        Task<int> GetEsiSetpointVoltage(string channel);
-        Task<int> GetEsiReadbackVoltage(string channel);
-        Task<int> GetEsiReadbackCurrent(string channel);
-        Task<int> GetMaximumEsiVoltage(string channel);
+        Task<Unit> SetEsiVoltage(int channel, int volts);
+        Task<int> GetEsiSetpointVoltage(int channel);
+        Task<int> GetEsiReadbackVoltage(int channel);
+        Task<int> GetEsiReadbackCurrent(int channel);
+        Task<int> GetMaximumEsiVoltage(int channel);
     }
 }
