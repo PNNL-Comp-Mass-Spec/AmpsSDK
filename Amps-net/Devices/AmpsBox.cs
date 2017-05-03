@@ -518,7 +518,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return await messagePacket.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default).FirstAsync();
         }
 
         public string LastTable { get; private set; }
@@ -528,10 +528,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes =>
-            {
-                return bytes;
-            }).FirstAsync();
+            return await messagePacket.Select(bytes => bytes).FirstAsync();
         }
 
         /// <summary>
@@ -543,7 +540,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return await messagePacket.Where(bytes => bytes.Equals("tblrdy", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default).FirstAsync();
         }
         /// <summary>
         /// Stop the time table of the device.

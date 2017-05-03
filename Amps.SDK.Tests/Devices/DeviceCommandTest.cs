@@ -33,10 +33,10 @@ namespace AmpsBoxTests.Devices
             var signalTable = new AmpsSignalTable();
             signalTable = signalTable.AddTimePoint(0, new LoopData());
             signalTable[0].CreateOutput("1", 10);
-            signalTable= signalTable.AddTimePoint(10, new LoopData());
-            signalTable[10].CreateOutput("1", 5);
+            signalTable= signalTable.AddTimePoint(1000, new LoopData());
+            signalTable[1000].CreateOutput("1", 5);
 
-            signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 10);
+            signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 100);
             var encodedString = signalTable.RetrieveTableAsEncodedString();
             output.WriteLine(encodedString);
 
