@@ -25,19 +25,18 @@ namespace AmpsBoxSdk.Io
         private readonly object sync = new object();
 
         private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
-            #endregion
+
+        /// <summary>
+        /// Gets the serial port
+        /// </summary>
+        private readonly SerialPortStream serialPort;
+        #endregion
 
         #region Construction and Initialization
 
         public AmpsBoxCommunicator(SerialPortStream serialPort)
         {
-            this.serialPort = serialPort;
-            this.serialPort.PortName = this.serialPort.PortName;
-            this.serialPort.BaudRate = this.serialPort.BaudRate;
-            this.serialPort.NewLine = "\n";
-            this.serialPort.ErrorReceived += SerialPort_ErrorReceived;
-            this.serialPort.WriteTimeout = 1000;
-            this.serialPort.ReadTimeout = 1000;
+            this.serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
             IsEmulated = false; 
         }
 
@@ -62,7 +61,7 @@ namespace AmpsBoxSdk.Io
             lock (sync)
             {
                 if (string.IsNullOrEmpty(separator)) return;
-
+                serialPort.DiscardInBuffer(); // ensure that no reply is sitting in queue! 
                 var bytes = Encoding.ASCII.GetBytes(separator);
                 foreach (var b in bytes)
                 {
@@ -134,16 +133,6 @@ namespace AmpsBoxSdk.Io
         }
 
         #region Properties
-
-        /// <summary>
-        /// Gets port open status.
-        /// </summary>
-        public bool IsOpen => serialPort.IsOpen;
-
-        /// <summary>
-        /// Gets the serial port
-        /// </summary>
-        private SerialPortStream serialPort;
 
         /// <summary>
         /// Get or set read timeout for commincator.

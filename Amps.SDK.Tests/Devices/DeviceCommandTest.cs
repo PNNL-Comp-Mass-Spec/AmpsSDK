@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Devices;
-using AmpsBoxSdk.Io;
-using AmpsBoxSdk.Modules;
 using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,7 +19,11 @@ namespace AmpsBoxTests.Devices
         {
             this.output = output;
             serialPort = new SerialPortStream("COM3", 19200 * 2, 8, Parity.Even, StopBits.One) {RtsEnable = false, Handshake = Handshake.XOn};
-
+            if (!serialPort.IsOpen)
+            {
+                serialPort.Open();
+            }
+           
             box = AmpsBoxFactory.CreateAmpsBox(serialPort);
         }
 
@@ -37,10 +33,10 @@ namespace AmpsBoxTests.Devices
             var signalTable = new AmpsSignalTable();
             signalTable = signalTable.AddTimePoint(0, new LoopData());
             signalTable[0].CreateOutput("1", 10);
-            signalTable= signalTable.AddTimePoint(10, new LoopData());
-            signalTable[10].CreateOutput("1", 5);
+            signalTable= signalTable.AddTimePoint(1000, new LoopData());
+            signalTable[1000].CreateOutput("1", 5);
 
-            signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 10);
+            signalTable.Points.LastOrDefault()?.ReferenceTimePoint(signalTable.Points.FirstOrDefault(), 100);
             var encodedString = signalTable.RetrieveTableAsEncodedString();
             output.WriteLine(encodedString);
 
@@ -129,7 +125,7 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void GetDigitalDirectionTest()
         {
-            var config = box.GetConfig();
+            var config = box.GetAmpsConfigurationAsync().Result;
             for (int i = 0; i < config.NumberDigitalChannels; i++)
             {
                var direction = box.GetDigitalDirection(config.GetDioChannel((uint) i)).Result;
@@ -179,7 +175,7 @@ namespace AmpsBoxTests.Devices
         [Fact]
         public void GetConfigTest()
         {
-            var config = box.GetConfig();
+            var config = box.GetAmpsConfigurationAsync().Result;
            output.WriteLine("HV: {0}\nDIO: {1}\nRF: {2}", config.NumberHvChannels, config.NumberDigitalChannels, config.NumberRfChannels);
         }
 

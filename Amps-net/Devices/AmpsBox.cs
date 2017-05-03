@@ -34,6 +34,8 @@ namespace AmpsBoxSdk.Devices
         private readonly AmpsBoxCommunicator communicator;
 
         private Lazy<AmpsBoxDeviceData> deviceData;
+
+
         #region Constants
 
         /// <summary>
@@ -42,10 +44,8 @@ namespace AmpsBoxSdk.Devices
         public AmpsBox(AmpsBoxCommunicator communicator)
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
-            if (!this.communicator.IsOpen)
-            {
-                this.communicator.Open();
-            }
+            this.communicator.Open();
+            
             ClockFrequency = 16000000;
         }
 
@@ -72,17 +72,14 @@ namespace AmpsBoxSdk.Devices
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public AmpsBoxDeviceData GetConfig()
+        public async Task<AmpsBoxDeviceData> GetAmpsConfigurationAsync()
         {
-            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
-                (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
-            if (this.communicator.IsOpen)
-            {
-                return this.deviceData.Value;
-            }
-
-            return AmpsBoxDeviceData.Empty;
-        }
+            var dcBiasChannels = await this.GetNumberDcBiasChannels();
+            var rfChannels = await this.GetNumberRfChannels();
+            var digitalChannels = await this.GetNumberDigitalChannels();
+            this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels));
+			return this.deviceData.Value;
+		}
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
@@ -521,7 +518,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return await messagePacket.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default).FirstAsync();
         }
 
         public string LastTable { get; private set; }
@@ -531,10 +528,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes =>
-            {
-                return bytes;
-            }).FirstAsync();
+            return await messagePacket.Select(bytes => bytes).FirstAsync();
         }
 
         /// <summary>
@@ -546,7 +540,7 @@ namespace AmpsBoxSdk.Devices
             ampsmessage.WriteTo(communicator);
             var messagePacket = communicator.MessageSources;
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return await messagePacket.Where(bytes => bytes.Equals("tblrdy", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default).FirstAsync();
         }
         /// <summary>
         /// Stop the time table of the device.
