@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using AmpsBoxSdk.Commands;
-using AmpsBoxSdk.Data;
-using AmpsBoxSdk.Devices;
 using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
+using Amps;
+using AmpsBoxSdk.Commands;
+using AmpsBoxSdk.Data;
+using AmpsBoxSdk.Devices;
 
 namespace Amps.SDK.Tests.Devices
 {

@@ -1,23 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.Configuration;
-using System.Reflection;
-using System.Runtime.Remoting.Channels;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mips.Commands;
 using Mips.Data;
 using RJCP.IO.Ports;
 using Xunit.Abstractions;
-using Mips.Device;
-using Mips.Module;
 using Xunit;
-using Xunit.Sdk;
+using Mips.Device;
 
 namespace MipsTest
 {
