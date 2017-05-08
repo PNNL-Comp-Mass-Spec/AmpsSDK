@@ -1,9 +1,8 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
-namespace AmpsBoxTests.Data
+namespace Amps.SDK.Tests.Data
 {
-    using System;
-
     public class SignalTableTests
     {
        [Fact]

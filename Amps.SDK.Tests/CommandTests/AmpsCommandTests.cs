@@ -2,7 +2,7 @@
 
 using Xunit;
 
-namespace AmpsBoxTests.CommandTests
+namespace Amps.SDK.Tests.CommandTests
 {
     public class AmpsCommandTests
     {

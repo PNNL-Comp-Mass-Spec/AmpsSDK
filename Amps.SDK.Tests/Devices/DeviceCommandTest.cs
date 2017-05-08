@@ -8,7 +8,7 @@ using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace AmpsBoxTests.Devices
+namespace Amps.SDK.Tests.Devices
 {
    public class DeviceCommandTest : IDisposable
     {

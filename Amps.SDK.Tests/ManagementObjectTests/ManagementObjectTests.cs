@@ -2,7 +2,7 @@
 using System.Management;
 using Xunit;
 
-namespace AmpsBoxTests.ManagementObjectTests
+namespace Amps.SDK.Tests.ManagementObjectTests
 {
     public class ManagementObjectTests
     {
