@@ -81,15 +81,7 @@ namespace AmpsBoxSdk.Commands
 
         internal void WriteTo(AmpsBoxCommunicator physical)
         {
-            try
-            {
-                WriteImpl(physical);
-            }
-            catch (Exception)
-            {
-                // these have specific meaning; don't wrap
-                throw;
-            }
+            WriteImpl(physical);
         }
     }
 
