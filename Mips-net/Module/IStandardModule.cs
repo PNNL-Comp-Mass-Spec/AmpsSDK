@@ -2,19 +2,19 @@
 using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.SqlServer.Server;
-using Mips.Commands;
-using Mips.Device;
+using Mips_net.Device;
 
-namespace Mips.Module
+
+namespace Mips_net.Module
 {
     public interface IStandardModule
     {
 	    Task<string> GetName();
 	    Task<string> GetVersion();
 	    Task<ErrorCode> GetError();
-	    Task<string> SetName(string name);
+	    Task<Unit> SetName(string name);
 	    Task<string> About();
-	    Task<Unit> RevisionLevel(string board, int mudule);
+	    Task<Unit> RevisionLevel(int board, int mudule,int revLevel);
 	    Task<Unit> Reset();
 	    Task<Unit> Save();
 	    Task<int> GetChannel(Modules module);

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Mips.Device;
 
-namespace Mips.Device
+
+namespace Mips_net.Device
 {
 
    public class MipsBoxDeviceData

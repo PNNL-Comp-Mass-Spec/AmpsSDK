@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Reactive;
 using System.Threading.Tasks;
-using Mips.Device;
+using Mips_net.Commands;
+using Mips_net.Device;
 
-namespace Mips.Module
+
+namespace Mips_net.Module
 {
     public interface ITwaveModule
     {
@@ -19,10 +21,10 @@ namespace Mips.Module
         Task<Unit> SetTWaveSequence(string channel, BitArray sequence);
         Task<TWaveDirection> GetTWaveDirection(string channel);
         Task<Unit> SetTWaveDirection(string channel, TWaveDirection direction);
-        Task<Unit> SetTWaveMultipassControlTable(string table);
-        Task<string> GetTWaveMultipassTableString();
-        Task<CompressorMode> GetCompressorMode();
-        Task<Unit> SetCompressorMode(CompressorMode mode);
+        Task<Unit> SetTWaveCompressionCommand(CompressionTable compressionTable);
+        Task<string> GetTWaveCompressionCommand();
+        Task<StateCommands> GetCompressorMode();
+        Task<Unit> SetCompressorMode(StateCommands mode);
         Task<int> GetCompressorOrder();
         Task<Unit> SetCompressorOrder(int order);
         Task<double> GetCompressorTriggerDelay();

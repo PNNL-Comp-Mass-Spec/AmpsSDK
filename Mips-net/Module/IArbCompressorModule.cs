@@ -1,15 +1,18 @@
-﻿using System.Reactive;
+﻿using System.Collections;
+using System.Reactive;
 using System.Threading.Tasks;
-using Mips.Device;
+using Mips_net.Commands;
+using Mips_net.Device;
 
-namespace Mips.Module
+
+namespace Mips_net.Module
 {
 	public interface IArbCompressorModule
 	{
-		Task<Unit> SetMultiPassCommand(CompressionCommandTable commnad);
-		Task<CompressionCommandTable> GetMultiPassCommand();
-		Task<CompressorMode> GetArbCompressorMode();
-		Task<Unit> SetArbCompressorMode(CompressorMode mode);
+		Task<Unit> SetArbCompressionCommand(CompressionTable compressionTable);
+		Task<string> GetArbCompressionCommand();
+		Task<StateCommands> GetArbCompressorMode();
+		Task<Unit> SetArbCompressorMode(StateCommands mode);
 		Task<int> GetArbCompressorOrder();
 		Task<Unit> SetArbCompressorOrder(int order);
 		Task<double> GetArbTriggerDelay();

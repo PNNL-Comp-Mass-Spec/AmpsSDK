@@ -1,7 +1,9 @@
-﻿using Mips.Io;
+﻿
+using FalkorSDK.IO.Ports;
+using Mips_net.Io;
 using RJCP.IO.Ports;
 
-namespace Mips.Device
+namespace Mips_net.Device
 {
    public class MipsFactory
     {

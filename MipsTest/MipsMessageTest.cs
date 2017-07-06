@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mips.Commands;
+
+using Mips_net.Commands;
 
 namespace MipsTest
 {
@@ -11,7 +12,7 @@ namespace MipsTest
 	public class MipsCommadMapTest
 	{
 		private readonly byte[][] map;
-		Mips.Commands.MipsCommandMap Default = null;
+		MipsCommandMap Default = null;
 		
 
 		[TestMethod]

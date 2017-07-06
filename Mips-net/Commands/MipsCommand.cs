@@ -1,4 +1,4 @@
-﻿namespace Mips.Commands
+﻿namespace Mips_net.Commands
 {
 	public enum MipsCommand
 	{

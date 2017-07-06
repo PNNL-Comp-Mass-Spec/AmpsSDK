@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
-using Mips.Module;
+using Mips_net.Module;
 
-namespace Mips.Device
+
+namespace Mips_net.Device
 {
 	public interface IMipsBox : IStandardModule,IClockGenerationModule,IDcBiasModule,IDelayTrigger, IDcBiasProfileModule,
 								IRfDriverModule, IDioModule,IEsiModule,IPulseSequenceGeneratorModule,IMacroModule, ITwaveModule,
