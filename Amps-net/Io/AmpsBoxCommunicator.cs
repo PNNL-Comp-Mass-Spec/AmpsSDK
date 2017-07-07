@@ -30,6 +30,8 @@ namespace AmpsBoxSdk.Io
         /// Gets the serial port
         /// </summary>
         private readonly SerialPortStream serialPort;
+
+        private IDisposable connection;
         #endregion
 
         #region Construction and Initialization
@@ -149,7 +151,7 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-        private IDisposable connection;
+        
         public void Open()
         {
             lock (sync)
