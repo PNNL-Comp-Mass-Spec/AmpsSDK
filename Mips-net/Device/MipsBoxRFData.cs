@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Mips.Device
+namespace Mips_net.Device
 {
     public class MipsBoxRFData
     {

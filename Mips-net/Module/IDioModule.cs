@@ -1,8 +1,8 @@
 ﻿using System.Reactive;
 using System.Threading.Tasks;
-using Mips.Device;
+using Mips_net.Device;
 
-namespace Mips.Module
+namespace Mips_net.Module
 {
     public interface IDioModule
     {

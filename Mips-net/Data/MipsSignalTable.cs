@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using DynamicData;
 
-namespace Mips.Data
+namespace Mips_net.Data
 {
 	[DataContract]
    public class MipsSignalTable
@@ -80,7 +81,7 @@ namespace Mips.Data
 
 	    public MipsSignalTable AddSignalTable(MipsSignalTable signalTable)
 	    {
-		    // TODO: Make AmpsSignalTables immutable. 
+		     
 		    foreach (var psgPoint in signalTable.Points)
 		    {
 			    var timePoint = Points.FirstOrDefault(x => x.TimePoint == psgPoint.TimePoint);
@@ -119,7 +120,7 @@ namespace Mips.Data
 
 	    public string RetrieveTableAsEncodedString()
 	    {
-		    if (cachedTable != null)
+		   if (cachedTable != null)
 		    {
 			    return cachedTable;
 		    }
@@ -249,4 +250,6 @@ namespace Mips.Data
 		    }
 	    }
 	}
+
+	
 }

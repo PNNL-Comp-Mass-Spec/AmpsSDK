@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Mips.Data
+namespace Mips_net.Data
 {
 	[DataContract]
    public class LoopData

@@ -5,11 +5,12 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using Mips.Commands;
+using FalkorSDK.IO.Ports;
+using Mips_net.Commands;
 using RJCP.IO.Ports;
 
 
-namespace Mips.Io
+namespace Mips_net.Io
 {
 internal sealed class MipsCommunicator : IMipsCommunicator
     {
@@ -27,8 +28,8 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 		public MipsCommunicator(SerialPortStream port)
         {
             this.port = port;
-            this.port.PortName = port.PortName;
-            this.port.BaudRate = port.BaudRate;
+	        this.port.BaudRate = port.BaudRate;
+			this.port.PortName = port.PortName;
             this.port.NewLine = "\n";
 	        this.port.ErrorReceived += PortErrorReceived;
             this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.

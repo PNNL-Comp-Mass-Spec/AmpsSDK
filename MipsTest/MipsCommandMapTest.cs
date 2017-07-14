@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Mips.Commands;
-using Mips.Data;
 using RJCP.IO.Ports;
 using Xunit.Abstractions;
 using Xunit;
-using Mips.Device;
+using Mips_net.Commands;
+using Mips_net.Data;
+using Mips_net.Device;
 
 namespace MipsTest
 {
@@ -21,7 +21,8 @@ namespace MipsTest
 		{
 			this.output = output;
 
-			serialPort =new SerialPortStream("COM4",128000,8,Parity.Even,StopBits.One) { RtsEnable = false, Handshake = Handshake.XOn };
+			serialPort = new SerialPortStream("COM4", 128000, 8, Parity.Even, StopBits.One) { RtsEnable = false, Handshake = Handshake.XOn };
+
 			mipsBox = MipsFactory.CreateMipsBox(serialPort);
 		}
 
@@ -31,11 +32,11 @@ namespace MipsTest
 		public void GetMipsNameProperty()
 		{
 			var name = mipsBox.Name;
-			output.WriteLine(name);
+			output.WriteLine(mipsBox.Name);
 		}
 
 		[Theory]
-		[InlineData("MipsTest")]
+		[InlineData("MIPS")]
 		public void SetNameTest(string name)
 		{
 			var value=mipsBox.SetName(name);
@@ -647,25 +648,19 @@ namespace MipsTest
 		public void SetTWaveSequenceTest()
 		{
 			string channel = "1";
-			//var bytes = Encoding.ASCII.GetBytes("11");
-			List<bool> bitPattern = new List<bool>();
-			for (int i = 0; i < 7; i++)
-			{
-				bitPattern.Add(i % 2 == 0);
-			}
-			byte[] intValue = bitPattern.Select(x => Convert.ToByte(x)).ToArray();
-			BitArray sequence=new BitArray(intValue);
-			
-			mipsBox.SetTWaveSequence(channel, sequence);
+			bool[] boolArray = {true, true};
+			BitArray bitArray= new BitArray(boolArray);
+			mipsBox.SetTWaveSequence(channel, bitArray);
 		}
 
 		[Fact]
 		public void BitArrayTest()
 		{
+			string channel = "11";
 			List<bool> bitPattern = new List<bool>();
-			for (int i = 0; i < 7; i++)
+			foreach (var v in channel.ToCharArray())
 			{
-				bitPattern.Add(i % 2 == 0);
+				bitPattern.Add(true);
 			}
 
 			BitArray sequence = new BitArray(bitPattern.ToArray());
@@ -702,14 +697,14 @@ namespace MipsTest
 		[Fact]
 		public void GetTWaveMultipassTableStringTest()
 		{
-			var result = mipsBox.GetTWaveMultipassTableString().Result;
+			var result = mipsBox.GetTWaveCompressionCommand().Result;
 			output.WriteLine(result.ToString());
 		}
 		[Theory]
 		[InlineData("C")]
-		public void SetTWaveMultipassControlTableTest(string table)
-		{
-			mipsBox.SetTWaveMultipassControlTable(table);
+		public void SetTWaveMultipassControlTableTest()
+		{ 
+			mipsBox.SetTWaveCompressionCommand(CompressionTable.GetCompressionTable());
 		}
 		[Fact]
 		public void GetCompressorModeTest()
@@ -718,8 +713,8 @@ namespace MipsTest
 			output.WriteLine(result.ToString());
 		}
 		[Theory]
-		[InlineData(CompressorMode.Normal)]
-		public void SetCompressorModeTest(CompressorMode mode)
+		[InlineData(StateCommands.N)]
+		public void SetCompressorModeTest(StateCommands mode)
 		{
 			mipsBox.SetCompressorMode( mode);
 		}
@@ -1637,7 +1632,7 @@ namespace MipsTest
 		[Fact]
 		public void SetArbCompressorModeTest()
 		{
-			CompressorMode mode=CompressorMode.Normal;
+			StateCommands mode=StateCommands.N;
 			mipsBox.SetArbCompressorMode(mode);
 		}
 		[Fact]

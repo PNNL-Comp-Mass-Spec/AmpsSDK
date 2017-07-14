@@ -11,12 +11,11 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mips.Commands;
-using Mips.Data;
-using Mips.Io;
-using Mips.Module;
+using Mips_net.Commands;
+using Mips_net.Data;
+using Mips_net.Io;
 
-namespace Mips.Device
+namespace Mips_net.Device
 {
 	[DataContract]
     internal sealed class MipsBox : IMipsBox
@@ -39,14 +38,14 @@ namespace Mips.Device
 	    public string Name => GetName().Result;
 	    public MipsBoxDeviceData GetConfig()
 	    {
-		    //this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
-			   // (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
-		    //if (this.communicator.IsOpen)
-		    //{
-			   // return this.deviceData.Value;
-		    //}
+			//this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
+			// (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
+			//if (this.communicator.IsOpen)
+			//{
+			//	return this.deviceData.Value;
+			//}
 
-		    return MipsBoxDeviceData.Empty;
+			return MipsBoxDeviceData.Empty;
 	    }
 	    public async Task<string> GetName()
 	    {
@@ -56,13 +55,13 @@ namespace Mips.Device
 
 		    return await messagePacket.Select(bytes => bytes).FirstAsync();
 	    }
-	    public async Task<String> SetName(string name)
+	    public async Task<Unit> SetName(string name)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
 		    mipsmessage.WriteTo(communicator);
 		    var messagePacket = communicator.MessageSources;
 
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
 	    }
 
 
@@ -94,7 +93,7 @@ namespace Mips.Device
 
 		    return await messagePacket.Select(bytes => bytes).FirstAsync();
 	    }
-	    public async Task<Unit> RevisionLevel(string board,int mudule)
+	    public async Task<Unit> RevisionLevel(int board,int module,int rev)
 	    {
 			//var mipsmessage = MipsMessage.Create(MipsCommand.SMREV);
 			//mipsmessage.WriteTo(communicator);
@@ -1111,32 +1110,29 @@ namespace Mips.Device
 		    }).FirstAsync();
 		}
 
-	    public BitArray uniArray { get; set; }
-
-	    public async Task<BitArray> GetTWaveSequence(string channel)
+	   public async Task<BitArray> GetTWaveSequence(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSEQ, channel);
 			mipsmessage.WriteTo(communicator);
 			var messagePacket = communicator.MessageSources;
-		    //int[] intarray;
-		    var arrayValue = await messagePacket.Select(s =>
-		    {
-			    byte[] intValue = { byte.Parse(s) };
-				//byte[] bytesArray = Encoding.ASCII.GetBytes(s);//Convert.FromBase64String(s); 
+			var bitPattern = await messagePacket.Select(s =>{
+				var boolArray = new List<bool>();
+				foreach (var v in s.ToCharArray())
+				{
+					boolArray.Add(v == '0' ? false : true);
 
-				return intValue;
-		    }).FirstAsync();
-
+				}
 				
-			var result = new BitArray(arrayValue);
-			uniArray=new BitArray(result);
-		    return result;
+				return boolArray;
+			}).FirstAsync();
+			var sequence = new BitArray(bitPattern.ToArray());
+			return sequence;
 		    //throw new NotImplementedException();
 	    }
 
 	    public async Task<Unit> SetTWaveSequence(string channel, BitArray sequence)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.STWSEQ, channel,sequence);
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSEQ, channel,sequence);
 		    mipsmessage.WriteTo(communicator);
 		    var messagePacket = communicator.MessageSources;
 
@@ -1165,16 +1161,16 @@ namespace Mips.Device
 		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
 		}
 
-	    public async Task<Unit> SetTWaveMultipassControlTable(string table)
+	    public async Task<Unit> SetTWaveCompressionCommand(CompressionTable compressionTable)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, table);
+			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, compressionTable);
 		    mipsmessage.WriteTo(communicator);
 		    var messagePacket = communicator.MessageSources;
 
 		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
 		}
 
-	    public async Task<string> GetTWaveMultipassTableString()
+	    public async Task<string> GetTWaveCompressionCommand()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTBL);
 		    mipsmessage.WriteTo(communicator);
@@ -1185,7 +1181,7 @@ namespace Mips.Device
 
 	    
 
-	    public async Task<CompressorMode> GetCompressorMode()
+	    public async Task<StateCommands> GetCompressorMode()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCMODE);
 		    mipsmessage.WriteTo(communicator);
@@ -1193,12 +1189,12 @@ namespace Mips.Device
 
 		    return await messagePacket.Select(bytes =>
 		    {
-			    Enum.TryParse(bytes,true, out CompressorMode mod);
+			    Enum.TryParse(bytes,true, out StateCommands mod);
 			    return mod;
 		    }).FirstAsync();
 		}
 
-	    public async Task<Unit> SetCompressorMode(CompressorMode mode)
+	    public async Task<Unit> SetCompressorMode(StateCommands mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCMODE, mode.ToString());
 		    mipsmessage.WriteTo(communicator);
@@ -2490,20 +2486,30 @@ namespace Mips.Device
 		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
 		}
 
+
 		//ARB CompressionCommand Module
 
 
-		public Task<Unit> SetMultiPassCommand(CompressionCommandTable commnad)
+		public async  Task<Unit> SetArbCompressionCommand(CompressionTable table)
 	    {
-		    throw new NotImplementedException();
-	    }
+			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTBL,table);
+		    mipsmessage.WriteTo(communicator);
+		    var messagePacket = communicator.MessageSources;
 
-	    public async Task<CompressionCommandTable> GetMultiPassCommand()
+		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
+			//throw new NotImplementedException();
+		}
+
+	    public async Task<string> GetArbCompressionCommand()
 	    {
-		    throw new NotImplementedException();
-	    }
+			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTBL);
+		    mipsmessage.WriteTo(communicator);
+		    var messagePacket = communicator.MessageSources;
 
-	    public async Task<CompressorMode> GetArbCompressorMode()
+		    return await messagePacket.Select(bytes =>bytes).FirstAsync();
+		}
+
+	    public async Task<StateCommands> GetArbCompressorMode()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCMODE);
 		    mipsmessage.WriteTo(communicator);
@@ -2511,12 +2517,12 @@ namespace Mips.Device
 
 		    return await messagePacket.Select(bytes =>
 		    {
-			    Enum.TryParse(bytes,true, out CompressorMode result);
+			    Enum.TryParse(bytes,true, out StateCommands result);
 			    return result;
 		    }).FirstAsync();
 		}
 
-	    public async Task<Unit> SetArbCompressorMode(CompressorMode mode)
+	    public async Task<Unit> SetArbCompressorMode(StateCommands mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCMODE, mode.ToString());
 		    mipsmessage.WriteTo(communicator);

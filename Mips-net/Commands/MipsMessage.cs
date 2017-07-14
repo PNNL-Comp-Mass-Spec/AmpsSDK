@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mips.Data;
-using Mips.Io;
+using Mips_net.Data;
+using Mips_net.Io;
 
-namespace Mips.Commands
+namespace Mips_net.Commands
 {
 	abstract class MipsMessage
 	{
@@ -36,7 +36,10 @@ namespace Mips.Commands
 		{
 			return new CommandSignalTableMessage(command, signalTable);
 		}
-
+		public static MipsMessage Create(MipsCommand command, CompressionTable compressionTable)
+		{
+			return new CommandCompressionTableMessage(command,compressionTable);
+		}
 		public static MipsMessage Create(MipsCommand command, int value)
 		{
 			return new CommandValueMessage(command, value);
@@ -87,15 +90,7 @@ namespace Mips.Commands
 		}
 		public static MipsMessage Create(MipsCommand command, string value1, BitArray value2)
 		{
-			var sb = new StringBuilder();
-
-			foreach (var bit in value2.Cast<bool>())
-			{
-				char c =bit? '1' : '0';
-				sb.Append(c);
-			}
-
-			return new CommandValueValueMessage(command, value1, sb.ToString());
+			return new CommandValueValueMessage(command, value1, value2);
 		}
 
 		public static MipsMessage Create(MipsCommand command, int value1, int value2, int value3)
@@ -255,7 +250,22 @@ namespace Mips.Commands
 		}
 	}
 
-	
+	internal sealed class CommandCompressionTableMessage : CommandBase
+	{
+		private readonly byte[] value;
+
+		public CommandCompressionTableMessage(MipsCommand command, CompressionTable compressionTable) : base(command)
+		{
+			this.value = Encoding.ASCII.GetBytes(compressionTable.RetrieveTableAsEncodedString());
+		}
+
+		internal override void WriteImpl(MipsCommunicator physical)
+		{
+			physical.WriteHeader(Command);
+			physical.Write(value, ",");
+			physical.WriteEnd();
+		}
+	}
 
 	internal sealed class CommandSignalTableMessage : CommandBase
 	{
@@ -347,8 +357,13 @@ namespace Mips.Commands
 		}
 		public CommandValueValueMessage(MipsCommand command, string value1, BitArray value2) : base(command)
 		{
+			StringBuilder sb = new StringBuilder();
+			foreach (var b in value2)
+			{
+				sb.Append((bool)b ? "1" : "0");
+			}
 			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
-			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(sb.ToString());
 		}
 
 		internal override void WriteImpl(MipsCommunicator physical)

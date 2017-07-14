@@ -2,7 +2,7 @@
 using System.Reactive;
 using System.Threading.Tasks;
 
-namespace Mips.Module
+namespace Mips_net.Module
 {
     public interface IDcBiasProfileModule
     {
