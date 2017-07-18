@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using FalkorSDK.IO.Ports;
 using Mips_net.Commands;
 using RJCP.IO.Ports;
 

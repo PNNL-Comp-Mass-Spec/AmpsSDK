@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mips.Commands;
+using Mips_net.Commands;
 
 namespace MipsTest
 {
