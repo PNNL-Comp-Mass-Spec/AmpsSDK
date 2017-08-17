@@ -110,10 +110,14 @@ namespace AmpsBoxSdk.Io
                 throw new NotImplementedException();
             }
 
-            foreach (var commandByte in commandBytes)
+            lock (sync)
             {
-                serialPort.WriteByte(commandByte);
+                foreach (var commandByte in commandBytes)
+                {
+                    serialPort.WriteByte(commandByte);
+                }
             }
+          
         }
 
         internal string ReadLine()

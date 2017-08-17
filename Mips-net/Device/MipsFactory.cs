@@ -1,6 +1,4 @@
-﻿
-using FalkorSDK.IO.Ports;
-using Mips_net.Io;
+﻿using Mips_net.Io;
 using RJCP.IO.Ports;
 
 namespace Mips_net.Device
