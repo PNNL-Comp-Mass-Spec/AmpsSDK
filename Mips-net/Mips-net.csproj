@@ -22,17 +22,4 @@
     <ProjectReference Include="..\Amps-net\Amps-net.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Reference Include="F.Controls">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\F.Controls.dll</HintPath>
-    </Reference>
-    <Reference Include="Falkor.Infrastructure">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\Falkor.Infrastructure.dll</HintPath>
-    </Reference>
-    <Reference Include="Falkor.SDK">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\Falkor.SDK.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
