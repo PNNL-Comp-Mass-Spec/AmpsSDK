@@ -9,7 +9,7 @@ namespace Mips_net.Device
 								IFrequencySweepModule,IWiFiModule,IEthernetModule,IFAIMSModule, IFilamentModule, IArbModule,
 								IArbCompressorModule, IArbConfigurationModule
 	{
-		MipsBoxDeviceData GetConfig();
+		Task<MipsBoxDeviceData> GetConfig();
 		string Name { get; }
 
 		

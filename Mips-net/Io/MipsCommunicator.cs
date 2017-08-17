@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using FalkorSDK.IO.Ports;
+using System.Threading;
 using Mips_net.Commands;
 using RJCP.IO.Ports;
 
@@ -22,23 +22,26 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         private readonly object sync = new object();     
 	    private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
 		#endregion
+	    private SerialPortStream port;
 
 		#region Construction and Initialization
 
 		public MipsCommunicator(SerialPortStream port)
-        {
-            this.port = port;
-	        this.port.BaudRate = port.BaudRate;
-			this.port.PortName = port.PortName;
-            this.port.NewLine = "\n";
-	        this.port.ErrorReceived += PortErrorReceived;
-            this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
-            this.port.WriteTimeout = 250;
-            this.port.ReadTimeout = 250;
-            IsEmulated = false;
+		{
+			//this.port = port;
+			//this.port.BaudRate = port.BaudRate;
+			//this.port.PortName = port.PortName;
+			//this.port.NewLine = "\n";
+			//this.port.ErrorReceived += PortErrorReceived;
+			//this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
+			//this.port.WriteTimeout = 250;
+			//this.port.ReadTimeout = 250;
+			//IsEmulated = false;
 
-            messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
-        }
+			//messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+			this.port= port ?? throw new ArgumentNullException(nameof(port));
+			IsEmulated = false;
+		}
 
 		#endregion
 
@@ -81,11 +84,14 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 		    {
 			    throw new NotImplementedException();
 		    }
-
-		    foreach (var commandByte in commandBytes)
+		    lock (sync)
 		    {
-			 port.WriteByte(commandByte);
-		    }
+			    foreach (var commandByte in commandBytes)
+			    {
+				    port.WriteByte(commandByte);
+			    }
+			}
+		   
 
 		}
 	    public void WriteEnd(string appendToEnd=null)
@@ -108,6 +114,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 			    {
 				    port.WriteByte(b);
 			    }
+
 		    }
 		}
 
@@ -122,19 +129,36 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                 }
             }
         }
+		public void Open()
+		{
+			lock (sync)
+			{
 
-        /// <summary>
-        /// TODO The m_port_ error received.
-        /// </summary>
-        /// <param name="sender">
-        /// TODO The sender.
-        /// </param>
-        /// <param name="e">
-        /// TODO The e.
-        /// </param>
-        /// <exception cref="IOException">
-        /// </exception>
-        private void PortErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
+				if (messageSources == null)
+				{
+					messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+				}
+				if (connection == null)
+				{
+					connection = messageSources.Connect();
+				}
+				if (port.IsOpen) return;
+
+				port.Open();
+			}
+		}
+		/// <summary>
+		/// TODO The m_port_ error received.
+		/// </summary>
+		/// <param name="sender">
+		/// TODO The sender.
+		/// </param>
+		/// <param name="e">
+		/// TODO The e.
+		/// </param>
+		/// <exception cref="IOException">
+		/// </exception>
+		private void PortErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
         {
             switch (e.EventType)
             {
@@ -157,7 +181,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         /// <summary>
         /// Gets the serial port
         /// </summary>
-        private SerialPortStream port;
+       
 
         /// <summary>
         /// Get or set read timeout for commincator.
@@ -177,18 +201,18 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
         private IDisposable connection;
 
-        public void Open()
-        {
-            lock (sync)
-            {
-                if (port.IsOpen) return;
-                port.Open();
-                connection = messageSources.Connect();
-            }
-            ;
-        }
+		//public void Open()
+		//{
+		//	lock (sync)
+		//	{
+		//		if (port.IsOpen) return;
+		//		port.Open();
+		//		connection = messageSources.Connect();
+		//	}
+		//	;
+		//}
 
-        private IObservable<byte> Read
+		private IObservable<byte> Read
         {
             get
             {

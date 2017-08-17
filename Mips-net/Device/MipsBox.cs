@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -23,38 +24,139 @@ namespace Mips_net.Device
 		private readonly MipsCommunicator communicator;
 	    private Lazy<MipsBoxDeviceData> deviceData;
 
+	    private ConcurrentQueue<MipsMessage> messageQueue = new ConcurrentQueue<MipsMessage>();
+	    private ConcurrentQueue<string> responseQueue = new ConcurrentQueue<string>();
+	    private object sync = new object();
+		private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
 		public MipsBox(MipsCommunicator communicator)
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
-			if (!this.communicator.IsOpen)
+			this.communicator.Open();
+			this.communicator.MessageSources.Subscribe(s =>
 			{
-				this.communicator.Open();
-			}
+				responseQueue.Enqueue(s);
+			});
+
 			ClockFrequency = 16000000;
 		}
 	    [DataMember]
 	    public int ClockFrequency { get; set; }
 	    [DataMember]
 	    public string Name => GetName().Result;
-	    public MipsBoxDeviceData GetConfig()
+	    public async Task<MipsBoxDeviceData> GetConfig()
 	    {
-			//this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
-			// (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
-			//if (this.communicator.IsOpen)
-			//{
-			//	return this.deviceData.Value;
-			//}
+		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
+		    var rfChannels = await this.GetNumberRfChannels();
+		    var digitalChannels = await this.GetNumberDigitalChannels();
+		    var twaveChannels = await this.GetNumberTwaveChannels();
+		    var arbChannels = await this.GetNumberARBChannels();
+
+			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
+								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels,(uint)arbChannels));
+			if (this.communicator.IsOpen)
+			{
+				return this.deviceData.Value;
+			}
 
 			return MipsBoxDeviceData.Empty;
 	    }
-	    public async Task<string> GetName()
+
+	    private async Task RunQueue()
 	    {
-		    var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
+		    await semaphore.WaitAsync();
+		    while (!messageQueue.IsEmpty)
+		    {
+			    if (messageQueue.TryDequeue(out var message))
+			    {
+				    message.WriteTo(communicator);
+			    }
+			    Thread.Sleep(50);
+			    string response = string.Empty;
+			    while (!responseQueue.TryPeek(out response))
+			    {
+				    Thread.Sleep(50);
+			    }
+
+		    }
+		    semaphore.Release();
+	    }
+	    public async Task<int> GetNumberARBChannels()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.Arb.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+			int.TryParse(result, out int channels);
+		    semaphore.Release();
+		    return channels;
+		}
+		 public async Task<string> GetName()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+			return result;
+	    }
+		public async Task<int> GetNumberTwaveChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
 		    mipsmessage.WriteTo(communicator);
 		    var messagePacket = communicator.MessageSources;
 
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+		    return await messagePacket.Select(bytes =>
+		    {
+			    int.TryParse(bytes, out int channels);
+			    return channels;
+		    }).FirstAsync();
 	    }
+
+		public async Task<int> GetNumberDigitalChannels()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
+		    mipsmessage.WriteTo(communicator);
+		    var messagePacket = communicator.MessageSources;
+
+		    return await messagePacket.Select(bytes =>
+		    {
+			    int.TryParse(bytes, out int channels);
+			    return channels;
+		    }).FirstAsync();
+		}
+
+	    public  async Task<int> GetNumberRfChannels()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.RF.ToString());
+		    mipsmessage.WriteTo(communicator);
+		    var messagePacket = communicator.MessageSources;
+
+		    return await messagePacket.Select(bytes =>
+		    {
+			    int.TryParse(bytes, out int channels);
+			    return channels;
+		    }).FirstAsync();
+		}
+
+	    public async Task<int> GetNumberDcBiasChannels()
+		{
+				var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.DCB.ToString());
+			mipsmessage.WriteTo(communicator);
+				var messagePacket = communicator.MessageSources;
+
+				return await messagePacket.Select(bytes =>
+				{
+					int.TryParse(bytes, out int channels);
+					return channels;
+				}).FirstAsync();
+
+		}
+	
+
+	   
 	    public async Task<Unit> SetName(string name)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
@@ -1024,90 +1126,97 @@ namespace Mips_net.Device
 
 	    public async Task<double> GetTWaveFrequency(string channel)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GTWF,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes =>
-			{
-				double.TryParse(bytes, out double freq);
-				return freq;
-			}).FirstAsync();
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWF, channel);
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    double.TryParse(result, out double freq);
+			semaphore.Release();
+		    return freq;
+			
+				
 		}
 
-	    public async Task<Unit> SetTWaveFrequency(string channel, int frequency)
+	    public async Task<Unit> SetTWaveFrequency(string channel, double frequency)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWF, channel,frequency);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+			return Unit.Default;
 
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
 		}
 
 	    public async Task<double> GetTWavePulseVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWPV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    double.TryParse(result, out double pulseVoltage);
+		    semaphore.Release();
+		    return pulseVoltage;
 		}
 
-	    public async Task<Unit> SetTWavePulseVoltage(string channel, int voltage)
+	    public async Task<Unit> SetTWavePulseVoltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWPV, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetTWaveGuard1Voltage(string channel, int voltage)
+	    public async Task<Unit> SetTWaveGuard1Voltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWG1V, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetTWaveGuard1Voltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWG1V, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double volt);
-			    return volt;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    double.TryParse(result, out double voltage);
+		    semaphore.Release();
+		    return voltage;
 		}
 
-	    public async Task<Unit> SetTWaveGuard2Voltage(string channel, int voltage)
+	    public async Task<Unit> SetTWaveGuard2Voltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWG2V, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetTWaveGuard2Voltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWG2V, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double volt);
-			    return volt;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    double.TryParse(result, out double voltage);
+		    semaphore.Release();
+		    return voltage;
 		}
 
 	   public async Task<BitArray> GetTWaveSequence(string channel)
@@ -1133,10 +1242,12 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetTWaveSequence(string channel, BitArray sequence)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSEQ, channel,sequence);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await RunQueue();
+		    await semaphore.WaitAsync();
+		    responseQueue.TryDequeue(out string result);
+		    semaphore.Release();
+		    return Unit.Default;
 		}
 
 	    public async Task<TWaveDirection> GetTWaveDirection(string channel)

@@ -9,7 +9,10 @@ namespace Mips_net.Module
 {
     public interface IStandardModule
     {
-	    Task<string> GetName();
+
+	    Task<int> GetNumberARBChannels();
+		Task<int> GetNumberTwaveChannels();
+		Task<string> GetName();
 	    Task<string> GetVersion();
 	    Task<ErrorCode> GetError();
 	    Task<Unit> SetName(string name);

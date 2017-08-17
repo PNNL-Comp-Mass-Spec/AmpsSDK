@@ -8,6 +8,7 @@
 		TWAVE,
 		FAIMS,
 		FIL,
+		Arb
 		
 	}
 }
