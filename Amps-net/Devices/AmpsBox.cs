@@ -35,11 +35,11 @@ namespace AmpsBoxSdk.Devices
 
         private Lazy<AmpsBoxDeviceData> deviceData;
 
-        private Queue<Message> messageQueue = new Queue<Message>();
+        private readonly Queue<Message> messageQueue = new Queue<Message>();
 
-        private Queue<string> responseQueue = new Queue<string>();
+        private readonly Queue<string> responseQueue = new Queue<string>();
 
-        private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
 
         #region Constants
