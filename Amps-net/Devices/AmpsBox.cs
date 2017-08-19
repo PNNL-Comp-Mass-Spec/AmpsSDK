@@ -51,11 +51,16 @@ namespace AmpsBoxSdk.Devices
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             this.communicator.Open();
-            this.communicator.MessageSources.Select(s =>
+            this.communicator.MessageSources.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy").Select(s =>
             {
                 this.responseQueue.Enqueue(s);
                 return s;
             }).Subscribe();
+
+           this.TableCompleteOrAborted = this.communicator.MessageSources
+                .Where(x => x.Equals("tblcmplt") || x.Contains("ABORTED")).Select(x => Unit.Default);
+
+            this.ModeReady = this.communicator.MessageSources.Where(x => x.Equals("tblrdy")).Select(x => Unit.Default);
             ClockFrequency = 16000000;
         }
 
@@ -69,7 +74,6 @@ namespace AmpsBoxSdk.Devices
                 var message = messageQueue.Dequeue();
                 message.WriteTo(this.communicator);
                 Thread.Sleep(50);
-                string response = string.Empty;
                 while (responseQueue.Count == 0)
                 {
                     Thread.Sleep(50);
@@ -89,6 +93,10 @@ namespace AmpsBoxSdk.Devices
 
         [DataMember]
         public string Name => GetName().Result;
+
+        public IObservable<Unit> TableCompleteOrAborted { get; }
+
+        public IObservable<Unit> ModeReady { get; }
 
         #endregion
 
