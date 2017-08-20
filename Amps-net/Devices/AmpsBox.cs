@@ -39,8 +39,6 @@ namespace AmpsBoxSdk.Devices
 
         private readonly Queue<string> responseQueue = new Queue<string>();
 
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
-
 
         #region Constants
 
@@ -51,7 +49,7 @@ namespace AmpsBoxSdk.Devices
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             this.communicator.Open();
-            this.communicator.MessageSources.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy").Select(s =>
+            this.communicator.MessageSources.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x)).Select(s =>
             {
                 this.responseQueue.Enqueue(s);
                 return s;
@@ -66,21 +64,22 @@ namespace AmpsBoxSdk.Devices
 
         #endregion
 
-        private async Task ProcessQueue()
+        private async Task ProcessQueue(bool response=false)
         {
-            await semaphore.WaitAsync();
             while (messageQueue.Count > 0)
             {
                 var message = messageQueue.Dequeue();
                 message.WriteTo(this.communicator);
                 Thread.Sleep(50);
-                while (responseQueue.Count == 0)
+                while (response && responseQueue.Count == 0)
                 {
                     Thread.Sleep(50);
                 }
+                break;
 
             }
-            semaphore.Release();
+
+
         }
 
         #region Public Properties
@@ -121,10 +120,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
+           
             return Unit.Default;
         }
 
@@ -132,10 +129,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GDCB, channel);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
             int.TryParse(response, out int setPoint);
             return setPoint;
         }
@@ -144,12 +139,12 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GDCBV, channel);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(true);
 
-            int.TryParse(response, out int voltageReadback);
+            int voltageReadback = 0;
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out voltageReadback);
+
             return voltageReadback;
         }
 
@@ -157,12 +152,11 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GDCBI, channel);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(true);
 
-            int.TryParse(response, out int currentReadback);
+            int currentReadback = 0;
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out currentReadback);            
             return currentReadback;
         }
 
@@ -170,10 +164,7 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
 
             return Unit.Default;
         }
@@ -182,10 +173,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             int.TryParse(response, out int offsetVoltage);
             return offsetVoltage;
@@ -195,10 +184,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             int.TryParse(response, out int channels);
             return channels;
@@ -210,10 +197,8 @@ namespace AmpsBoxSdk.Devices
             var stateAsInt = Convert.ToInt32(state).ToString();
             var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, stateAsInt);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
+
 
            return Unit.Default;
         }
@@ -222,10 +207,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, "P");
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
+
             return Unit.Default;
         }
 
@@ -233,10 +216,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GDIO, channel);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
             var result = Convert.ToBoolean(Convert.ToInt16(response));
             return result;
         }
@@ -257,10 +238,7 @@ namespace AmpsBoxSdk.Devices
                 case "H":
                     var ampsmessage = Message.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
                     messageQueue.Enqueue(ampsmessage);
-                    await ProcessQueue();
-                    await semaphore.WaitAsync();
-                    var response = responseQueue.Dequeue();
-                    semaphore.Release();
+                    await ProcessQueue(false);
 
                     return Unit.Default;
                 default:
@@ -273,10 +251,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GDIODR, channel);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             Enum.TryParse(response, true, out DigitalDirection result);
             return result;
@@ -286,10 +262,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             int.TryParse(response, out int channels);
             return channels;
@@ -299,10 +273,7 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SPHV, volts);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
 
             return Unit.Default;
         }
@@ -311,10 +282,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SNHV, volts);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
+
 
             return Unit.Default;
         }
@@ -323,11 +292,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GPHVV);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
-
             var values = response.Split(',');
             if (values.Length < 2)
             {
@@ -343,10 +309,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GNHVV);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             var values = response.Split(',');
             if (values.Length < 2)
@@ -363,11 +327,7 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SHTR, State.ON.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
-
+            await ProcessQueue(false);
             return Unit.Default;
         }
 
@@ -375,10 +335,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.SHTR, State.OFF.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
+            await ProcessQueue(false);
+
 
             return Unit.Default;
         }
@@ -388,9 +346,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SHTRTMP, temperature);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -399,10 +354,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GHTRTC);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             int.TryParse(response, out int temperature);
             return temperature;
@@ -413,9 +366,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SHTRGAIN, gain);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -424,10 +374,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GVER);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return response;
         }
@@ -436,10 +384,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GERR);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             Enum.TryParse(response, true, out ErrorCodes result);
             return result;
@@ -449,12 +395,10 @@ namespace AmpsBoxSdk.Devices
 		{
 			var ampsmessage = Message.Create(AmpsCommand.GNAME);
 		    messageQueue.Enqueue(ampsmessage);
-		    await ProcessQueue();
-		    await semaphore.WaitAsync();
+		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    semaphore.Release();
 
-		    return response;
+            return response;
 		}
 
 		public async Task<Unit> SetName(string name)
@@ -462,9 +406,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SNAME, name);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -474,9 +415,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.RESET);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -486,9 +424,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SAVE);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -497,8 +432,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GCMDS);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
+          
             List<string> responses = new List<string>();
             while (responseQueue.Count > 0)
             {
@@ -509,7 +444,6 @@ namespace AmpsBoxSdk.Devices
                 }
                 responses.Add(response);
             }
-            semaphore.Release();
             return responses;
         }
 
@@ -523,9 +457,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -534,10 +465,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             int.TryParse(response, out int frequencySetting);
             return frequencySetting;
@@ -548,9 +477,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -559,11 +485,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
-
             int.TryParse(response, out int rfDriveSetting);
             return rfDriveSetting;
         }
@@ -572,10 +495,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.RF.ToString());
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
 
             int.TryParse(response, out int channels);
@@ -587,9 +508,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.TBLABRT);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -603,9 +521,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.TBLSTRT);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -615,10 +530,8 @@ namespace AmpsBoxSdk.Devices
         {
             var ampsmessage = Message.Create(AmpsCommand.TBLRPT);
             messageQueue.Enqueue(ampsmessage);
-            await ProcessQueue();
-            await semaphore.WaitAsync();
+            await ProcessQueue(true);
             var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return response;
         }
@@ -631,10 +544,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.SMOD, mode.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
-
            return Unit.Default;
         }
         /// <summary>
@@ -646,10 +555,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.TBLSTOP);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
-
             return Unit.Default;
         }
 
@@ -666,9 +571,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.STBLDAT, table);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -686,9 +588,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.STBLCLK, clockType.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
@@ -703,9 +602,6 @@ namespace AmpsBoxSdk.Devices
             var ampsmessage = Message.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-            await semaphore.WaitAsync();
-            var response = responseQueue.Dequeue();
-            semaphore.Release();
 
             return Unit.Default;
         }
