@@ -5,10 +5,10 @@ namespace Mips_net.Module
 {
     public interface IFrequencySweepModule
     {
-        Task<Unit> SetStartFrequency(string channel, int frequency);
-        Task<int> GetStartFrequency(string channel);
-        Task<Unit> SetStopFrequency(string channel, int stopFrequency);
-        Task<int> GetStopFrequency(string channel);
+        Task<Unit> SetSweepStartFrequency(string channel, double frequency);
+        Task<double> GetSweepStartFrequency(string channel);
+        Task<Unit> SetSweepStopFrequency(string channel, double stopFrequency);
+        Task<double> GetSweepStopFrequency(string channel);
         Task<Unit> SetSweepTime(string channel, double timeInSeconds);
         Task<double> GetSweepTime(string channel);
         /// <summary>
@@ -23,6 +23,6 @@ namespace Mips_net.Module
         /// <param name="channel"></param>
         /// <returns></returns>
         Task<Unit> StopSweep(string channel);
-        Task<string> GetStatus(string channel);
+        Task<string> GetSweepStatus(string channel);
     }
 }
