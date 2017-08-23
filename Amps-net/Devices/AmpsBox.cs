@@ -49,16 +49,23 @@ namespace AmpsBoxSdk.Devices
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             this.communicator.Open();
-            this.communicator.MessageSources.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x)).Select(s =>
+            var source = this.communicator.MessageSources;
+
+                source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
             {
                 this.responseQueue.Enqueue(s);
                 return s;
             }).Subscribe();
 
-           this.TableCompleteOrAborted = this.communicator.MessageSources
-                .Where(x => x.Equals("tblcmplt") || x.Contains("ABORTED")).Select(x => Unit.Default);
+            this.TableCompleteOrAborted = source
+                .Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
+            this.TableCompleteOrAborted.Subscribe(unit =>
+            {
+                System.Diagnostics.Trace.WriteLine($"{Environment.NewLine}complete{DateTime.Now}");
+            });
 
-            this.ModeReady = this.communicator.MessageSources.Where(x => x.Equals("tblrdy")).Select(x => Unit.Default);
+            this.ModeReady = source.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
+            this.ModeReady.Subscribe();
             ClockFrequency = 16000000;
         }
 

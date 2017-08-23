@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,12 +31,9 @@ namespace Amps.SDK.Tests.Devices
         }
 
         [Fact]
-        public void AmpsSignalTableTest()
+        public async void AmpsSignalTableTest()
         {
-            box.TableCompleteOrAborted.Subscribe(unit =>
-            {
-                output.WriteLine("received complete");
-            });
+            
 
             box.ModeReady.Subscribe(unit =>
             {
@@ -70,7 +69,8 @@ namespace Amps.SDK.Tests.Devices
 
             box.StopTable().Wait();
             box.AbortTimeTable().Wait();
-
+            box.TableCompleteOrAborted.FirstAsync().Wait();
+            Thread.Sleep(1000);
         }
 
         [Fact]
