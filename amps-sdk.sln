@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amps.SDK.Tests", "Amps.SDK.Tests\Amps.SDK.Tests.csproj", "{EAEADBF2-85C6-4F31-A37E-E6E702A8C691}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amps-net", "Amps-net\Amps-net.csproj", "{B9D88F1E-ECEB-4DA6-988D-04DB9D89D51E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amps-net", "Amps-net\Amps-net.csproj", "{B9D88F1E-ECEB-4DA6-988D-04DB9D89D51E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mips-net", "Mips-net\Mips-net.csproj", "{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mips-net", "Mips-net\Mips-net.csproj", "{31C174DC-3AA3-4F5C-9046-FA94D1BC7B9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MipsTest", "MipsTest\MipsTest.csproj", "{EDEC7F49-B324-4F99-B2D1-0AC6DCBC1BC9}"
 EndProject
@@ -36,5 +36,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C58FBE19-19F7-4395-A47F-7C2FEED10B2A}
 	EndGlobalSection
 EndGlobal

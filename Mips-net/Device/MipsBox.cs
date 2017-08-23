@@ -26,14 +26,12 @@ namespace Mips_net.Device
 
 	    private Queue<MipsMessage> messageQueue = new Queue<MipsMessage>();
 	    private Queue<string> responseQueue = new Queue<string>();
-	    private object sync = new object();
-		
 
 		public MipsBox(MipsCommunicator communicator)
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
-			this.communicator.MessageSources.Select(s =>
+			this.communicator.MessageSources.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x)).Select(s =>
 			{
 				this.responseQueue.Enqueue(s);
 				return s;
@@ -152,7 +150,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
 			messageQueue.Enqueue(mipsmessage);
-			await ProcessQueue(true);
+			await ProcessQueue(false);
 			var result = responseQueue.Dequeue();
 		    return Unit.Default;
 
@@ -208,7 +206,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SAVE);
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -233,7 +231,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.ECHO,echo.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -241,7 +239,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -249,7 +247,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger);
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -257,7 +255,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.DELAY, delay);
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -292,7 +290,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SAENA,status.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -317,7 +315,7 @@ namespace Mips_net.Device
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STHRDENA, threadName.ToString(),threadValue.ToString());
 			messageQueue.Enqueue(mipsmessage);
-			await ProcessQueue(true);
+			await ProcessQueue();
 			var result = responseQueue.Dequeue();
 			return Unit.Default;
 		}
@@ -325,7 +323,7 @@ namespace Mips_net.Device
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SDEVADD, board, address);
 			messageQueue.Enqueue(mipsmessage);
-			await ProcessQueue(true);
+			await ProcessQueue();
 			var result = responseQueue.Dequeue();
 			return Unit.Default;
 		}
@@ -1123,7 +1121,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSEQ, channel,sequence);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -1142,7 +1140,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWDIR, channel,direction.ToString());
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -1151,7 +1149,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, compressionTable);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -1371,7 +1369,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSTM,channel,timeInSeconds);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -1390,7 +1388,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSGO,channel);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
@@ -1399,7 +1397,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSHLT,channel);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    var result = responseQueue.Dequeue();
 		    return Unit.Default; 
 		}
