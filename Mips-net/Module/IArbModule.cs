@@ -8,7 +8,7 @@ namespace Mips_net.Module
 {
     public interface IArbModule
     {
-        Task<string> SetArbMode(int module, ArbMode mode);
+        Task<Unit> SetArbMode(int module, ArbMode mode);
         Task<ArbMode> GetArbMode(int module);
         Task<Unit> SetArbFrequency(int module, int frequencyInHz);
         Task<int> GetArbFrequency(int module);
