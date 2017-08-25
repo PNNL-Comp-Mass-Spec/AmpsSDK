@@ -28,17 +28,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
 		public MipsCommunicator(SerialPortStream port)
 		{
-			//this.port = port;
-			//this.port.BaudRate = port.BaudRate;
-			//this.port.PortName = port.PortName;
-			//this.port.NewLine = "\n";
-			//this.port.ErrorReceived += PortErrorReceived;
-			//this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
-			//this.port.WriteTimeout = 250;
-			//this.port.ReadTimeout = 250;
-			//IsEmulated = false;
-
-			//messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+			
 			this.port= port ?? throw new ArgumentNullException(nameof(port));
 			IsEmulated = false;
 		}

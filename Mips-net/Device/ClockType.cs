@@ -2,7 +2,7 @@
 {
 	public enum ClockType
 	{
-		Ext,
+		EXT,
 		MCK2,
 		MCK8,
 		MCK32,

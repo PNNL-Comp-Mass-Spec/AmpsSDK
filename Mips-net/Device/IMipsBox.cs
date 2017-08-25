@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Reactive;
+using System.Threading.Tasks;
 using Mips_net.Module;
 
 
@@ -11,7 +13,9 @@ namespace Mips_net.Device
 	{
 		Task<MipsBoxDeviceData> GetConfig();
 		string Name { get; }
+		IObservable<Unit> TableCompleteOrAborted { get; }
 
-		
+		IObservable<Unit> ModeReady { get; }
+
 	}
 }

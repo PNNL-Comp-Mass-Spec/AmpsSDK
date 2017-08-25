@@ -27,6 +27,25 @@ namespace MipsTest
 		}
 
 		//General Command
+		[Fact]
+		public void GetConfigTest()
+		{
+			var mipsBoxdata = mipsBox.GetConfig();
+			output.WriteLine(mipsBoxdata.Result.NumberTWaveChannels.ToString());
+		}
+
+		[Fact]
+		public void GetName()
+		{
+			var mipsBoxdata = mipsBox.GetName();
+			output.WriteLine(mipsBoxdata.Result.ToString());
+		}
+		[Fact]
+		public void GeTWaveNumberTest()
+		{
+			var mipsBoxdata = mipsBox.GetNumberTwaveChannels();
+			output.WriteLine(mipsBoxdata.Result.ToString());
+		}
 
 		[Fact]
 		public void GetMipsNameProperty()
@@ -36,7 +55,7 @@ namespace MipsTest
 		}
 
 		[Theory]
-		[InlineData("MIPS")]
+		[InlineData("MIPSE")]
 		public void SetNameTest(string name)
 		{
 			var value=mipsBox.SetName(name);
@@ -399,14 +418,14 @@ namespace MipsTest
 		//Rf Driver
 
 		[Theory]
-		[InlineData(1,1000010)]
+		[InlineData("1",1000010)]
 		public void SetFrequencyTest(string channel, int frequencyInHz)
 		{
 			mipsBox.SetFrequency(channel,frequencyInHz);
 			output.WriteLine("Done");
 		}
 		[Theory]
-		[InlineData(1)]
+		[InlineData("1")]
 		public void GetFrequencyTest(string channel)
 		{
 			var result=mipsBox.GetFrequency(channel).Result;
@@ -614,7 +633,7 @@ namespace MipsTest
 		}
 		[Theory]
 		[InlineData("1", 15)]
-		public void SetTWavePulseVoltageTest(string channel,int voltage)
+		public void SetTWavePulseVoltageTest(string channel,double voltage)
 		{
 			mipsBox.SetTWavePulseVoltage(channel, voltage);
 		}
@@ -627,7 +646,7 @@ namespace MipsTest
 		}
 		[Theory]
 		[InlineData("1", 10)]
-		public void SetTWaveGuard1VoltageTest(string channel, int voltage)
+		public void SetTWaveGuard1VoltageTest(string channel,double voltage)
 		{
 			mipsBox.SetTWaveGuard1Voltage(channel, voltage);
 		}
@@ -647,8 +666,8 @@ namespace MipsTest
 		[Fact]
 		public void SetTWaveSequenceTest()
 		{
-			string channel = "1";
-			bool[] boolArray = {true, true};
+			string channel = "2";
+			bool[] boolArray = {true, false};
 			BitArray bitArray= new BitArray(boolArray);
 			mipsBox.SetTWaveSequence(channel, bitArray);
 		}
@@ -670,7 +689,7 @@ namespace MipsTest
 			}
 		}
 		[Theory]
-		[InlineData("1")]
+		[InlineData("2")]
 		public void GetTWaveSequenceTest(string channel)
 		{
 			var result = mipsBox.GetTWaveSequence(channel).Result;
@@ -700,8 +719,7 @@ namespace MipsTest
 			var result = mipsBox.GetTWaveCompressionCommand().Result;
 			output.WriteLine(result.ToString());
 		}
-		[Theory]
-		[InlineData("C")]
+		[Fact]
 		public void SetTWaveMultipassControlTableTest()
 		{ 
 			mipsBox.SetTWaveCompressionCommand(CompressionTable.GetCompressionTable());
@@ -799,28 +817,28 @@ namespace MipsTest
 		[InlineData("1")]
 		public void GetStartFrequency(string channel)
 		{
-			var result = mipsBox.GetStartFrequency(channel).Result;
+			var result = mipsBox.GetSweepStartFrequency(channel).Result;
 			output.WriteLine(result.ToString());
 		}
 		[Theory]
 		[InlineData("1", 100000)]
 		public void SetStartFrequencyTest(string channel, int frequency)
 		{
-			mipsBox.SetStartFrequency(channel, frequency);
+			mipsBox.SetSweepStartFrequency(channel, frequency);
 
 		}
 		[Theory]
 		[InlineData("1")]
 		public void GetStopFrequencyTest(string channel)
 		{
-			var result = mipsBox.GetStopFrequency(channel).Result;
+			var result = mipsBox.GetSweepStopFrequency(channel).Result;
 			output.WriteLine(result.ToString());
 		}
 		[Theory]
 		[InlineData("1", 200000)]
 		public void SetStopFrequencyTest(string channel, int frequency)
 		{
-			mipsBox.SetStopFrequency(channel, frequency);
+			mipsBox.SetSweepStopFrequency(channel, frequency);
 
 		}
 		[Theory]
@@ -858,7 +876,7 @@ namespace MipsTest
 		[InlineData("1")]
 		public void GetStatusTest(string channel)
 		{
-			var result = mipsBox.GetStatus(channel).Result;
+			var result = mipsBox.GetSweepStatus(channel).Result;
 			output.WriteLine(result.ToString());
 
 		}
