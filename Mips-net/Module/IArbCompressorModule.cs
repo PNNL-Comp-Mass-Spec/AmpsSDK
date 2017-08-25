@@ -26,11 +26,5 @@ namespace Mips_net.Module
 		Task<Unit> SetArbTrigger();
 		Task<SwitchState> GetArbSwitchState();
 		Task<Unit> SetArbSwitchState(SwitchState state);
-
-
-
-
-
-
 	}
 }

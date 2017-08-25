@@ -77,12 +77,7 @@ namespace Mips_net.Device
 
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
 								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels,(uint)arbChannels));
-			if (this.communicator.IsOpen)
-			{
-				return this.deviceData.Value;
-			}
-
-			return MipsBoxDeviceData.Empty;
+		    return this.deviceData.Value;
 	    }
 
 	    
@@ -116,7 +111,7 @@ namespace Mips_net.Device
 
 		public async Task<int> GetNumberDigitalChannels()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.DIO.ToString());
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var result = responseQueue.Dequeue();
