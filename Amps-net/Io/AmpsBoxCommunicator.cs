@@ -253,16 +253,10 @@ namespace AmpsBoxSdk.Io
         {
             return input.Select(bytes =>
             {
-                if (bytes.Any())
-                {
-                    var str = Encoding.ASCII.GetString(bytes.ToArray());
-                   return str;
-                }
-                else
-                {
-                    return string.Empty;
-                }
-                
+                var enumerable = bytes.ToArray();
+                if (enumerable.Length <= 0) return string.Empty;
+                var str = Encoding.ASCII.GetString(enumerable);
+                return str;
             });
         }
 
