@@ -31,15 +31,23 @@ namespace Mips_net.Device
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
-			this.communicator.MessageSources.Select(s=>s).Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x)).Select(s =>
+			var source = this.communicator.MessageSources;
+
+			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
 				this.responseQueue.Enqueue(s);
 				return s;
 			}).Subscribe();
-			this.TableCompleteOrAborted = this.communicator.MessageSources
-				.Where(x => x.Equals("tblcmplt") || x.Contains("ABORTED")).Select(x => Unit.Default);
 
-			this.ModeReady = this.communicator.MessageSources.Where(x => x.Equals("tblrdy")).Select(x => Unit.Default);
+			this.TableCompleteOrAborted = source
+				.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
+			this.TableCompleteOrAborted.Subscribe(unit =>
+			{
+				System.Diagnostics.Trace.WriteLine($"{Environment.NewLine}complete{DateTime.Now}");
+			});
+
+			this.ModeReady = source.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
+			this.ModeReady.Subscribe();
 			ClockFrequency = 16000000;
 		}
 	    private async Task ProcessQueue(bool response=false)
@@ -72,11 +80,11 @@ namespace Mips_net.Device
 		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
 		    var rfChannels = await this.GetNumberRfChannels();
 		    var digitalChannels = await this.GetNumberDigitalChannels();
-		    var twaveChannels = await this.GetNumberTwaveChannels();
-		    var arbChannels = await this.GetNumberARBChannels();
+		   // var twaveChannels = await this.GetNumberTwaveChannels();
+		   // var arbChannels = await this.GetNumberARBChannels();
 
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels,(uint)arbChannels));
+								(uint)rfChannels,  (uint) digitalChannels, (uint)2,(uint)4));
 		    return this.deviceData.Value;
 	    }
 
