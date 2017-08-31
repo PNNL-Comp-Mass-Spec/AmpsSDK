@@ -146,10 +146,17 @@ namespace Mips_net.Device
 			int.TryParse(result, out int channels);
 			return channels;
 		}
-	
 
-	   
-	    public async Task<Unit> SetName(string name)
+	    public async Task<string> GetName()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
+	    }
+
+		public async Task<Unit> SetName(string name)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
 			messageQueue.Enqueue(mipsmessage);
@@ -177,13 +184,23 @@ namespace Mips_net.Device
 			Enum.TryParse(result, out ErrorCode error);
 			return error;
 		}
-	    public async Task<string> About()
+	    public async Task<IEnumerable<string>> About()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.ABOUT);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
-		    var result = responseQueue.Dequeue();
-		    return result;
+			List<string> responses = new List<string>();
+			Thread.Sleep(100);
+		    while (responseQueue.Count > 0)
+		    {
+			    var response = responseQueue.Dequeue();
+				if (string.IsNullOrEmpty(response))
+			    {
+				    continue;
+			    }
+			    responses.Add(response);
+		    }
+		    return responses;
 		}
 	    public async Task<Unit> RevisionLevel(int board,int module,int rev)
 	    {
@@ -709,7 +726,7 @@ namespace Mips_net.Device
 
 	    //Rf Driver
 
-		public async Task<Unit> SetFrequency(string channel, int frequencyInHz)
+		public async Task<Unit> SetFrequency(string channel, double frequencyInHz)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFFRQ,channel,frequencyInHz);
 			messageQueue.Enqueue(mipsmessage);
@@ -717,7 +734,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetLevel(string channel, int peakToPeakVoltage)
+	    public async Task<Unit> SetRfPeakToPeak(string channel, double peakToPeakVoltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFVLT,channel,peakToPeakVoltage);
 			messageQueue.Enqueue(mipsmessage);
@@ -725,7 +742,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetDriveLevel(string channel, int drive)
+	    public async Task<Unit> SetDriveLevel(string channel, double drive)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFDRV,channel,drive);
 			messageQueue.Enqueue(mipsmessage);
@@ -733,17 +750,17 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetFrequency(string channel)
+	    public async Task<double> GetFrequency(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFFRQ, channel);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    double.TryParse(response, out double result);
 		    return result;
 		}
 
-	    public async Task<double> GetPositiveComponent(string channel)
+	    public async Task<double> GetRFPositive(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPPVP, channel);
 			messageQueue.Enqueue(mipsmessage);
@@ -753,7 +770,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<double> GetNegativeComponent(string channel)
+	    public async Task<double> GetRFNegative(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPPVN, channel);
 			messageQueue.Enqueue(mipsmessage);
@@ -773,7 +790,7 @@ namespace Mips_net.Device
 		    return result;
 	    }
 
-	    public async Task<double> GetPeakToPeakVoltageSetpoint(string channel)
+	    public async Task<double> GetPeakToPeakVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFVLT, channel);
 			messageQueue.Enqueue(mipsmessage);
@@ -783,7 +800,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<int> GetChannelPower(string channel)
+	    public async Task<double> GetChannelPower(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPWR, channel);
 			messageQueue.Enqueue(mipsmessage);

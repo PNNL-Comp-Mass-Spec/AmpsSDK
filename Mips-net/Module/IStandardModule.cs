@@ -16,7 +16,7 @@ namespace Mips_net.Module
 	    Task<string> GetVersion();
 	    Task<ErrorCode> GetError();
 	    Task<Unit> SetName(string name);
-	    Task<string> About();
+	    Task<IEnumerable<string>> About();
 	    Task<Unit> RevisionLevel(int board, int mudule,int revLevel);
 	    Task<Unit> Reset();
 	    Task<Unit> Save();
