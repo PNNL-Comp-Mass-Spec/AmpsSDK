@@ -2035,7 +2035,7 @@ namespace Mips_net.Device
 
 	    //ARB Module
 
-		public async Task<Unit> SetArbMode(int module, ArbMode mode)
+		public async Task<Unit> SetArbMode(string module, ArbMode mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBMODE, module, mode.ToString());
 			messageQueue.Enqueue(mipsmessage);
@@ -2044,7 +2044,7 @@ namespace Mips_net.Device
 			//throw new NotImplementedException();
 		}
 
-	    public async Task<ArbMode> GetArbMode(int module)
+	    public async Task<ArbMode> GetArbMode(string module)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBMODE, module);
@@ -2055,7 +2055,7 @@ namespace Mips_net.Device
 		    return value;
 		}
 
-	    public async Task<Unit> SetArbFrequency(int module, int frequencyInHz)
+	    public async Task<Unit> SetArbFrequency(string module, double frequencyInHz)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFREQ,module,frequencyInHz);
 			messageQueue.Enqueue(mipsmessage);
@@ -2063,7 +2063,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbFrequency(int module)
+	    public async Task<int> GetArbFrequency(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFREQ, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2073,7 +2073,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<Unit> SetArbVoltsPeakToPeak(int module, int peakToPeakVolts)
+	    public async Task<Unit> SetArbVoltsPeakToPeak(string module,double peakToPeakVolts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFVRNG, module, peakToPeakVolts);
 			messageQueue.Enqueue(mipsmessage);
@@ -2081,7 +2081,7 @@ namespace Mips_net.Device
 		   return Unit.Default;
 		}
 
-	    public async Task<int> GetArbVoltsPeakToPeak(int module)
+	    public async Task<int> GetArbVoltsPeakToPeak(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVRNG, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2091,7 +2091,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<Unit> SetArbOffsetVoltage(int module, int value)
+	    public async Task<Unit> SetArbOffsetVoltage(string module, double value)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SWFVOFF, module, value);
 			messageQueue.Enqueue(mipsmessage);
@@ -2099,7 +2099,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbOffsetVoltage(int module)
+	    public async Task<int> GetArbOffsetVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVOFF, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2109,7 +2109,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-		public async Task<Unit> SetAuxOutputVoltage(int module, int value)
+		public async Task<Unit> SetAuxOutputVoltage(string module, double value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFVAUX, module, value);
 			messageQueue.Enqueue(mipsmessage);
@@ -2117,7 +2117,7 @@ namespace Mips_net.Device
 		   return Unit.Default;
 		}
 
-	    public async Task<int> GetAuxOutputVoltage(int module)
+	    public async Task<int> GetAuxOutputVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVAUX, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2127,7 +2127,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<Unit> StopArb(int module)
+	    public async Task<Unit> StopArb(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFDIS, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2135,7 +2135,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> StartArb(int module)
+	    public async Task<Unit> StartArb(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFENA, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2143,7 +2143,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetTwaveDirection(int module, TWaveDirection direction)
+	    public async Task<Unit> SetTwaveDirection(string module, TWaveDirection direction)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFDIR, module, direction.ToString());
 			messageQueue.Enqueue(mipsmessage);
@@ -2151,7 +2151,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<TWaveDirection> GetTwaveDirection(int module)
+	    public async Task<TWaveDirection> GetTwaveDirection(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFDIR, module);
 		    messageQueue.Enqueue(mipsmessage);
@@ -2161,7 +2161,7 @@ namespace Mips_net.Device
 		    return value;
 		}
 
-	    public async Task<Unit> SetWaveform(int module, IEnumerable<int> points)
+	    public async Task<Unit> SetWaveform(string module, IEnumerable<int> points)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFARB, module, points);
 			messageQueue.Enqueue(mipsmessage);
@@ -2169,7 +2169,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<IEnumerable<int>> GetWaveform(int module)
+	    public async Task<IEnumerable<int>> GetWaveform(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFARB, module);
 		    mipsmessage.WriteTo(communicator);
@@ -2195,7 +2195,7 @@ namespace Mips_net.Device
 
 		}
 
-		public async Task<Unit> SetWaveformType(int module, ArbWaveForms waveForms)
+		public async Task<Unit> SetWaveformType(string module, ArbWaveForms waveForms)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFTYP, module, waveForms.ToString());
 			messageQueue.Enqueue(mipsmessage);
@@ -2203,7 +2203,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<ArbWaveForms> GetWaveformType(int module)
+	    public async Task<ArbWaveForms> GetWaveformType(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFTYP, module);
 		    messageQueue.Enqueue(mipsmessage);
@@ -2213,7 +2213,7 @@ namespace Mips_net.Device
 		    return value;
 		}
 
-	    public async Task<Unit> SetBufferLength(int module, int length)
+	    public async Task<Unit> SetBufferLength(string module, int length)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBBUF, module, length);
 			messageQueue.Enqueue(mipsmessage);
@@ -2221,7 +2221,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetBufferLength(int module)
+	    public async Task<int> GetBufferLength(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBBUF, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2231,7 +2231,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<Unit> SetBufferRepeat(int module, int count)
+	    public async Task<Unit> SetBufferRepeat(string module, int count)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBNUM, module, count);
 			messageQueue.Enqueue(mipsmessage);
@@ -2239,7 +2239,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetBufferRepeat(int module)
+	    public async Task<int> GetBufferRepeat(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBNUM, module);
 			messageQueue.Enqueue(mipsmessage);
@@ -2249,7 +2249,7 @@ namespace Mips_net.Device
 		    return result;
 		}
 
-	    public async Task<Unit> SetAllChannelValue(int module, int value)
+	    public async Task<Unit> SetAllChannelValue(string module, int value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCHS, module,value);
 			messageQueue.Enqueue(mipsmessage);
@@ -2257,7 +2257,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetChannelValue(int module, int channel, int value)
+	    public async Task<Unit> SetChannelValue(string module, int channel, double value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCH, module, channel,value);
 			messageQueue.Enqueue(mipsmessage);

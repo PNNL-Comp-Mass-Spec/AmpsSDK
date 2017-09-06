@@ -101,7 +101,10 @@ namespace Mips_net.Commands
 		{
 			return new CommandValueValueValueMessage(command, value1, value2, value3);
 		}
-
+		public static MipsMessage Create(MipsCommand command, string value1, int value2, double value3)
+		{
+			return new CommandValueValueValueMessage(command, value1, value2, value3);
+		}
 		public static MipsMessage Create(MipsCommand command, int value1, int value2, string value3)
 		{
 			return new CommandValueValueValueMessage(command, value1, value2, value3);
@@ -393,6 +396,12 @@ namespace Mips_net.Commands
 			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
 		}
 		public CommandValueValueValueMessage(MipsCommand command, int value1, int value2, string value3) : base(command)
+		{
+			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
+		}
+		public CommandValueValueValueMessage(MipsCommand command, string value1, int value2, double value3) : base(command)
 		{
 			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
 			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
