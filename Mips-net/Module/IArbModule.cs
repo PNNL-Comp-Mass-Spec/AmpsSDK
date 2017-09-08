@@ -31,7 +31,7 @@ namespace Mips_net.Module
 	    Task<Unit> SetBufferRepeat(string module, int count);
 	    Task<int> GetBufferRepeat(string module);
 	    Task<Unit> SetAllChannelValue(string module, int value);
-	    Task<Unit> SetChannelValue(string module, int channle, double value);
-	    Task<Unit> SetChannelRange(int module, int channel, int start, int stop, int range);
+	    Task<Unit> SetChannelValue(string module, string channle, int value);
+	    Task<Unit> SetChannelRange(string module, string channel, int start, int stop, int range);
     }
 }

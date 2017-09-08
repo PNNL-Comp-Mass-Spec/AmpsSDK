@@ -105,11 +105,15 @@ namespace Mips_net.Commands
 		{
 			return new CommandValueValueValueMessage(command, value1, value2, value3);
 		}
+		public static MipsMessage Create(MipsCommand command, string value1, string value2, int value3)
+		{
+			return new CommandValueValueValueMessage(command, value1, value2, value3);
+		}
 		public static MipsMessage Create(MipsCommand command, int value1, int value2, string value3)
 		{
 			return new CommandValueValueValueMessage(command, value1, value2, value3);
 		}
-		public static MipsMessage Create(MipsCommand command, int value1, int value2, int value3,int value4,int value5)
+		public static MipsMessage Create(MipsCommand command, string value1, string value2, int value3,int value4,int value5)
 		{
 			return new CommandValuesMessage(command, value1, value2, value3,value4,value5);
 		}
@@ -407,6 +411,12 @@ namespace Mips_net.Commands
 			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
 			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
 		}
+		public CommandValueValueValueMessage(MipsCommand command, string value1, string value2, int value3) : base(command)
+		{
+			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());
+			this.value2 = Encoding.ASCII.GetBytes(value2.ToString());
+			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
+		}
 
 		internal override void WriteImpl(MipsCommunicator physical)
 		{
@@ -425,7 +435,7 @@ namespace Mips_net.Commands
 		private readonly byte[] value4;
 		private readonly byte[] value5;
 
-		public CommandValuesMessage(MipsCommand command, int value1, int value2, int value3, int value4, int value5) : base(command)
+		public CommandValuesMessage(MipsCommand command, string value1, string value2, int value3, int value4, int value5) : base(command)
 		{
 			this.command = command;
 			this.value1 = Encoding.ASCII.GetBytes(value1.ToString());

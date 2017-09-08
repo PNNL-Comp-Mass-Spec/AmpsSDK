@@ -79,12 +79,23 @@ namespace Mips_net.Device
 	    {
 		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
 		    var rfChannels = await this.GetNumberRfChannels();
-		    var digitalChannels = await this.GetNumberDigitalChannels();
+		    //var digitalChannels = await this.GetNumberDigitalChannels();
 		   // var twaveChannels = await this.GetNumberTwaveChannels();
 		   // var arbChannels = await this.GetNumberARBChannels();
 
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) digitalChannels, (uint)2,(uint)4));
+								(uint)rfChannels,  (uint) 0, (uint)2,(uint)4));
+
+		    //var twaveChannels = await this.GetNumberTwaveChannels();
+		    //var arbChannels = await this.GetNumberARBChannels();
+		    //var esiChannels = await this.GetNumberESIChannels();
+		    //var faimsChannels = await this.GetNumberFaimsChannels();
+		    //var filamentChannels = await this.GetNumberFilamentChannels();
+
+
+			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
+								(uint)rfChannels,  (uint) 0, (uint)2,(uint)4));
+
 		    return this.deviceData.Value;
 	    }
 
@@ -98,14 +109,34 @@ namespace Mips_net.Device
 			int.TryParse(result, out int channels);
 		    return channels;
 		}
-		 public async Task<string> GetName()
+	    public async Task<int> GetNumberESIChannels()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
-			messageQueue.Enqueue(mipsmessage);
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ESI.ToString());
+		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
-		    var result=responseQueue.Dequeue();
-		    return result;
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
 	    }
+	    public async Task<int> GetNumberFaimsChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.FAIMS.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+	    }
+	    public async Task<int> GetNumberFilamentChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.FIL.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+	    }
+		
 		public async Task<int> GetNumberTwaveChannels()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
@@ -2248,7 +2279,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetChannelValue(string module, int channel, double value)
+	    public async Task<Unit> SetChannelValue(string module, string channel, int value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCH, module, channel,value);
 			messageQueue.Enqueue(mipsmessage);
@@ -2256,7 +2287,7 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetChannelRange(int module, int channel, int start, int stop, int range)
+	    public async Task<Unit> SetChannelRange(string module, string channel, int start, int stop, int range)
 	    {
 
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SACHRNG, module, channel,start,stop, range);
