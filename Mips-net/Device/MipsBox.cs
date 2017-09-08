@@ -147,15 +147,6 @@ namespace Mips_net.Device
 			return channels;
 		}
 
-	    public async Task<string> GetName()
-	    {
-		    var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
-		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
-		    var result = responseQueue.Dequeue();
-		    return result;
-	    }
-
 		public async Task<Unit> SetName(string name)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
