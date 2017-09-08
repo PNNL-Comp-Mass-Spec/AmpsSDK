@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DynamicData" Version="5.4.1.2196" />
+    <PackageReference Include="DynamicData" Version="6.0.1.2317-beta" />
     <PackageReference Include="SerialPortStream" Version="2.0.3" />
   </ItemGroup>
 
