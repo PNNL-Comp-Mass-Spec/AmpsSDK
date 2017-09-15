@@ -148,7 +148,16 @@ namespace Mips_net.Device
 		  
 	    }
 
-		public async Task<int> GetNumberDigitalChannels()
+	    public async Task<string> GetName()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var name = responseQueue.Dequeue();
+		    return name;
+		}
+
+	    public async Task<int> GetNumberDigitalChannels()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.DIO.ToString());
 			messageQueue.Enqueue(mipsmessage);
