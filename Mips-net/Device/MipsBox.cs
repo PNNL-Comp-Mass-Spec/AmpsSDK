@@ -92,11 +92,7 @@ namespace Mips_net.Device
 		    //var faimsChannels = await this.GetNumberFaimsChannels();
 		    //var filamentChannels = await this.GetNumberFilamentChannels();
 
-
-			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) 0, (uint)2,(uint)4));
-
-		    return this.deviceData.Value;
+			return this.deviceData.Value;
 	    }
 
 	    
@@ -501,7 +497,7 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SFREQ,frequencyInHz);
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue(true);
-			var result = responseQueue.Dequeue();
+			//var result = responseQueue.Dequeue();
 			return Unit.Default;
 		}
 
@@ -510,7 +506,7 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.BURST,numberCycles);
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
-			var result = responseQueue.Dequeue();
+			//var result = responseQueue.Dequeue();
 			return Unit.Default;
 		}
 
@@ -719,7 +715,7 @@ namespace Mips_net.Device
 			var mipsmessage = MipsMessage.Create(MipsCommand.ADCBPRO, profile);
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
-			var result = responseQueue.Dequeue();
+			//var result = responseQueue.Dequeue();
 			return Unit.Default;
 			//throw new NotImplementedException();
 
@@ -730,7 +726,7 @@ namespace Mips_net.Device
 			var mipsmessage = MipsMessage.Create(MipsCommand.CDCBPRO, profile);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
+		    //var result = responseQueue.Dequeue();
 		    return Unit.Default;
 			throw new NotImplementedException();
 		}
@@ -740,7 +736,7 @@ namespace Mips_net.Device
 			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBPRO, profile1, profile2, time);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
+		    //var result = responseQueue.Dequeue();
 		    return Unit.Default;
 			throw new NotImplementedException();
 		}
@@ -750,7 +746,7 @@ namespace Mips_net.Device
 			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBSTOP);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
+		   // var result = responseQueue.Dequeue();
 		    return Unit.Default;
 			throw new NotImplementedException();
 		}
