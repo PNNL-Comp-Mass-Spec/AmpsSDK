@@ -60,11 +60,12 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				{
 					port.WriteByte(b);
 				}
-
+				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(bytes));
 				foreach (var b in value)
 				{
 					port.WriteByte(b);
 				}
+				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(value));
 			}
 		}
 	    public void WriteHeader(MipsCommand command)
@@ -81,7 +82,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				    port.WriteByte(commandByte);
 			    }
 			}
-		   
+		   System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
 
 		}
 	    public void WriteEnd(string appendToEnd=null)
@@ -104,8 +105,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 			    {
 				    port.WriteByte(b);
 			    }
+			    System.Diagnostics.Debug.Write(Environment.NewLine);
 
-		    }
+			}
 		}
 
 		public void Close()
