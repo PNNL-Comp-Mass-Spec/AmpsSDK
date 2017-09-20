@@ -10,9 +10,9 @@ namespace Mips_net.Module
 
         Task<Unit> SetClockPulseWidth(int microseconds);
        
-        Task<int> GetClockFrequency();
+        Task<double> GetClockFrequency();
 
-        Task<Unit> SetClockFrequency(int frequencyInHz);
+        Task<Unit> SetClockFrequency(double frequencyInHz);
 
         
         Task<Unit> ConfigureClockBurst(int numberCycles);

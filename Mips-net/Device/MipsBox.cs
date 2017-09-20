@@ -269,8 +269,7 @@ namespace Mips_net.Device
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.MUTE,mute.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
-		    var result = responseQueue.Dequeue();
+		    await ProcessQueue();
 		    return Unit.Default;
 		}
 	    public async Task<Unit> Echo(Status echo)
@@ -278,7 +277,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.ECHO,echo.ToString());
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
 	    public async Task<Unit> TriggerOut(TriggerValue trigger)
@@ -286,7 +284,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger.ToString());
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
 	    public async Task<Unit> TriggerOut(int trigger)
@@ -294,7 +291,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
 		public async Task<Unit> Delay(double delay)
@@ -302,7 +298,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.DELAY, delay);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
 	    public async Task<IEnumerable<string>> GetCommand()
@@ -443,7 +438,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.LEDOVRD, LEDValue.ToString());
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
-			var result = responseQueue.Dequeue();
 			return Unit.Default;
 		}
 	    public async Task<Unit> LEDColor(int color)
@@ -459,7 +453,6 @@ namespace Mips_net.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.DSPOFF, status.ToString());
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
-		    var result = responseQueue.Dequeue();
 		    return Unit.Default;
 		}
 
@@ -482,22 +475,21 @@ namespace Mips_net.Device
 			return Unit.Default;
 		}
 
-	    public async Task<int> GetClockFrequency()
+	    public async Task<double> GetClockFrequency()
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GFREQ);
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue(true);
 			var response = responseQueue.Dequeue();
-			int.TryParse(response, out int result);
+			double.TryParse(response, out double result);
 			return result;
 		}
 
-	    public async Task<Unit> SetClockFrequency(int frequencyInHz)
+	    public async Task<Unit> SetClockFrequency(double frequencyInHz)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SFREQ,frequencyInHz);
 			messageQueue.Enqueue(mipsmessage);
-			await ProcessQueue(true);
-			//var result = responseQueue.Dequeue();
+			await ProcessQueue();
 			return Unit.Default;
 		}
 
@@ -864,13 +856,13 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetDigitalState(string channel)
+	    public async Task<bool> GetDigitalState(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDIO, channel);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    bool.TryParse(response, out bool result);
 		    return result;
 		}
 
