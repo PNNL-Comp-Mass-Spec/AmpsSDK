@@ -79,12 +79,12 @@ namespace Mips_net.Device
 	    {
 		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
 		    var rfChannels = await this.GetNumberRfChannels();
-		    //var digitalChannels = await this.GetNumberDigitalChannels();
+		    var digitalChannels = await this.GetNumberDigitalChannels();
 		   // var twaveChannels = await this.GetNumberTwaveChannels();
 		   // var arbChannels = await this.GetNumberARBChannels();
 
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) 0, (uint)2,(uint)4));
+								(uint)rfChannels,  (uint) digitalChannels, (uint)2,(uint)4));
 
 		    //var twaveChannels = await this.GetNumberTwaveChannels();
 		    //var arbChannels = await this.GetNumberARBChannels();
