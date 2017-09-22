@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
-using RJCP.IO.Ports;
 using Xunit.Abstractions;
 using Xunit;
 using Mips_net.Commands;
@@ -16,12 +16,12 @@ namespace MipsTest
 	{
 		private IMipsBox mipsBox;
 		private ITestOutputHelper output;
-		private SerialPortStream serialPort;
+		private SerialPort serialPort;
 		public MipsCommandMapTest(ITestOutputHelper output)
 		{
 			this.output = output;
 
-			serialPort = new SerialPortStream("COM4", 128000, 8, Parity.Even, StopBits.One) { RtsEnable = false, Handshake = Handshake.XOn };
+			serialPort = new SerialPort("COM4", 128000) { RtsEnable = true};
 
 			mipsBox = MipsFactory.CreateMipsBox(serialPort);
 		}

@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net47</TargetFramework>
-    <RootNamespace>Mips_net</RootNamespace>
+    <TargetFramework>net471</TargetFramework>
+    <RootNamespace>Mips</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="DynamicData" Version="6.0.1.2317-beta" />
-    <PackageReference Include="SerialPortStream" Version="2.0.3" />
+    <PackageReference Include="xunit" Version="2.3.0-beta5-build3769" />
   </ItemGroup>
 
 

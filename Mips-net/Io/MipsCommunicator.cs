@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using Mips_net.Commands;
-using RJCP.IO.Ports;
-
 
 namespace Mips_net.Io
 {
@@ -22,14 +21,14 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         private readonly object sync = new object();     
 	    private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
 		#endregion
-	    private SerialPortStream port;
+	    private SerialPort serialPort;
 
 		#region Construction and Initialization
 
-		public MipsCommunicator(SerialPortStream port)
+		public MipsCommunicator(SerialPort port)
 		{
 			
-			this.port= port ?? throw new ArgumentNullException(nameof(port));
+			this.serialPort= port ?? throw new ArgumentNullException(nameof(port));
 			IsEmulated = false;
 		}
 
@@ -37,7 +36,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
 		internal string ReadLine()
 		{
-			return this.port.ReadLine();
+			return this.serialPort.ReadLine();
 		}
 
 	    /// <summary>
@@ -47,7 +46,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 	    /// <param name="separator"></param>
 	    public void Write(byte[] value, string separator)
 		{
-			if (!port.IsOpen)
+			if (!serialPort.IsOpen)
 			{
 				return;
 			}
@@ -58,12 +57,12 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				var bytes = Encoding.ASCII.GetBytes(separator);
 				foreach (var b in bytes)
 				{
-					port.WriteByte(b);
+					serialPort.BaseStream.WriteByte(b);
 				}
 				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(bytes));
 				foreach (var b in value)
 				{
-					port.WriteByte(b);
+					serialPort.BaseStream.WriteByte(b);
 				}
 				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(value));
 			}
@@ -79,7 +78,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 		    {
 			    foreach (var commandByte in commandBytes)
 			    {
-				    port.WriteByte(commandByte);
+				    serialPort.BaseStream.WriteByte(commandByte);
 			    }
 			}
 		   System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
@@ -87,7 +86,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 		}
 	    public void WriteEnd(string appendToEnd=null)
 	    {
-		    if (!port.IsOpen)
+		    if (!serialPort.IsOpen)
 		    {
 			    return;
 		    }
@@ -98,12 +97,12 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				    var bytes = Encoding.ASCII.GetBytes(appendToEnd);
 				    foreach (var b in bytes)
 				    {
-					    port.WriteByte(b);
+					    serialPort.BaseStream.WriteByte(b);
 				    }
 			    }
 			    foreach (var b in _lf)
 			    {
-				    port.WriteByte(b);
+				    serialPort.BaseStream.WriteByte(b);
 			    }
 			    System.Diagnostics.Debug.Write(Environment.NewLine);
 
@@ -114,9 +113,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         {
             lock (sync)
             {
-                if (port.IsOpen)
+                if (serialPort.IsOpen)
                 {
-                    port.Close();
+                    serialPort.Close();
                     connection.Dispose();
                 }
             }
@@ -134,44 +133,22 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				{
 					connection = messageSources.Connect();
 				}
-				if (port.IsOpen) return;
+				if (serialPort.IsOpen) return;
 
-				port.Open();
+				serialPort.Open();
 			}
 		}
-		/// <summary>
-		/// TODO The m_port_ error received.
-		/// </summary>
-		/// <param name="sender">
-		/// TODO The sender.
-		/// </param>
-		/// <param name="e">
-		/// TODO The e.
-		/// </param>
-		/// <exception cref="IOException">
-		/// </exception>
-		private void PortErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
-        {
-            switch (e.EventType)
-            {
-                case RJCP.IO.Ports.SerialError.Frame:
-                    System.Diagnostics.Trace.WriteLine(e.EventType.ToString());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
 
 
         #region Properties
 
         /// <summary>
-        /// Gets port open status.
+        /// Gets serialPort open status.
         /// </summary>
-        public bool IsOpen => port.IsOpen;
+        public bool IsOpen => serialPort.IsOpen;
 
         /// <summary>
-        /// Gets the serial port
+        /// Gets the serial serialPort
         /// </summary>
        
 
@@ -193,31 +170,20 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
         private IDisposable connection;
 
-		//public void Open()
-		//{
-		//	lock (sync)
-		//	{
-		//		if (port.IsOpen) return;
-		//		port.Open();
-		//		connection = messageSources.Connect();
-		//	}
-		//	;
-		//}
-
 		private IObservable<byte> Read
         {
             get
             {
                 return
-                    Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
-						h => port.DataReceived += h, h => port.DataReceived -= h).SelectMany(_ =>
+                    Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                        h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
                     {
                         var buffer = new byte[1024];
                         var ret = new List<byte>();
                         int bytesRead;
                         do
                         {
-                            bytesRead = port.Read(buffer, 0, buffer.Length);
+                            bytesRead = serialPort.Read(buffer, 0, buffer.Length);
                             ret.AddRange(buffer.Take(bytesRead));
                         } while (bytesRead >= buffer.Length);
                         return ret;
@@ -298,7 +264,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
         public void Dispose()
         {
-            port?.Dispose();
+            serialPort?.Dispose();
             connection?.Dispose();
         }
 	    

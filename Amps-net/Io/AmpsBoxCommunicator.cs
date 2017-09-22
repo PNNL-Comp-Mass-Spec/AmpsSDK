@@ -8,7 +8,6 @@ using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
-using RJCP.IO.Ports;
 using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
 using SerialError = System.IO.Ports.SerialError;
 using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
@@ -29,23 +28,19 @@ namespace AmpsBoxSdk.Io
         /// <summary>
         /// Gets the serial port
         /// </summary>
-        private readonly SerialPortStream serialPort;
+        private readonly SerialPort serialPort;
 
         private IDisposable connection;
         #endregion
 
         #region Construction and Initialization
 
-        public AmpsBoxCommunicator(SerialPortStream serialPort)
+        public AmpsBoxCommunicator(SerialPort serialPort)
         {
             this.serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
             IsEmulated = false; 
         }
 
-        private void SerialPort_ErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
-        {
-            throw new Exception(e.EventType.ToString());
-        }
 
         #endregion
 
@@ -63,16 +58,15 @@ namespace AmpsBoxSdk.Io
             lock (sync)
             {
                 if (string.IsNullOrEmpty(separator)) return;
-                serialPort.DiscardInBuffer(); // ensure that no reply is sitting in queue! 
                 var bytes = Encoding.ASCII.GetBytes(separator);
                 foreach (var b in bytes)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
 
                 foreach (var b in value)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
             }
         }
@@ -90,12 +84,12 @@ namespace AmpsBoxSdk.Io
                     var bytes = Encoding.ASCII.GetBytes(appendToEnd);
                     foreach (var b in bytes)
                     {
-                        serialPort.WriteByte(b);
+                        serialPort.BaseStream.WriteByte(b);
                     }
                 }
                 foreach (var b in _lf)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
             }
         }
@@ -114,7 +108,7 @@ namespace AmpsBoxSdk.Io
             {
                 foreach (var commandByte in commandBytes)
                 {
-                    serialPort.WriteByte(commandByte);
+                    serialPort.BaseStream.WriteByte(commandByte);
                 }
             }
           
@@ -180,7 +174,7 @@ namespace AmpsBoxSdk.Io
             get
             {
                 return
-                          Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
+                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
                               h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
                               {
                                   var buffer = new byte[1024];
