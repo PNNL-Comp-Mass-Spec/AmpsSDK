@@ -46,7 +46,7 @@ namespace Mips_net.Device
 				System.Diagnostics.Trace.WriteLine($"{Environment.NewLine}complete{DateTime.Now}");
 			});
 
-			this.ModeReady = source.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
+			this.ModeReady = source.Where(x => x.Equals("tblrdy", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
 			this.ModeReady.Subscribe();
 			ClockFrequency = 16000000;
 		}
