@@ -1312,15 +1312,21 @@ namespace Mips_net.Device
 		    await ProcessQueue();
 		    return Unit.Default;
 		}
-	    public async Task<Unit> SetTWaveToCommonClockMode(bool setToMode)
+	    public async Task<Unit> SetTWaveToCommonClockMode(bool setClock)
 	    {
-		    throw new NotImplementedException();
-	    }
+			var mipsmessage = MipsMessage.Create(MipsCommand.STWCMP, setClock);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
-	    public async Task<Unit> SetTWaveToCompressorMode(bool setToMode)
+	    public async Task<Unit> SetTWaveToCompressorMode(bool setMode)
 	    {
-		    throw new NotImplementedException();
-	    }
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWCMP, setMode);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
 
 
@@ -1663,22 +1669,18 @@ namespace Mips_net.Device
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
 			return Unit.Default;
-			throw new NotImplementedException();
+			
 		}
 
 		public async Task<double> GetTriggerDelay()
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGDLY);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes =>
-			//{
-			//	double.TryParse(bytes, out double result);
-			//	return result;
-
-			//}).FirstAsync();
-			throw new NotImplementedException();
+			var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGDLY);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+			
 		}
 
 		public async Task<Unit> SetTriggerPeriod(double delayPeriod)
@@ -1723,11 +1725,11 @@ namespace Mips_net.Device
 
 		public async Task<Unit> SetTriggerModule(ArbMode mode)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGMOD, mode.ToString());
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGMOD, mode.ToString());
+			mipsmessage.WriteTo(communicator);
+			var messagePacket = communicator.MessageSources;
 
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
 			throw new NotImplementedException();
 		}
 

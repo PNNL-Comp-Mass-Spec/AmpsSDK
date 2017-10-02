@@ -48,6 +48,10 @@ namespace Mips_net.Commands
 		{
 			return new CommandValueMessage(command, value);
 		}
+		public static MipsMessage Create(MipsCommand command, bool value)
+		{
+			return new CommandValueMessage(command, value);
+		}
 
 		public static MipsMessage Create(MipsCommand command, double value)
 		{
@@ -295,6 +299,10 @@ namespace Mips_net.Commands
 		private readonly byte[] value;
 
 		public CommandValueMessage(MipsCommand command, int value) : base(command)
+		{
+			this.value = Encoding.ASCII.GetBytes(value.ToString());
+		}
+		public CommandValueMessage(MipsCommand command, bool value) : base(command)
 		{
 			this.value = Encoding.ASCII.GetBytes(value.ToString());
 		}
