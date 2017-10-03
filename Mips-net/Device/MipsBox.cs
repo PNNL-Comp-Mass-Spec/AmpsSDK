@@ -31,7 +31,8 @@ namespace Mips_net.Device
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
-			var source = this.communicator.MessageSources;
+			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);
+			var otherSource = this.communicator.MessageSources.Where(x => x.Item1 == true);
 
 			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
@@ -41,13 +42,12 @@ namespace Mips_net.Device
 
 			this.TableCompleteOrAborted = source
 				.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
-			this.TableCompleteOrAborted.Subscribe(unit =>
+
+			otherSource.Subscribe(tuple =>
 			{
-				System.Diagnostics.Trace.WriteLine($"{Environment.NewLine}complete{DateTime.Now}");
+				System.Diagnostics.Trace.WriteLine($"{tuple.Item1} {tuple.Item2}");
 			});
 
-			this.ModeReady = source.Where(x => x.Equals("tblrdy", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
-			this.ModeReady.Subscribe();
 			ClockFrequency = 16000000;
 		}
 	    private async Task ProcessQueue(bool response=false)
@@ -57,10 +57,10 @@ namespace Mips_net.Device
 		    {
 			    var message = messageQueue.Dequeue();
 				message.WriteTo(this.communicator);
-				Thread.Sleep(50);
+			    await Task.Delay(20);
 			    while (response && responseQueue.Count==0)
 			    {
-				    Thread.Sleep(50);
+				    await Task.Delay(20);
 			    }
 			    break;
 		    }
@@ -69,7 +69,6 @@ namespace Mips_net.Device
 
 	    public IObservable<Unit> TableCompleteOrAborted { get; }
 
-	    public IObservable<Unit> ModeReady { get; }
 
 		[DataMember]
 	    public int ClockFrequency { get; set; }
@@ -1510,7 +1509,8 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SMOD, mode.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue();
+		    await ProcessQueue(true);
+
 		    return Unit.Default;
 		}
 
@@ -2198,7 +2198,7 @@ namespace Mips_net.Device
 				.Scan(new List<int>(),
 					(list, bytes) =>
 					{
-						var value = bytes.Split(',');
+						var value = bytes.Item2.Split(',');
 						if (value.Length == 32)
 						{
 							foreach (var v in value)

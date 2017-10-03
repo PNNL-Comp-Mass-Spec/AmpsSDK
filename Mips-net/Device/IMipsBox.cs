@@ -15,7 +15,5 @@ namespace Mips_net.Device
 		string Name { get; }
 		IObservable<Unit> TableCompleteOrAborted { get; }
 
-		IObservable<Unit> ModeReady { get; }
-
 	}
 }

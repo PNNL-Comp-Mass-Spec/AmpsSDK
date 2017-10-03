@@ -10,7 +10,7 @@ namespace Mips_net.Io
         /// <param name="command"></param>
         //void Write(MipsMessage command);
 
-        IObservable<string> MessageSources { get; }
+        IObservable<(bool, string)> MessageSources { get; }
 
         /// <summary>
         /// Opens connection and allows 

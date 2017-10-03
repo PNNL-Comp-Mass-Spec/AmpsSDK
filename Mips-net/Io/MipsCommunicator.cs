@@ -205,7 +205,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             }
         }
 
-        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        private IObservable<(bool, List<byte>)> ToMessage(IObservable<byte> input)
         {
             return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
             {
@@ -229,7 +229,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                         case 0x15:
                             buffer.IsError = true;
-                            break;
+							this.serialPort.DiscardInBuffer();
+							System.Diagnostics.Trace.WriteLine("MIPS: ERROR");
+							break;
                         case 63:
                             break;
                         case 13:
@@ -239,28 +241,29 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                     }
                 return buffer;
-            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+            }).Where(fc => fc.Complete).Select(fc => (fc.IsError, fc.Message));
         }
 
-        private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
+        private IObservable<(bool, string)> ToDecodedMessage(IObservable<(bool, List<byte>)> input)
         {
             return input.Select(bytes =>
             {
-                if (bytes.Any())
+
+				if (bytes.Item2.Count != 0)
                 {
-                    return Encoding.ASCII.GetString(bytes.ToArray());
+                    return (bytes.Item1, Encoding.ASCII.GetString(bytes.Item2.ToArray()));
                 }
                 else
                 {
-                    return string.Empty;
+                    return (bytes.Item1, string.Empty);
                 }
 
             });
         }
 
-        private IConnectableObservable<string> messageSources;
+        private IConnectableObservable<(bool, string)> messageSources;
 
-        public IObservable<string> MessageSources => messageSources;
+        public IObservable<(bool, string)> MessageSources => messageSources;
 
         public void Dispose()
         {
