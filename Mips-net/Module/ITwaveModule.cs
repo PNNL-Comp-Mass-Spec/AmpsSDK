@@ -22,6 +22,8 @@ namespace Mips_net.Module
         Task<TWaveDirection> GetTWaveDirection(string channel);
         Task<Unit> SetTWaveDirection(string channel, TWaveDirection direction);
         Task<Unit> SetTWaveCompressionCommand(CompressionTable compressionTable);
+
+        Task<Unit> SetTWaveCompressionCommand(string compressionTable);
         Task<string> GetTWaveCompressionCommand();
         Task<StateCommands> GetCompressorMode();
         Task<Unit> SetCompressorMode(StateCommands mode);

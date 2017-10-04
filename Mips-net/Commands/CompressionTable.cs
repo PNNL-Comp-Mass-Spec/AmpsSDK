@@ -11,7 +11,7 @@ namespace Mips_net.Commands
 	{
 		private Queue<string> commandQueue;
 		private StringBuilder commandBuilder;
-		public CompressionTable()
+		protected CompressionTable()
 		{
 			
 		}
@@ -36,13 +36,7 @@ namespace Mips_net.Commands
 			
 		}
 
-		//throw new NotImplementedException();
-		
-		public  Queue<string> CommandQueue { get; set; }
+		private Queue<string> CommandQueue { get; }
 
-		public static CompressionTable GetCompressionTable()
-		{
-			return new CompressionTable() ;
-		}
 	}
 }

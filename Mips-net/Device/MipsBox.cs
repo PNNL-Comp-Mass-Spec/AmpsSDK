@@ -1159,7 +1159,15 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<string> GetTWaveCompressionCommand()
+	    public async Task<Unit> SetTWaveCompressionCommand(string compressionTable)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, compressionTable);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+
+		public async Task<string> GetTWaveCompressionCommand()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTBL);
 		    messageQueue.Enqueue(mipsmessage);
@@ -2308,7 +2316,16 @@ namespace Mips_net.Device
 			//throw new NotImplementedException();
 		}
 
-	    public async Task<string> GetArbCompressionCommand()
+	    public async Task<Unit> SetArbCompressionCommand(string table)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTBL, table);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		    //throw new NotImplementedException();
+	    }
+
+		public async Task<string> GetArbCompressionCommand()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTBL);
 		    messageQueue.Enqueue(mipsmessage);

@@ -10,6 +10,7 @@ namespace Mips_net.Module
 	public interface IArbCompressorModule
 	{
 		Task<Unit> SetArbCompressionCommand(CompressionTable compressionTable);
+		Task<Unit> SetArbCompressionCommand(string compressionTable);
 		Task<string> GetArbCompressionCommand();
 		Task<StateCommands> GetArbCompressorMode();
 		Task<Unit> SetArbCompressorMode(StateCommands mode);
