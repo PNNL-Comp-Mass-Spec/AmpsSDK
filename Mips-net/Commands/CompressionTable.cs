@@ -11,13 +11,16 @@ namespace Mips_net.Commands
 	{
 		private Queue<string> commandQueue;
 		private StringBuilder commandBuilder;
-		protected CompressionTable()
+		public CompressionTable()
 		{
-			
+			this.CommandQueue = new Queue<string>();
 		}
-		public CompressionTable(Queue<string> commandQueue)
+		public CompressionTable(IEnumerable<string> commandQueue) : this()
 		{
-			this.CommandQueue = commandQueue;
+			foreach (var command in commandQueue)
+			{
+				CommandQueue.Enqueue(command);
+			}
 		}
 
 		public string RetrieveTableAsEncodedString()
@@ -36,7 +39,7 @@ namespace Mips_net.Commands
 			
 		}
 
-		private Queue<string> CommandQueue { get; }
+		public Queue<string> CommandQueue { get; }
 
 	}
 }
