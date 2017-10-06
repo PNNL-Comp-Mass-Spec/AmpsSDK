@@ -12,19 +12,17 @@ namespace Mips_net.Device
     {
 	  
 
-	    public MipsBoxDeviceData(uint analogChannels, uint rfChannels, uint digitalChannels,uint twaveChannels,uint arbChannels)
+	    public MipsBoxDeviceData(uint analogChannels, uint rfChannels, uint digitalChannels,uint twaveChannels)
 	    {
 		    HvData = new Dictionary<uint, ChannelData>();
 		    RfData = new Dictionary<uint, MipsBoxRFData>();
 		    DioChannels = new Dictionary<uint, string>();
 		    TwaveChannels = new Dictionary<uint, string>();
-			ARBChannels= new Dictionary<uint, string>();
 
 			this.NumberHvChannels = analogChannels;
 		    this.NumberRfChannels = rfChannels;
 		    this.NumberDigitalChannels = digitalChannels;
 		    this.NumberTWaveChannels = twaveChannels;
-		    this.NumberARBChannels = arbChannels;
 
 			int start = Convert.ToInt32('A');
 		    int end = start + (int)NumberDigitalChannels;
@@ -35,7 +33,7 @@ namespace Mips_net.Device
 		    }
 
 		}
-	    public static MipsBoxDeviceData Empty { get; } = new MipsBoxDeviceData(0, 0,0, 0,0);
+	    public static MipsBoxDeviceData Empty { get; } = new MipsBoxDeviceData(0, 0, 0, 0);
 	    public uint NumberHvChannels { get; }
 	    public uint NumberRfChannels { get; }
 
@@ -43,14 +41,13 @@ namespace Mips_net.Device
 	    public uint NumberTWaveChannels { get; }
 	    private uint NumberARBChannels { get; }
 
-		private Dictionary<uint, ChannelData> HvData { get; set; }
+		private Dictionary<uint, ChannelData> HvData { get;}
 
 	   
-	    private Dictionary<uint, MipsBoxRFData> RfData { get; set; }
+	    private Dictionary<uint, MipsBoxRFData> RfData { get;}
 
-	    private Dictionary<uint, string> DioChannels { get; set; }
-	    private Dictionary<uint, string> TwaveChannels { get; set; }
-	    private Dictionary<uint, string> ARBChannels { get; set; }
+	    private Dictionary<uint, string> DioChannels { get;}
+	    private Dictionary<uint, string> TwaveChannels { get;}
 
 
 
