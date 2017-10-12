@@ -8,7 +8,7 @@
 		TWAVE,
 		FAIMS,
 		FIL,
-		Arb,
+		ARB,
 		DIO
 
 	}

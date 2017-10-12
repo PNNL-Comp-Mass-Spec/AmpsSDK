@@ -80,9 +80,10 @@ namespace Mips_net.Device
 		    var rfChannels = await this.GetNumberRfChannels();
 		    var digitalChannels = await this.GetNumberDigitalChannels();
 		    var twaveChannels = await this.GetNumberTwaveChannels();
+		    var arbChannels = await this.GetNumberArbChannels();
 
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels));
+								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels, (uint)arbChannels));
 
 			return this.deviceData.Value;
 	    }
@@ -113,7 +114,18 @@ namespace Mips_net.Device
 		    int.TryParse(result, out int channels);
 		    return channels;
 	    }
-		
+
+	    public async Task<int> GetNumberArbChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ARB.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+
+	    }
+
 		public async Task<int> GetNumberTwaveChannels()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
