@@ -11,13 +11,13 @@ namespace Mips_net.Module
         Task<Unit> SetArbMode(string module, ArbMode mode);
         Task<ArbMode> GetArbMode(string module);
         Task<Unit> SetArbFrequency(string module, double frequencyInHz);
-        Task<int> GetArbFrequency(string module);
+        Task<double> GetArbFrequency(string module);
         Task<Unit> SetArbVoltsPeakToPeak(string module, double peakToPeakVolts);
-        Task<int> GetArbVoltsPeakToPeak(string module);
+        Task<double> GetArbVoltsPeakToPeak(string module);
         Task<Unit> SetArbOffsetVoltage(string module, double value);
-        Task<int> GetArbOffsetVoltage(string module);
+        Task<double> GetArbOffsetVoltage(string module);
         Task<Unit> SetAuxOutputVoltage(string module, double value);
-        Task<int> GetAuxOutputVoltage(string module);
+        Task<double> GetAuxOutputVoltage(string module);
         Task<Unit> StopArb(string module);
         Task<Unit> StartArb(string module);
         Task<Unit> SetTwaveDirection(string module, TWaveDirection direction);

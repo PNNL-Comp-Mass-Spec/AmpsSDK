@@ -41,7 +41,7 @@ namespace Mips_net.Device
 
 	    public uint NumberDigitalChannels { get; }
 	    public uint NumberTWaveChannels { get; }
-	    private uint NumberARBChannels { get; }
+	    public uint NumberARBChannels { get; }
 
 		private Dictionary<uint, ChannelData> HvData { get; set; }
 

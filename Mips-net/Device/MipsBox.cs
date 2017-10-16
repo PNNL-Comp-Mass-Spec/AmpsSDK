@@ -2086,13 +2086,13 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbFrequency(string module)
+	    public async Task<double> GetArbFrequency(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFREQ, module);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    double.TryParse(response, out double result);
 		    return result;
 		}
 
@@ -2104,13 +2104,13 @@ namespace Mips_net.Device
 		   return Unit.Default;
 		}
 
-	    public async Task<int> GetArbVoltsPeakToPeak(string module)
+	    public async Task<double> GetArbVoltsPeakToPeak(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVRNG, module);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    double.TryParse(response, out double result);
 		    return result;
 		}
 
@@ -2122,13 +2122,13 @@ namespace Mips_net.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbOffsetVoltage(string module)
+	    public async Task<double> GetArbOffsetVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVOFF, module);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    double.TryParse(response, out double result);
 		    return result;
 		}
 
@@ -2140,13 +2140,13 @@ namespace Mips_net.Device
 		   return Unit.Default;
 		}
 
-	    public async Task<int> GetAuxOutputVoltage(string module)
+	    public async Task<double> GetAuxOutputVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVAUX, module);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
 		    var response = responseQueue.Dequeue();
-		    int.TryParse(response, out int result);
+		    double.TryParse(response, out double result);
 		    return result;
 		}
 
