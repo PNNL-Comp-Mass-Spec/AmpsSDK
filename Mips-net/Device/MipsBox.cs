@@ -27,6 +27,8 @@ namespace Mips_net.Device
 	    private Queue<MipsMessage> messageQueue = new Queue<MipsMessage>();
 	    private Queue<string> responseQueue = new Queue<string>();
 
+		private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
 		public MipsBox(MipsCommunicator communicator)
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
@@ -45,26 +47,28 @@ namespace Mips_net.Device
 
 			otherSource.Subscribe(tuple =>
 			{
-				System.Diagnostics.Trace.WriteLine($"{tuple.Item1} {tuple.Item2}");
+				System.Diagnostics.Trace.WriteLine($"ERROR: {tuple.Item1} {tuple.Item2}");
 			});
 
 			ClockFrequency = 16000000;
 		}
 	    private async Task ProcessQueue(bool response=false)
 	    {
-		    
-		    while (messageQueue.Count>0)
+		    semaphore.Wait();
+
+			while (messageQueue.Count>0)
 		    {
 			    var message = messageQueue.Dequeue();
 				message.WriteTo(this.communicator);
-			    await Task.Delay(20);
+			    Thread.Sleep(25);
 			    while (response && responseQueue.Count==0)
 			    {
-				    await Task.Delay(20);
-			    }
+					Thread.Sleep(25);
+				}
 			    break;
 		    }
-		   
+		    semaphore.Release();
+
 	    }
 
 	    public IObservable<Unit> TableCompleteOrAborted { get; }

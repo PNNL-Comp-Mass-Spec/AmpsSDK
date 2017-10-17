@@ -229,7 +229,6 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                         case 0x15:
                             buffer.IsError = true;
-							this.serialPort.DiscardInBuffer();
 							System.Diagnostics.Trace.WriteLine("MIPS: ERROR");
 							break;
                         case 63:
