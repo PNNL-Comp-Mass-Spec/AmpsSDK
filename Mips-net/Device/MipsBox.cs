@@ -27,8 +27,6 @@ namespace Mips_net.Device
 	    private Queue<MipsMessage> messageQueue = new Queue<MipsMessage>();
 	    private Queue<string> responseQueue = new Queue<string>();
 
-		private SemaphoreSlim semaphore = new SemaphoreSlim(1);
-
 		public MipsBox(MipsCommunicator communicator)
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
@@ -54,8 +52,6 @@ namespace Mips_net.Device
 		}
 	    private async Task ProcessQueue(bool response=false)
 	    {
-		    semaphore.Wait();
-
 			while (messageQueue.Count>0)
 		    {
 			    var message = messageQueue.Dequeue();
@@ -67,8 +63,6 @@ namespace Mips_net.Device
 				}
 			    break;
 		    }
-		    semaphore.Release();
-
 	    }
 
 	    public IObservable<Unit> TableCompleteOrAborted { get; }
