@@ -2089,7 +2089,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFREQ, module);
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue();
+		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
 		    double.TryParse(response, out double result);
 		    return result;
