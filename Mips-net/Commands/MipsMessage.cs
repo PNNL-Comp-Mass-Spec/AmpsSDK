@@ -157,6 +157,10 @@ namespace Mips_net.Commands
 			}
 		}
 
+		public override string ToString()
+		{
+			return this.Command.ToString();
+		}
 	}
 	internal class CommandEnumerableMessage : CommandBase
 	{

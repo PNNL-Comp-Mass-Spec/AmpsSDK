@@ -34,7 +34,7 @@ namespace Mips_net.Device
 			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);
 			var otherSource = this.communicator.MessageSources.Where(x => x.Item1 == true);
 
-			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
+			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && !x.Contains("TRIG") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
 				this.responseQueue.Enqueue(s);
 				return s;
@@ -54,7 +54,8 @@ namespace Mips_net.Device
 	    {
 			while (messageQueue.Count>0)
 		    {
-			    var message = messageQueue.Dequeue();
+			    MipsMessage message = messageQueue.Dequeue();
+				System.Diagnostics.Trace.WriteLine(message.ToString());
 				message.WriteTo(this.communicator);
 			    Thread.Sleep(25);
 			    while (response && responseQueue.Count==0)
