@@ -679,9 +679,8 @@ namespace Mips_net.Device
 	    public async Task<IEnumerable<double>> GetDCbiasProfile(int profile)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBPRO, profile);
-			mipsmessage.WriteTo(communicator);
-		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
 			List<double> responses = new List<double>();
 		    var response = responseQueue.Dequeue();
 		    var values = response.Split(',');
@@ -1280,7 +1279,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTNC,timemilliSeconds);
 		    messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
+		    await ProcessQueue();
 		    return Unit.Default;
 		}
 
@@ -1516,8 +1515,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SMOD, mode.ToString());
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue(true);
-
+		    await ProcessQueue();
 		    return Unit.Default;
 		}
 
@@ -1727,11 +1725,9 @@ namespace Mips_net.Device
 		public async Task<Unit> SetTriggerModule(ArbMode mode)
 		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGMOD, mode.ToString());
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 		}
 
 		public async Task<Unit> EnableDelayTrigger(Status enable)
@@ -2143,7 +2139,7 @@ namespace Mips_net.Device
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVAUX, module);
 			messageQueue.Enqueue(mipsmessage);
-		    await ProcessQueue();
+		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
 		    double.TryParse(response, out double result);
 		    return result;
@@ -2194,27 +2190,18 @@ namespace Mips_net.Device
 	    public async Task<IEnumerable<int>> GetWaveform(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFARB, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => bytes)
-				.Scan(new List<int>(),
-					(list, bytes) =>
-					{
-						var value = bytes.Item2.Split(',');
-						if (value.Length == 32)
-						{
-							foreach (var v in value)
-							{
-								int.TryParse(v, out int result);
-								list.Add(result);
-							}
-
-						}
-
-						return list;
-					}).FirstAsync();
-
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    List<int> responses = new List<int>();
+		    var response = responseQueue.Dequeue();
+		    var values = response.Split(',');
+		    for (int i = 0; i < values.Length; i++)
+		    {
+			    int.TryParse(values[i], out int result);
+			    responses.Add(result);
+		    }
+		    return responses;
+			
 		}
 
 		public async Task<Unit> SetWaveformType(string module, ArbWaveForms waveForms)
