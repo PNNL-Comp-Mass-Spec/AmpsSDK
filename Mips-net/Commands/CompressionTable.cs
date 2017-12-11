@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
 using System.Text;
-using Mips_net.Device;
 
-namespace Mips_net.Commands
+namespace Mips.Commands
 {
 	public  class CompressionTable
 	{

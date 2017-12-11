@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace Mips_net.Data
+namespace Mips.Data
 {
 	[DataContract]
     public class PsgPoint

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Mips_net.Io
+namespace Mips.Io
 {
     public interface IMipsCommunicator
     {

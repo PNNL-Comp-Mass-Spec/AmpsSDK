@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using System.Threading;
-using Mips_net.Commands;
+using Mips.Commands;
 
-namespace Mips_net.Io
+namespace Mips.Io
 {
 internal sealed class MipsCommunicator : IMipsCommunicator
     {

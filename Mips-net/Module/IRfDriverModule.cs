@@ -2,7 +2,7 @@
 using System.Reactive;
 using System.Threading.Tasks;
 
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IRfDriverModule
     {

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Text;
+﻿using System.Reactive;
 using System.Threading.Tasks;
-using Mips_net.Device;
+using Mips.Device;
 
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IArbConfigurationModule
     {

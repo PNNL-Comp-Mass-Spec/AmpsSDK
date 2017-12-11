@@ -1,7 +1,7 @@
 ﻿using System.IO.Ports;
-using Mips_net.Io;
+using Mips.Io;
 
-namespace Mips_net.Device
+namespace Mips.Device
 {
    public class MipsFactory
     {

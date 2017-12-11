@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Mips_net.Data;
-using Mips_net.Io;
+using Mips.Data;
+using Mips.Io;
 
-namespace Mips_net.Commands
+namespace Mips.Commands
 {
 	abstract class MipsMessage
 	{

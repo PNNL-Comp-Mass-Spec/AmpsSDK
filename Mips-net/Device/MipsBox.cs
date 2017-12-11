@@ -1,22 +1,16 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mips_net.Commands;
-using Mips_net.Data;
-using Mips_net.Io;
+using Mips.Commands;
+using Mips.Data;
+using Mips.Io;
 
-namespace Mips_net.Device
+namespace Mips.Device
 {
 	[DataContract]
     internal sealed class MipsBox : IMipsBox

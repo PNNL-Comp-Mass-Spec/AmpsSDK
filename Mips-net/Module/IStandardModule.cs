@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reactive;
 using System.Threading.Tasks;
-using Microsoft.SqlServer.Server;
-using Mips_net.Device;
+using Mips.Device;
 
-
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IStandardModule
     {

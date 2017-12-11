@@ -1,9 +1,8 @@
 ﻿using System.Reactive;
 using System.Threading.Tasks;
-using Mips_net.Device;
+using Mips.Device;
 
-
-namespace Mips_net.Module
+namespace Mips.Module
 {
 	public interface IFilamentModule
 	{
