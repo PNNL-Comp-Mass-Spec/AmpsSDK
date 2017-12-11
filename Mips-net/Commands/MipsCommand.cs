@@ -248,7 +248,8 @@
 		SARBCSW,
 
 		SARBCCLK,
-		SARBCMP
+		SARBCMP,
+		ARBSYNC
 
 	}
 }

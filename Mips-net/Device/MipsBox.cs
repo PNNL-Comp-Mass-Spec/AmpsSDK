@@ -2458,5 +2458,13 @@ namespace Mips.Device
 		    await ProcessQueue();
 		    return Unit.Default;
 		}
+
+	    public async Task<Unit> SetArbSoftwareSync()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCMP);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
     }
 }

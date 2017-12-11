@@ -8,5 +8,6 @@ namespace Mips.Module
     {
 	    Task<Unit> SetArbClock(Status status);
 	    Task<Unit> SetArbCompressor(Status status);
+	    Task<Unit> SetArbSoftwareSync();
     }
 }
