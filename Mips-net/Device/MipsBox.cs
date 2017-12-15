@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -18,8 +19,9 @@ namespace Mips.Device
 		private readonly MipsCommunicator communicator;
 	    private Lazy<MipsBoxDeviceData> deviceData;
 
-	    private Queue<MipsMessage> messageQueue = new Queue<MipsMessage>();
+	    private ConcurrentQueue<MipsMessage> messageQueue = new ConcurrentQueue<MipsMessage>();
 	    private Queue<string> responseQueue = new Queue<string>();
+	    private bool isErrorState = false;
 
 		public MipsBox(MipsCommunicator communicator)
 		{
@@ -40,24 +42,26 @@ namespace Mips.Device
 			otherSource.Subscribe(tuple =>
 			{
 				System.Diagnostics.Trace.WriteLine($"ERROR: {tuple.Item1} {tuple.Item2}");
+				this.responseQueue.Enqueue(string.Empty);
+				isErrorState = true;
 			});
 
 			ClockFrequency = 16000000;
 		}
 	    private async Task ProcessQueue(bool response=false)
 	    {
-			while (messageQueue.Count>0)
+		    if (messageQueue.TryDequeue(out var message))
 		    {
-			    MipsMessage message = messageQueue.Dequeue();
-				System.Diagnostics.Trace.WriteLine(message.ToString());
-				message.WriteTo(this.communicator);
+			    System.Diagnostics.Trace.WriteLine(message.ToString());
+			    message.WriteTo(this.communicator);
 			    Thread.Sleep(25);
-			    while (response && responseQueue.Count==0)
+			    while (response && responseQueue.Count == 0 && !isErrorState)
 			    {
-					Thread.Sleep(25);
-				}
-			    break;
+				    Thread.Sleep(25);
+			    }
 		    }
+
+			isErrorState = false;
 	    }
 
 	    public IObservable<Unit> TableCompleteOrAborted { get; }
@@ -85,10 +89,12 @@ namespace Mips.Device
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ESI.ToString());
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
-		    var result = responseQueue.Dequeue();
+			var result = responseQueue.Dequeue();
+
 		    int.TryParse(result, out int channels);
 		    return channels;
-	    }
+
+		}
 	    public async Task<int> GetNumberFaimsChannels()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.FAIMS.ToString());
