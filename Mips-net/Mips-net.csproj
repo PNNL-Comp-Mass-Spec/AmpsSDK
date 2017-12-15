@@ -5,6 +5,10 @@
     <RootNamespace>Mips</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <PackageReference Include="SerialPortStream">
       <Version>2.0.3</Version>
@@ -13,8 +17,8 @@
 
 
   <ItemGroup>
-    <PackageReference Include="DynamicData" Version="6.0.1.2317-beta" />
-    <PackageReference Include="xunit" Version="2.3.0-beta5-build3769" />
+    <PackageReference Include="DynamicData" Version="6.0.4.2351" />
+    <PackageReference Include="xunit" Version="2.3.1" />
   </ItemGroup>
 
 
