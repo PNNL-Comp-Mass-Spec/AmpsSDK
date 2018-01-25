@@ -13,5 +13,10 @@ namespace AmpsBoxSdk.Devices
             }
             return new AmpsBox(new AmpsBoxCommunicator(serialPort));
         }
+
+        public static IAmpsBox CreateAmpsBox(string serialNumber)
+        {
+            return new AmpsBox(new FTDIAmpsBoxCommunicator(serialNumber, false));
+        }
     }
 }

@@ -1,21 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
-using AmpsBoxSdk.Devices;
-using Infrastructure.Io;
-using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
-using SerialError = System.IO.Ports.SerialError;
-using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
+using FTD2XX_NET;
 
 namespace AmpsBoxSdk.Io
 {
-    internal sealed  class AmpsBoxCommunicator : IAmpsCommunicator, IDisposable
+    public class FTDIAmpsBoxCommunicator : IAmpsCommunicator
     {
         #region Members
 
@@ -25,20 +20,23 @@ namespace AmpsBoxSdk.Io
         private readonly object sync = new object();
 
         private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
-        /// <summary>
-        /// Gets the serial port
-        /// </summary>
-        private readonly SerialPort serialPort;
-
+        private string serialNumber;
+        private FTDI ftdi;
         private IDisposable connection;
         #endregion
 
         #region Construction and Initialization
 
-        public AmpsBoxCommunicator(SerialPort serialPort)
+        public FTDIAmpsBoxCommunicator(string serialNumber, bool shouldEmulate)
         {
-            this.serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-            IsEmulated = false; 
+            if (string.IsNullOrEmpty(serialNumber))
+            {
+                throw new ArgumentNullException(nameof(serialNumber));
+            }
+
+            this.serialNumber = serialNumber;
+            this.ftdi = new FTDI();
+            IsEmulated = shouldEmulate;
         }
 
 
@@ -52,7 +50,7 @@ namespace AmpsBoxSdk.Io
         /// <param name="separator"></param>
         public void Write(byte[] value, string separator)
         {
-            if (!serialPort.IsOpen)
+            if (!ftdi.IsOpen)
             {
                 return;
             }
@@ -60,37 +58,41 @@ namespace AmpsBoxSdk.Io
             {
                 if (string.IsNullOrEmpty(separator)) return;
                 var bytes = Encoding.ASCII.GetBytes(separator);
-                foreach (var b in bytes)
+                uint bytesWritten = 0;
+                while (bytesWritten < bytes.Length)
                 {
-                    serialPort.BaseStream.WriteByte(b);
+                    ftdi.Write(bytes, bytes.Length, ref bytesWritten);
                 }
-
-                foreach (var b in value)
+                bytesWritten = 0;
+                while (bytesWritten < value.Length)
                 {
-                    serialPort.BaseStream.WriteByte(b);
+                    ftdi.Write(value, value.Length, ref bytesWritten);
                 }
             }
         }
 
         public void WriteEnd(string appendToEnd = null)
         {
-            if (!serialPort.IsOpen)
+            if (!ftdi.IsOpen)
             {
                 return;
             }
             lock (sync)
             {
+                uint bytesWritten = 0;
                 if (!string.IsNullOrEmpty(appendToEnd))
                 {
                     var bytes = Encoding.ASCII.GetBytes(appendToEnd);
-                    foreach (var b in bytes)
+                   
+                    while (bytesWritten < bytes.Length)
                     {
-                        serialPort.BaseStream.WriteByte(b);
+                        ftdi.Write(bytes, bytes.Length, ref bytesWritten);
                     }
                 }
-                foreach (var b in _lf)
+                bytesWritten = 0;
+                while (bytesWritten < _lf.Length)
                 {
-                    serialPort.BaseStream.WriteByte(b);
+                    ftdi.Write(_lf, _lf.Length, ref bytesWritten);
                 }
             }
         }
@@ -107,26 +109,27 @@ namespace AmpsBoxSdk.Io
 
             lock (sync)
             {
-                foreach (var commandByte in commandBytes)
+                uint bytesWritten = 0;
+                while (bytesWritten < commandBytes.Length)
                 {
-                    serialPort.BaseStream.WriteByte(commandByte);
+                    ftdi.Write(commandBytes, commandBytes.Length, ref bytesWritten);
                 }
             }
-          
+
         }
 
         public string ReadLine()
         {
-            return this.serialPort.ReadLine();
+            throw new NotImplementedException();
         }
 
         public void Close()
         {
             lock (sync)
             {
-                if (serialPort.IsOpen)
+                if (ftdi.IsOpen)
                 {
-                    serialPort.Close();
+                    ftdi.Close();
                 }
                 connection.Dispose();
                 connection = null;
@@ -150,7 +153,7 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-        
+
         public void Open()
         {
             lock (sync)
@@ -163,9 +166,12 @@ namespace AmpsBoxSdk.Io
                 {
                     connection = messageSources.Connect();
                 }
-                if (serialPort.IsOpen) return;
-
-                serialPort.Open();
+               var status = ftdi.OpenBySerialNumber(serialNumber);
+                status = this.ftdi.SetBaudRate(19200 * 2);
+                //status = this.ftdi.SetRTS(true);
+                status = this.ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_1, FTDI.FT_PARITY.FT_PARITY_EVEN);
+                status = this.ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_XON_XOFF, 17, 19);
+                
             }
         }
 
@@ -174,19 +180,24 @@ namespace AmpsBoxSdk.Io
             get
             {
                 return
-                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
-                              {
-                                  var buffer = new byte[1024];
-                                  var ret = new List<byte>();
-                                  int bytesRead;
-                                  do
-                                  {
-                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
-                                      ret.AddRange(buffer.Take(bytesRead));
-                                  } while (bytesRead >= buffer.Length);
-                                  return ret;
-                              });
+                    Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
+                    {
+                        uint bytesToRead = 0;
+                        ftdi.GetRxBytesAvailable(ref bytesToRead);
+                        return bytesToRead;
+                    }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
+                    {
+                        var buffer = new byte[1024];
+                        var ret = new List<byte>();
+                        uint bytesRead = 0;
+                        do
+                        {
+                            ftdi.Read(buffer, bytesToRead, ref bytesRead);
+                            ret.AddRange(buffer.Take((int) bytesRead));
+                        } while (bytesRead >= buffer.Length);
+                        var str = Encoding.ASCII.GetString(ret.ToArray());
+                        return ret;
+                    }).SelectMany(x => x);
             }
         }
 
@@ -210,7 +221,7 @@ namespace AmpsBoxSdk.Io
                 {
                 }
                 else switch (newByte)
-                {
+                    {
                         case 0x06:
 
                             break;
@@ -222,9 +233,9 @@ namespace AmpsBoxSdk.Io
                         case 13:
                             break;
                         default:
-                        buffer.Message.Add(newByte);
-                        break;
-                }
+                            buffer.Message.Add(newByte);
+                            break;
+                    }
                 return buffer;
             }).Where(fc => fc.Complete).Select(fc => fc.Message);
         }
@@ -246,13 +257,11 @@ namespace AmpsBoxSdk.Io
 
         public void Dispose()
         {
-            serialPort?.Dispose();
+            ftdi.Close();
             connection?.Dispose();
         }
 
         #endregion
 
     }
-
-
 }

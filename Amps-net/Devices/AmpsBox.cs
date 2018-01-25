@@ -31,7 +31,7 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     internal sealed class AmpsBox : IAmpsBox
     {
-        private readonly AmpsBoxCommunicator communicator;
+        private readonly IAmpsCommunicator communicator;
 
         private Lazy<AmpsBoxDeviceData> deviceData;
 
@@ -45,7 +45,7 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// 
         /// </summary>
-        public AmpsBox(AmpsBoxCommunicator communicator)
+        public AmpsBox(IAmpsCommunicator communicator)
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             this.communicator.Open();

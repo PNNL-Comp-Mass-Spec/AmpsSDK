@@ -90,6 +90,7 @@
     <Compile Include="CommandTests\AmpsCommandTests.cs" />
     <Compile Include="Data\SignalTableTests.cs" />
     <Compile Include="Devices\DeviceCommandTest.cs" />
+    <Compile Include="Devices\FtdiCommunicationTests.cs" />
     <Compile Include="ManagementObjectTests\ManagementObjectTests.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -72,14 +72,14 @@ namespace AmpsBoxSdk.Commands
         //    this.resultProcessor = resultProcessor;
         //}
 
-        internal abstract void WriteImpl(AmpsBoxCommunicator physical);
+        internal abstract void WriteImpl(IAmpsCommunicator physical);
 
         private string Read(AmpsBoxCommunicator physical)
         {
            return physical.ReadLine();
         }
 
-        internal void WriteTo(AmpsBoxCommunicator physical)
+        internal void WriteTo(IAmpsCommunicator physical)
         {
             WriteImpl(physical);
         }
@@ -98,7 +98,7 @@ namespace AmpsBoxSdk.Commands
         {
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             physical.WriteHeader(Command);
             physical.WriteEnd();
@@ -128,7 +128,7 @@ namespace AmpsBoxSdk.Commands
         }
 
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {         
             physical.WriteHeader(Command);
             physical.Write(value1, ",");
@@ -156,7 +156,7 @@ namespace AmpsBoxSdk.Commands
             this.value = Encoding.ASCII.GetBytes(value);
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             physical.WriteHeader(Command);
             physical.Write(value, ",");
@@ -173,7 +173,7 @@ namespace AmpsBoxSdk.Commands
             this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             //Table format: STBLDAT;<data>;
             physical.WriteHeader(Command);
