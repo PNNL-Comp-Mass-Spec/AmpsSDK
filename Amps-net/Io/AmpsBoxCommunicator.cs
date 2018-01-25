@@ -8,6 +8,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
+using FTD2XX_NET;
 using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
 using SerialError = System.IO.Ports.SerialError;
 using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
@@ -24,7 +25,6 @@ namespace AmpsBoxSdk.Io
         private readonly object sync = new object();
 
         private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
-
         /// <summary>
         /// Gets the serial port
         /// </summary>

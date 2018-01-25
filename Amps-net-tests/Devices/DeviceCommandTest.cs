@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
-using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
 using Amps;
@@ -17,11 +17,11 @@ namespace Amps.SDK.Tests.Devices
     {
         private IAmpsBox box;
         private ITestOutputHelper output;
-        private SerialPortStream serialPort;
+        private SerialPort serialPort;
         public DeviceCommandTest(ITestOutputHelper output)
         {
             this.output = output;
-            serialPort = new SerialPortStream("COM3", 19200 * 2, 8, Parity.Even, StopBits.One) {RtsEnable = false, Handshake = Handshake.XOn};
+            serialPort = new SerialPort("COM3", 19200 * 2, Parity.Even) {RtsEnable = true, Handshake = Handshake.XOnXOff};
             if (!serialPort.IsOpen)
             {
                 serialPort.Open();
@@ -78,15 +78,6 @@ namespace Amps.SDK.Tests.Devices
         {
             var name = box.Name;
             output.WriteLine(name);
-        }
-
-		[Fact]
-        public void GetDescriptorTest()
-        {
-            foreach (var portDescription in SerialPortStream.GetPortDescriptions())
-            {
-                output.WriteLine(portDescription.Description);
-            }
         }
 
         [Fact]
