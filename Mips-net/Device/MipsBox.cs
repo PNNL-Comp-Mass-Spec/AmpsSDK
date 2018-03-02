@@ -726,7 +726,7 @@ namespace Mips.Device
 
 	    public async Task<Unit> StopToggleProfile()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBSTOP);
+			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBSTP);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
 		   // var result = responseQueue.Dequeue();
@@ -2472,5 +2472,109 @@ namespace Mips.Device
 		    await ProcessQueue();
 		    return Unit.Default;
 		}
+	    public async Task<Unit> SetArbOffsetA(string module,double offsetvalue)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBOFFA,module,offsetvalue);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetArbOffsetA(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFA,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetArbOffsetB(string module,double offsetvalue)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBOFFB,module,offsetvalue);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetArbOffsetB(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFB);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetSerialport1Enable(bool value)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SSER1ENA,value);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<bool> GetSerialport1Enable()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GSER1ENA);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    bool.TryParse(response, out bool result);
+		    return result;
+	    }
+
+	    public async Task<string> GetUniqueID()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.UUID);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    return response;
+	    }
+	    public async Task<Unit> TuneRFChannel(string channel)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.TUNERFCH,channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<Unit> ReTuneRFChannel(string channel)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.RETUNERFCH,channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<Unit> SetTwaveSweepStopingVoltage(string module, double voltage)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTPV,module,voltage);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetTwaveSweepStopingVoltage(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTPV,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetTwaveSweepStartingVoltage(string module,double voltage)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTRTV,module,voltage);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetTwaveSweepStartingVoltage(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTRTV,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    
     }
 }

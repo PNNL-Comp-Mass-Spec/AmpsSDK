@@ -32,5 +32,10 @@ namespace Mips.Module
 	    Task<Unit> SetAllChannelValue(string module, int value);
 	    Task<Unit> SetChannelValue(string module, string channle, int value);
 	    Task<Unit> SetChannelRange(string module, string channel, int start, int stop, int range);
+	    Task<Unit>  SetArbOffsetA(string module, double offsetValue); 
+	    Task<double> GetArbOffsetA(string module);
+	    Task<Unit> SetArbOffsetB(string module, double value);
+	    Task<double> GetArbOffsetB(string module);
     }
+
 }

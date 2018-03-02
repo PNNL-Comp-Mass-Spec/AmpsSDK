@@ -36,6 +36,10 @@ namespace Mips.Module
 		Task<Unit> LEDColor(int color);
 		Task<Unit> DisplayOff(Status status);
 
+	    Task<Unit> SetSerialport1Enable(bool value);
+	    Task<bool> GetSerialport1Enable();
+	    Task<string> GetUniqueID();
 
-	}
+
+    }
 }

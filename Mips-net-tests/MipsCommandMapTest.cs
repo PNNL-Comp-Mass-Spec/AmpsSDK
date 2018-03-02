@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using Mips.Commands;
+using Mips.Data;
+using Mips.Device;
 using Xunit.Abstractions;
 using Xunit;
-using Mips_net.Commands;
-using Mips_net.Data;
-using Mips_net.Device;
 
 namespace MipsTest
 {
@@ -21,7 +21,7 @@ namespace MipsTest
 		{
 			this.output = output;
 
-			serialPort = new SerialPort("COM4", 128000) { RtsEnable = true};
+			serialPort = new SerialPort("COM7", 128000) { RtsEnable = true};
 
 			mipsBox = MipsFactory.CreateMipsBox(serialPort);
 		}
@@ -435,14 +435,14 @@ namespace MipsTest
 		[InlineData("1",2)]
 		public void SetLevelTest(string channel, int peakToPeakVoltage)
 		{
-			mipsBox.SetLevel( channel, peakToPeakVoltage);
+			mipsBox.SetDriveLevel( channel, peakToPeakVoltage);
 			output.WriteLine("Done");
 		}
 		[Theory]
 		[InlineData("1")]
 		public void GetPeakToPeakVoltageSetpointTest(string channel)
 		{
-			var value = mipsBox.GetPeakToPeakVoltageSetpoint(channel).Result;
+			var value = mipsBox.GetPeakToPeakVoltage(channel).Result;
 			output.WriteLine(value.ToString());
 		}
 		[Theory]
@@ -463,7 +463,7 @@ namespace MipsTest
 		[InlineData("1")]
 		public void GetPositiveComponentTest(string channel)
 		{
-			var volts = mipsBox.GetPositiveComponent(channel).Result;
+			var volts = mipsBox.GetRFPositive(channel).Result;
 			output.WriteLine(volts.ToString());
 
 		}
@@ -471,7 +471,7 @@ namespace MipsTest
 		[InlineData("1")]
 		public void GetNegativeComponentTest(string channel)
 		{
-			var volts = mipsBox.GetNegativeComponent(channel).Result;
+			var volts = mipsBox.GetRFNegative(channel).Result;
 			output.WriteLine(volts.ToString());
 
 		}
@@ -722,7 +722,7 @@ namespace MipsTest
 		[Fact]
 		public void SetTWaveMultipassControlTableTest()
 		{ 
-			mipsBox.SetTWaveCompressionCommand(CompressionTable.GetCompressionTable());
+			//mipsBox.SetTWaveCompressionCommand(CompressionTable.GetCompressionTable());
 		}
 		[Fact]
 		public void GetCompressorModeTest()
@@ -1403,7 +1403,7 @@ namespace MipsTest
 		[Fact]
 		public void SetArbModeTest()
 		{
-			int module = 1;
+			string module = "1";
 			ArbMode mode=ArbMode.ARB;
 			var result=mipsBox.SetArbMode(module,mode).Result;
 			var error = mipsBox.GetError().Result;
@@ -1413,7 +1413,7 @@ namespace MipsTest
 		[Fact]
 		public void GetArbModeTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetArbMode(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1422,7 +1422,7 @@ namespace MipsTest
 		[Fact]
 		public void SetArbFrequencyTest()
 		{
-			int module = 1;
+			string module = "1";
 			int freq = 10000;
 			 mipsBox.SetArbFrequency(module, freq);
 			var error = mipsBox.GetError().Result;
@@ -1431,7 +1431,7 @@ namespace MipsTest
 		[Fact]
 		public void GetArbFrequencyTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetArbFrequency(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1440,7 +1440,7 @@ namespace MipsTest
 		[Fact]
 		public void GetArbVoltsPeakToPeakTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetArbVoltsPeakToPeak(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1449,7 +1449,7 @@ namespace MipsTest
 		[Fact]
 		public void SetArbVoltsPeakToPeakTest()
 		{
-			int module = 1;
+			string module = "1";
 			int volts= 10000;
 			mipsBox.SetArbVoltsPeakToPeak(module, volts);
 			var error = mipsBox.GetError().Result;
@@ -1458,7 +1458,7 @@ namespace MipsTest
 		[Fact]
 		public void GetArbOffsetVoltageTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetArbOffsetVoltage(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1467,7 +1467,7 @@ namespace MipsTest
 		[Fact]
 		public void SetArbOffsetVoltageTest()
 		{
-			int module = 1;
+			string module = "1";
 			int volts = 5;
 			mipsBox.SetArbOffsetVoltage(module, volts);
 			var error = mipsBox.GetError().Result;
@@ -1476,7 +1476,7 @@ namespace MipsTest
 		[Fact]
 		public void GetAuxOutputVoltageTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetAuxOutputVoltage(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1485,7 +1485,7 @@ namespace MipsTest
 		[Fact]
 		public void SetAuxOutputVoltageTest()
 		{
-			int module = 1;
+			string module = "1";
 			int volts = 5;
 			mipsBox.SetAuxOutputVoltage(module, volts);
 			var error = mipsBox.GetError().Result;
@@ -1494,7 +1494,7 @@ namespace MipsTest
 		[Fact]
 		public void StartArbTest()
 		{
-			int module = 1;
+			string module = "1";
 			mipsBox.StartArb(module);
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(error.ToString());
@@ -1502,7 +1502,7 @@ namespace MipsTest
 		[Fact]
 		public void StopArbTest()
 		{
-			int module = 1;
+			string module = "1";
 			mipsBox.StopArb(module);
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(error.ToString());
@@ -1510,7 +1510,7 @@ namespace MipsTest
 		[Fact]
 		public void GetTwaveDirectionTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetTwaveDirection(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(result.ToString());
@@ -1519,7 +1519,7 @@ namespace MipsTest
 		[Fact]
 		public void SetTwaveDirectionTest()
 		{
-			int module = 1;
+			string module = "1";
 			TWaveDirection dir=TWaveDirection.REV;
 			mipsBox.SetTwaveDirection(module, dir);
 			var error = mipsBox.GetError().Result;
@@ -1528,7 +1528,7 @@ namespace MipsTest
 		[Fact]
 		public void GetWaveformTest()
 		{
-			int module = 1;
+			string module = "1";
 			IEnumerable<int> result = mipsBox.GetWaveform(module).Result;
 			foreach (var v in result)
 			{
@@ -1540,7 +1540,7 @@ namespace MipsTest
 		[Fact]
 		public void SetWaveformTest()
 		{
-			int module = 1;
+			string module = "1";
 			IList<int> list=new List<int>();
 			IEnumerable<int> val = from values in Enumerable.Repeat(2, 33)
 									select values;
@@ -1555,7 +1555,7 @@ namespace MipsTest
 		[Fact]
 		public void GetWaveformTypeTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result=mipsBox.GetWaveformType(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(error.ToString());
@@ -1564,7 +1564,7 @@ namespace MipsTest
 		[Fact]
 		public void SetWaveformTypeTest()
 		{
-			int module = 1;
+			string module = "1";
 			ArbWaveForms waveForms=ArbWaveForms.ARB;
 			mipsBox.SetWaveformType(module, waveForms);
 			var error = mipsBox.GetError().Result;
@@ -1573,7 +1573,7 @@ namespace MipsTest
 		[Fact]
 		public void GetBufferLengthTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetBufferLength(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(error.ToString());
@@ -1582,7 +1582,7 @@ namespace MipsTest
 		[Fact]
 		public void SetBufferLengthTest()
 		{
-			int module = 1;
+			string module = "1";
 			int length = 5;
 			mipsBox.SetBufferLength(module, length);
 			var error = mipsBox.GetError().Result;
@@ -1591,7 +1591,7 @@ namespace MipsTest
 		[Fact]
 		public void GetBufferRepeatTest()
 		{
-			int module = 1;
+			string module = "1";
 			var result = mipsBox.GetBufferRepeat(module).Result;
 			var error = mipsBox.GetError().Result;
 			output.WriteLine(error.ToString());
@@ -1600,7 +1600,7 @@ namespace MipsTest
 		[Fact]
 		public void SetBufferRepeatTest()
 		{
-			int module = 1;
+			string module = "1";
 			int length = 5;
 			mipsBox.SetBufferRepeat(module, length);
 			var error = mipsBox.GetError().Result;
@@ -1610,7 +1610,7 @@ namespace MipsTest
 		[Fact]
 		public void SetAllChannelValueTest()
 		{
-			int module = 1;
+			string module = "1";
 			int length = 5;
 			mipsBox.SetAllChannelValue(module, length);
 			var error = mipsBox.GetError().Result;
@@ -1619,8 +1619,8 @@ namespace MipsTest
 		[Fact]
 		public void SetChannelValueTest()
 		{
-			int module = 1;
-			int channel =1;
+			string module = "1";
+			string channel ="1";
 			int value = 10;
 			mipsBox.SetChannelValue(module, channel,value);
 			var error = mipsBox.GetError().Result;
@@ -1629,8 +1629,8 @@ namespace MipsTest
 		[Fact]
 		public void SetChannelRangeTest()
 		{
-			int module = 1;
-			int channel = 1;
+			string module = "1";
+			string channel = "1";
 			int start = 1;
 			int stop = 1;
 			int offset = 1;
@@ -1726,13 +1726,57 @@ namespace MipsTest
 			mipsBox.SetArbSwitchState(state);
 		}
 		[Fact]
-		public void SetArbTrigger()
+		public void SetArbTriggerTest()
 		{
 			SwitchState state = SwitchState.Close;
 			mipsBox.SetArbTrigger();
 		}
 
+		[Fact]
+		public void SetArbSoftwareSyncTest()
+		{
+			mipsBox.SetArbSoftwareSync();
+		}
 
+
+
+
+		[Fact]
+		public void SetArbSOffsetATest()
+		{
+			string module = "1";
+			double value = 5;
+			mipsBox.SetArbOffsetA(module, value);
+		}
+
+		[Fact]
+		public void GetArbOffsetATest()
+		{
+			string module = "1";
+			var result=mipsBox.GetArbOffsetA(module).Result;
+			output.WriteLine(result.ToString());
+		}
+		[Fact]
+		public void SetArboffsetBTest()
+		{
+			string module = "1";
+			double value = 5;
+			mipsBox.SetArbOffsetB(module, value);
+		}
+		[Fact]
+		public void GetArboffsetBTest()
+		{
+			string module = "1";
+			var result=mipsBox.GetArbOffsetB(module).Result;
+			output.WriteLine(result.ToString());
+		}
+		[Fact]
+		public void GetUUIDTest()
+		{
+			var result = mipsBox.GetUniqueID().Result;
+			output.WriteLine(result.ToString());
+		}
+		
 		public void Dispose()
 		{
 			serialPort.Dispose();
