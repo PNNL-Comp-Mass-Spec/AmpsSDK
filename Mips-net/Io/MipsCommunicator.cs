@@ -57,12 +57,10 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				{
 					serialPort.BaseStream.WriteByte(b);
 				}
-				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(bytes));
 				foreach (var b in value)
 				{
 					serialPort.BaseStream.WriteByte(b);
 				}
-				System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(value));
 			}
 		}
 	    public void WriteHeader(MipsCommand command)
@@ -227,7 +225,6 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                         case 0x15:
                             buffer.IsError = true;
-							System.Diagnostics.Trace.WriteLine("MIPS: ERROR");
 							break;
                         case 63:
                             break;

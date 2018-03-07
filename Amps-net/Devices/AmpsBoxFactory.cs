@@ -14,6 +14,11 @@ namespace AmpsBoxSdk.Devices
             return new AmpsBox(new AmpsBoxCommunicator(serialPort));
         }
 
+        /// <summary>
+        /// Use FTDI serial number to generate and return an AMPS box.
+        /// </summary>
+        /// <param name="serialNumber"></param>
+        /// <returns></returns>
         public static IAmpsBox CreateAmpsBox(string serialNumber)
         {
             return new AmpsBox(new FTDIAmpsBoxCommunicator(serialNumber, false));

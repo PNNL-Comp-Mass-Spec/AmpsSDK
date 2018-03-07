@@ -41,7 +41,6 @@ namespace Mips.Device
 
 			otherSource.Subscribe(tuple =>
 			{
-				System.Diagnostics.Trace.WriteLine($"ERROR: {tuple.Item1} {tuple.Item2}");
 				this.responseQueue.Enqueue(string.Empty);
 				isErrorState = true;
 			});
@@ -52,7 +51,6 @@ namespace Mips.Device
 	    {
 		    if (messageQueue.TryDequeue(out var message))
 		    {
-			    System.Diagnostics.Trace.WriteLine(message.ToString());
 			    message.WriteTo(this.communicator);
 			    Thread.Sleep(25);
 			    while (response && responseQueue.Count == 0 && !isErrorState)
