@@ -2497,7 +2497,7 @@ namespace Mips.Device
 	    }
 	    public async Task<double> GetArbOffsetB(string module)
 	    {
-		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFB);
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFB,module);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
