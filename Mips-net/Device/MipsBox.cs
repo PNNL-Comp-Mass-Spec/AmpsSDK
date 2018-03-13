@@ -2465,7 +2465,7 @@ namespace Mips.Device
 
 	    public async Task<Unit> SetArbSoftwareSync()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCMP);
+			var mipsmessage = MipsMessage.Create(MipsCommand.ARBSYNC);
 		    messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
 		    return Unit.Default;
