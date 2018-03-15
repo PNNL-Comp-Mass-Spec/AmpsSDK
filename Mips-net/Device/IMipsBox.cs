@@ -10,9 +10,9 @@ namespace Mips.Device
 								IFrequencySweepModule,IWiFiModule,IEthernetModule,IFAIMSModule, IFilamentModule, IArbModule,
 								IArbCompressorModule, IArbConfigurationModule
 	{
-		Task<MipsBoxDeviceData> GetConfig();
+		Task GetConfig();
 		string Name { get; }
 		IObservable<Unit> TableCompleteOrAborted { get; }
-
+		Lazy<MipsBoxDeviceData> DeviceData { get; }
 	}
 }

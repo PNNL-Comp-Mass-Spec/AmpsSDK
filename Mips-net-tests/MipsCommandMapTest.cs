@@ -30,8 +30,8 @@ namespace MipsTest
 		[Fact]
 		public void GetConfigTest()
 		{
-			var mipsBoxdata = mipsBox.GetConfig();
-			output.WriteLine(mipsBoxdata.Result.NumberTWaveChannels.ToString());
+			//var mipsBoxdata = mipsBox.GetConfig();
+			//output.WriteLine(mipsBoxdata.Result.NumberTWaveChannels.ToString());
 		}
 
 		[Fact]

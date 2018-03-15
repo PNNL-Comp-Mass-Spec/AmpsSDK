@@ -27,9 +27,9 @@ namespace Mips.Device
 		{
 			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
+			//var task = GetConfig();
 			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);
 			var otherSource = this.communicator.MessageSources.Where(x => x.Item1 == true);
-
 			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && !x.Contains("TRIG") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
 				this.responseQueue.Enqueue(s);
@@ -69,7 +69,10 @@ namespace Mips.Device
 	    public int ClockFrequency { get; set; }
 	    [DataMember]
 	    public string Name => GetName().Result;
-	    public async Task<MipsBoxDeviceData> GetConfig()
+
+		public Lazy<MipsBoxDeviceData> DeviceData => deviceData; 
+
+		public async Task GetConfig()
 	    {
 		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
 		    var rfChannels = await this.GetNumberRfChannels();
@@ -80,7 +83,7 @@ namespace Mips.Device
 			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
 								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels, (uint)arbChannels));
 
-			return this.deviceData.Value;
+		
 	    }
 	    public async Task<int> GetNumberESIChannels()
 	    {
