@@ -3,13 +3,13 @@
     public enum AuxChannel
     {
         Unknown = 0,
-        Aux1 = 101,
-        Aux2 = 102,
-        Aux3 = 103,
-        Aux4 = 104,
-        Offset1A = 105,
-        Offset1B = 106,
-        Offset1C = 107,
-        Offset1D = 108
+        Aux1 = 100,
+        Aux2 = 101,
+        Aux3 = 102,
+        Aux4 = 103,
+        Offset1A = 104,
+        Offset1B = 105,
+        Offset1C = 106,
+        Offset1D = 107
     }
 }
