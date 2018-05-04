@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using FTD2XX_NET;
+using Mips.Commands;
 
-namespace AmpsBoxSdk.Io
+namespace Mips.Io
 {
-    public class FTDIAmpsBoxCommunicator : IAmpsCommunicator
+    public class MipsFtdiCommunicator : IMipsCommunicator
     {
         #region Members
 
@@ -27,7 +27,7 @@ namespace AmpsBoxSdk.Io
 
         #region Construction and Initialization
 
-        public FTDIAmpsBoxCommunicator(string serialNumber, bool shouldEmulate)
+        public MipsFtdiCommunicator(string serialNumber, bool shouldEmulate)
         {
             if (string.IsNullOrEmpty(serialNumber))
             {
@@ -84,7 +84,7 @@ namespace AmpsBoxSdk.Io
                 if (!string.IsNullOrEmpty(appendToEnd))
                 {
                     var bytes = Encoding.ASCII.GetBytes(appendToEnd);
-                   
+
                     while (bytesWritten < bytes.Length)
                     {
                         ftdi.Write(bytes, bytes.Length, ref bytesWritten);
@@ -100,9 +100,9 @@ namespace AmpsBoxSdk.Io
 
 
 
-        public void WriteHeader(AmpsCommand command)
+        public void WriteHeader(MipsCommand command)
         {
-            var commandBytes = CommandMap.Default.GetBytes(command);
+            var commandBytes = MipsCommandMap.Default.GetBytes(command);
             if (commandBytes == null)
             {
                 throw new NotImplementedException();
@@ -193,14 +193,14 @@ namespace AmpsBoxSdk.Io
                         do
                         {
                             ftdi.Read(buffer, bytesToRead, ref bytesRead);
-                            ret.AddRange(buffer.Take((int) bytesRead));
+                            ret.AddRange(buffer.Take((int)bytesRead));
                         } while (bytesRead >= buffer.Length);
                         return ret;
                     }).SelectMany(x => x);
             }
         }
 
-        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        private IObservable<(bool, List<byte>)> ToMessage(IObservable<byte> input)
         {
             return input.Scan(new FillingCollection(), (buffer, newByte) =>
             {
@@ -236,23 +236,29 @@ namespace AmpsBoxSdk.Io
                             break;
                     }
                 return buffer;
-            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+            }).Where(fc => fc.Complete).Select(fc => (fc.IsError, fc.Message));
         }
 
-        private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
+        private IObservable<(bool, string)> ToDecodedMessage(IObservable<(bool, List<byte>)> input)
         {
             return input.Select(bytes =>
             {
-                var enumerable = bytes.ToArray();
-                if (enumerable.Length <= 0) return string.Empty;
-                var str = Encoding.ASCII.GetString(enumerable);
-                return str;
+
+                if (bytes.Item2.Count != 0)
+                {
+                    return (bytes.Item1, Encoding.ASCII.GetString(bytes.Item2.ToArray()));
+                }
+                else
+                {
+                    return (bytes.Item1, string.Empty);
+                }
+
             });
         }
 
-        private IConnectableObservable<string> messageSources;
+        private IConnectableObservable<(bool, string)> messageSources;
 
-        public IObservable<string> MessageSources => messageSources;
+        public IObservable<(bool, string)> MessageSources => messageSources;
 
         public void Dispose()
         {
@@ -261,6 +267,5 @@ namespace AmpsBoxSdk.Io
         }
 
         #endregion
-
     }
 }
