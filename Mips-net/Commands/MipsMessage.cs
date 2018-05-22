@@ -138,18 +138,18 @@ namespace Mips.Commands
 			return new CommandValueEnumerableMessage(command, value,values);
 		}
 
-		internal abstract void WriteImpl(MipsCommunicator physical);
+		internal abstract void WriteImpl(IMipsCommunicator physical);
 
 		private string Read(MipsCommunicator physical)
 		{
 			return physical.ReadLine();
 		}
 
-		internal void WriteTo(MipsCommunicator physical)
+		internal void WriteTo(IMipsCommunicator physical)
 		{
 			try
 			{
-				WriteImpl(physical);
+				this.WriteImpl(physical);
 			}
 			catch
 			{
@@ -188,7 +188,7 @@ namespace Mips.Commands
 				i++;
 			}
 		}
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			foreach (var value in bytevalue)
@@ -228,7 +228,7 @@ namespace Mips.Commands
 			}
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(this.value, ",");
@@ -258,7 +258,7 @@ namespace Mips.Commands
 
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.WriteEnd();
@@ -274,7 +274,7 @@ namespace Mips.Commands
 			this.value = Encoding.ASCII.GetBytes(compressionTable.RetrieveTableAsEncodedString());
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ",");
@@ -291,7 +291,7 @@ namespace Mips.Commands
 			this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
 		}
 		
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ";");
@@ -321,7 +321,7 @@ namespace Mips.Commands
 			this.value = Encoding.ASCII.GetBytes(value.ToString());
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ",");
@@ -385,7 +385,7 @@ namespace Mips.Commands
 			this.value2 = Encoding.ASCII.GetBytes(sb.ToString());
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");
@@ -430,7 +430,7 @@ namespace Mips.Commands
 			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");
@@ -457,7 +457,7 @@ namespace Mips.Commands
 			this.value5 = Encoding.ASCII.GetBytes(value5.ToString());
 		}
 
-		internal override void WriteImpl(MipsCommunicator physical)
+		internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");

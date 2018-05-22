@@ -16,16 +16,16 @@ namespace Mips.Device
 	[DataContract]
     internal sealed class MipsBox : IMipsBox
     {
-		private readonly MipsCommunicator communicator;
+		private readonly IMipsCommunicator communicator;
 	    private Lazy<MipsBoxDeviceData> deviceData;
 
 	    private ConcurrentQueue<MipsMessage> messageQueue = new ConcurrentQueue<MipsMessage>();
 	    private Queue<string> responseQueue = new Queue<string>();
 	    private bool isErrorState = false;
 
-		public MipsBox(MipsCommunicator communicator)
+		public MipsBox(IMipsCommunicator communicator)
 		{
-			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
+			this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
 			//var task = GetConfig();
 			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);

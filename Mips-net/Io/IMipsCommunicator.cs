@@ -2,6 +2,8 @@
 
 namespace Mips.Io
 {
+    using Mips.Commands;
+
     public interface IMipsCommunicator
     {
         /// <summary>
@@ -39,6 +41,12 @@ namespace Mips.Io
         /// Gets whether the port is open.
         /// </summary>
         bool IsOpen { get; }
-		
+
+        void Write(byte[] value, string separator);
+
+        void WriteEnd(string appendToEnd = null);
+
+        void WriteHeader(MipsCommand command);
+
     }
 }

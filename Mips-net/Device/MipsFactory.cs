@@ -9,5 +9,10 @@ namespace Mips.Device
 	    {
 		    return new MipsBox(new MipsCommunicator(serialPort));
 	    }
-	}
+
+	    public static IMipsBox CreateMipsBox(string serialNumber)
+	    {
+		    return new MipsBox(new MipsFtdiCommunicator(serialNumber, false));
+	    }
+    }
 }

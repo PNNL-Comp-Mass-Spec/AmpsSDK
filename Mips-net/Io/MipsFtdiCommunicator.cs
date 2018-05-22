@@ -154,11 +154,7 @@ namespace Mips.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-        public bool IsOpen
-        {
-            get { return this.ftdi.IsOpen; }
-        }
-
+        public bool IsOpen => this.ftdi.IsOpen;
 
         public void Open()
         {
