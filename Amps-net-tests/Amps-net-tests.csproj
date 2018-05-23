@@ -41,8 +41,8 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DynamicData, Version=6.1.4.2381, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DynamicData.6.1.4.2381\lib\net46\DynamicData.dll</HintPath>
+    <Reference Include="DynamicData, Version=6.3.1.2409, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicData.6.3.1.2409\lib\net46\DynamicData.dll</HintPath>
     </Reference>
     <Reference Include="FTD2XX_NET, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FTD2XX.Net.1.0.14\lib\FTD2XX_NET.dll</HintPath>
