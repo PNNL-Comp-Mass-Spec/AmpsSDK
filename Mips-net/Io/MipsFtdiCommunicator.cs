@@ -169,10 +169,10 @@ namespace Mips.Io
                     connection = messageSources.Connect();
                 }
                 var status = ftdi.OpenBySerialNumber(serialNumber);
-                status = this.ftdi.SetBaudRate(19200 * 2);
+                status = this.ftdi.SetBaudRate(921600);
                 //status = this.ftdi.SetRTS(true);
-                status = this.ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_1, FTDI.FT_PARITY.FT_PARITY_EVEN);
-                status = this.ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_XON_XOFF, 17, 19);
+                status = this.ftdi.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_1, FTDI.FT_PARITY.FT_PARITY_NONE);
+               // status = this.ftdi.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_XON_XOFF, 17, 19);
             }
         }
 
