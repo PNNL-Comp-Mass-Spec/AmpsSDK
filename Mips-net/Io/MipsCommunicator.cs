@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using Mips.Commands;
-
+using Serilog;
 namespace Mips.Io
 {
 internal sealed class MipsCommunicator : IMipsCommunicator
@@ -78,8 +78,9 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 			    }
 			}
 		   System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
+            Log.Information($"MIPS {(Encoding.UTF8.GetString(commandBytes))}" );
 
-		}
+        }
 	    public void WriteEnd(string appendToEnd=null)
 	    {
 		    if (!serialPort.IsOpen)

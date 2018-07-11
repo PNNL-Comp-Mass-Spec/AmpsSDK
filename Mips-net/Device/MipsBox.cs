@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Mips.Commands;
 using Mips.Data;
 using Mips.Io;
+using Serilog;
 
 namespace Mips.Device
 {
@@ -33,7 +34,8 @@ namespace Mips.Device
 			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && !x.Contains("TRIG") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
 				this.responseQueue.Enqueue(s);
-				return s;
+                Log.Information($"{s}");
+                return s;
 			}).Subscribe();
 
 			this.TableCompleteOrAborted = source

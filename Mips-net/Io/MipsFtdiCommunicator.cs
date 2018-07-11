@@ -7,6 +7,7 @@ using System.Text;
 using AmpsBoxSdk.Commands;
 using FTD2XX_NET;
 using Mips.Commands;
+using Serilog;
 
 namespace Mips.Io
 {
@@ -116,6 +117,8 @@ namespace Mips.Io
                     ftdi.Write(commandBytes, commandBytes.Length, ref bytesWritten);
                 }
             }
+            System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
+            Log.Information($"MIPS {(Encoding.UTF8.GetString(commandBytes))}");
 
         }
 
