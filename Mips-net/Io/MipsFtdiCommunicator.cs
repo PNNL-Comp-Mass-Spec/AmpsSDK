@@ -24,6 +24,7 @@ namespace Mips.Io
         private string serialNumber;
         private FTDI ftdi;
         private IDisposable connection;
+       
         #endregion
 
         #region Construction and Initialization
@@ -39,6 +40,23 @@ namespace Mips.Io
             this.ftdi = new FTDI();
             this.ftdi.SetTimeouts(500u, 500u);
             IsEmulated = shouldEmulate;
+            read = Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
+                    {
+                        uint bytesToRead = 0;
+                        ftdi.GetRxBytesAvailable(ref bytesToRead);
+                        return bytesToRead;
+                    }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
+                    {
+                        var buffer = new byte[1024];
+                        var ret = new List<byte>();
+                        uint bytesRead = 0;
+                        do
+                        {
+                            ftdi.Read(buffer, bytesToRead, ref bytesRead);
+                            ret.AddRange(buffer.Take((int)bytesRead));
+                        } while (bytesRead >= buffer.Length);
+                        return ret;
+                    }).SelectMany(x => x).Publish().RefCount(); 
         }
 
 
@@ -96,7 +114,11 @@ namespace Mips.Io
                 {
                     ftdi.Write(_lf, _lf.Length, ref bytesWritten);
                 }
+               
+               
+
             }
+            System.Diagnostics.Debug.Write(Environment.NewLine);
         }
 
 
@@ -157,6 +179,8 @@ namespace Mips.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
+        private IObservable<byte> read;
+
         public bool IsOpen => this.ftdi.IsOpen;
 
         public void Open()
@@ -179,29 +203,33 @@ namespace Mips.Io
             }
         }
 
-        private IObservable<byte> Read
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                    Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
-                    {
-                        uint bytesToRead = 0;
-                        ftdi.GetRxBytesAvailable(ref bytesToRead);
-                        return bytesToRead;
-                    }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
-                    {
-                        var buffer = new byte[1024];
-                        var ret = new List<byte>();
-                        uint bytesRead = 0;
-                        do
-                        {
-                            ftdi.Read(buffer, bytesToRead, ref bytesRead);
-                            ret.AddRange(buffer.Take((int)bytesRead));
-                        } while (bytesRead >= buffer.Length);
-                        return ret;
-                    }).SelectMany(x => x);
+                return read;
+
             }
+            //get
+            //{
+            //    return Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
+            //      {
+            //          uint bytesToRead = 0;
+            //          ftdi.GetRxBytesAvailable(ref bytesToRead);
+            //          return bytesToRead;
+            //      }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
+            //                    {
+            //          var buffer = new byte[1024];
+            //          var ret = new List<byte>();
+            //          uint bytesRead = 0;
+            //          do
+            //          {
+            //              ftdi.Read(buffer, bytesToRead, ref bytesRead);
+            //              ret.AddRange(buffer.Take((int)bytesRead));
+            //          } while (bytesRead >= buffer.Length);
+            //          return ret;
+            //      }).SelectMany(x => x);
+            //}
         }
 
         private IObservable<(bool, List<byte>)> ToMessage(IObservable<byte> input)
@@ -250,6 +278,8 @@ namespace Mips.Io
 
                 if (bytes.Item2.Count != 0)
                 {
+                   // System.Diagnostics.Debug.Write(bytes.Item1);
+                    System.Diagnostics.Debug.Write(Encoding.ASCII.GetString(bytes.Item2.ToArray()));
                     return (bytes.Item1, Encoding.ASCII.GetString(bytes.Item2.ToArray()));
                 }
                 else

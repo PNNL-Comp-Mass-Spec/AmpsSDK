@@ -20,15 +20,30 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 	    private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
 		#endregion
 	    private SerialPort serialPort;
+       
 
-		#region Construction and Initialization
+        #region Construction and Initialization
 
-		public MipsCommunicator(SerialPort port)
+        public MipsCommunicator(SerialPort port)
 		{
 			
 			this.serialPort= port ?? throw new ArgumentNullException(nameof(port));
 			IsEmulated = false;
-		}
+
+            read = Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                        h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
+                        {
+                            var buffer = new byte[1024];
+                            var ret = new List<byte>();
+                            int bytesRead;
+                            do
+                            {
+                                bytesRead = serialPort.Read(buffer, 0, buffer.Length);
+                                ret.AddRange(buffer.Take(bytesRead));
+                            } while (bytesRead >= buffer.Length);
+                           return ret;
+                        }).Publish().RefCount();
+        }
 
 		#endregion
 
@@ -167,24 +182,13 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
         private IDisposable connection;
 
-		private IObservable<byte> Read
+        private IObservable<byte> read;
+
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                    Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                        h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
-                    {
-                        var buffer = new byte[1024];
-                        var ret = new List<byte>();
-                        int bytesRead;
-                        do
-                        {
-                            bytesRead = serialPort.Read(buffer, 0, buffer.Length);
-                            ret.AddRange(buffer.Take(bytesRead));
-                        } while (bytesRead >= buffer.Length);
-                        return ret;
-                    });
+                return read;
             }
         }
 
@@ -259,7 +263,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         private IConnectableObservable<(bool, string)> messageSources;
 
         public IObservable<(bool, string)> MessageSources => messageSources;
-
+       
         public void Dispose()
         {
             serialPort?.Dispose();

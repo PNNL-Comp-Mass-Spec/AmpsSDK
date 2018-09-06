@@ -3,6 +3,7 @@
 namespace Mips.Io
 {
     using Mips.Commands;
+    using System.Collections.Generic;
 
     public interface IMipsCommunicator
     {
@@ -47,6 +48,6 @@ namespace Mips.Io
         void WriteEnd(string appendToEnd = null);
 
         void WriteHeader(MipsCommand command);
-
+        IObservable<byte> Read { get; }
     }
 }

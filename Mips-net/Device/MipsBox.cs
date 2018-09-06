@@ -17,7 +17,7 @@ namespace Mips.Device
 	[DataContract]
     internal sealed class MipsBox : IMipsBox
     {
-		private readonly IMipsCommunicator communicator;
+		public readonly IMipsCommunicator communicator;
 	    private Lazy<MipsBoxDeviceData> deviceData;
 
 	    private ConcurrentQueue<MipsMessage> messageQueue = new ConcurrentQueue<MipsMessage>();
@@ -72,9 +72,11 @@ namespace Mips.Device
 	    [DataMember]
 	    public string Name => GetName().Result;
 
-		public Lazy<MipsBoxDeviceData> DeviceData => deviceData; 
+		public Lazy<MipsBoxDeviceData> DeviceData => deviceData;
 
-		public async Task GetConfig()
+        public IMipsCommunicator Communicator =>communicator;
+
+        public async Task GetConfig()
 	    {
 		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
 		    var rfChannels = await this.GetNumberRfChannels();

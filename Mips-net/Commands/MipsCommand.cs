@@ -2,6 +2,7 @@
 {
 	public enum MipsCommand
 	{
+        NONE,
 		GVER,
 		GERR,
 		GNAME,

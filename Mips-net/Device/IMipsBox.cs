@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive;
 using System.Threading.Tasks;
+using Mips.Io;
 using Mips.Module;
 
 namespace Mips.Device
@@ -14,5 +15,8 @@ namespace Mips.Device
 		string Name { get; }
 		IObservable<Unit> TableCompleteOrAborted { get; }
 		Lazy<MipsBoxDeviceData> DeviceData { get; }
-	}
+        IMipsCommunicator Communicator { get; }
+       
+
+    }
 }
