@@ -356,6 +356,16 @@ namespace AmpsBoxSdk.Devices
 
             return Unit.Default;
         }
+        public async Task<int> GetTemperatureSetpoint()
+        {
+            var ampsmessage = Message.Create(AmpsCommand.GHTRTMP);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+
+            int.TryParse(response, out int temperature);
+            return temperature;
+        }
 
         public async Task<int> ReadTemperature()
         {
@@ -612,6 +622,8 @@ namespace AmpsBoxSdk.Devices
 
             return Unit.Default;
         }
+
+        
 
         #endregion
     }

@@ -31,8 +31,10 @@
 
         SHTR,
         SHTRTMP,
+        GHTRTMP,
         GHTRTC,
         SHTRGAIN,
+		GHTRGAIN,
 
 
         STBLDAT,
