@@ -38,6 +38,23 @@ namespace AmpsBoxSdk.Io
             this.ftdi = new FTDI();
             this.ftdi.SetTimeouts(500u, 500u);
             IsEmulated = shouldEmulate;
+            read= Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
+            {
+                uint bytesToRead = 0;
+                ftdi.GetRxBytesAvailable(ref bytesToRead);
+                return bytesToRead;
+            }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
+            {
+                var buffer = new byte[1024];
+                var ret = new List<byte>();
+                uint bytesRead = 0;
+                do
+                {
+                    ftdi.Read(buffer, bytesToRead, ref bytesRead);
+                    ret.AddRange(buffer.Take((int)bytesRead));
+                } while (bytesRead >= buffer.Length);
+                return ret;
+            }).SelectMany(x => x).Publish().RefCount();
         }
 
 
@@ -154,6 +171,7 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
+        private IObservable<byte> read;
 
         public void Open()
         {
@@ -175,28 +193,12 @@ namespace AmpsBoxSdk.Io
             }
         }
 
-        private IObservable<byte> Read
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                    Observable.Interval(TimeSpan.FromMilliseconds(50)).Where(x => this.ftdi.IsOpen).Select(x =>
-                    {
-                        uint bytesToRead = 0;
-                        ftdi.GetRxBytesAvailable(ref bytesToRead);
-                        return bytesToRead;
-                    }).Where(bytesToRead => bytesToRead > 0).Select(bytesToRead =>
-                    {
-                        var buffer = new byte[1024];
-                        var ret = new List<byte>();
-                        uint bytesRead = 0;
-                        do
-                        {
-                            ftdi.Read(buffer, bytesToRead, ref bytesRead);
-                            ret.AddRange(buffer.Take((int) bytesRead));
-                        } while (bytesRead >= buffer.Length);
-                        return ret;
-                    }).SelectMany(x => x);
+                return read;
+                     
             }
         }
 

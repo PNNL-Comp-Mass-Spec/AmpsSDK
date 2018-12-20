@@ -18,5 +18,6 @@ namespace AmpsBoxSdk.Io
         void Open();
 
         IObservable<string> MessageSources { get; }
-  }
+        IObservable<byte> Read { get; }
+    }
 }

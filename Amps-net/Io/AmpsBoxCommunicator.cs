@@ -38,7 +38,20 @@ namespace AmpsBoxSdk.Io
         public AmpsBoxCommunicator(SerialPort serialPort)
         {
             this.serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-            IsEmulated = false; 
+            IsEmulated = false;
+            read = Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
+                              {
+                                  var buffer = new byte[1024];
+                                  var ret = new List<byte>();
+                                  int bytesRead;
+                                  do
+                                  {
+                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
+                                      ret.AddRange(buffer.Take(bytesRead));
+                                  } while (bytesRead >= buffer.Length);
+                                  return ret;
+                              }).Publish().RefCount() ;
         }
 
 
@@ -150,7 +163,8 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-        
+        private IObservable<byte> read;
+
         public void Open()
         {
             lock (sync)
@@ -169,24 +183,11 @@ namespace AmpsBoxSdk.Io
             }
         }
 
-        private IObservable<byte> Read
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                          Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
-                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
-                              {
-                                  var buffer = new byte[1024];
-                                  var ret = new List<byte>();
-                                  int bytesRead;
-                                  do
-                                  {
-                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
-                                      ret.AddRange(buffer.Take(bytesRead));
-                                  } while (bytesRead >= buffer.Length);
-                                  return ret;
-                              });
+                return read;
             }
         }
 

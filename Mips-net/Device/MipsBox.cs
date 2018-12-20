@@ -47,7 +47,7 @@ namespace Mips.Device
 				isErrorState = true;
 			});
 
-			ClockFrequency = 16000000;
+			
 		}
 	    private async Task ProcessQueue(bool response=false)
 	    {

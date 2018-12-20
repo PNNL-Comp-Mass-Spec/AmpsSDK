@@ -31,11 +31,11 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     internal sealed class AmpsBox : IAmpsBox
     {
-        private readonly IAmpsCommunicator communicator;
+        public readonly IAmpsCommunicator communicator;
 
         private Lazy<AmpsBoxDeviceData> deviceData;
 
-        private readonly Queue<Message> messageQueue = new Queue<Message>();
+        private readonly Queue<AmpsMessage> messageQueue = new Queue<AmpsMessage>();
 
         private readonly Queue<string> responseQueue = new Queue<string>();
 
@@ -51,7 +51,7 @@ namespace AmpsBoxSdk.Devices
             this.communicator.Open();
             var source = this.communicator.MessageSources;
 
-                source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
+            source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
             {
                 this.responseQueue.Enqueue(s);
                 return s;
@@ -71,7 +71,7 @@ namespace AmpsBoxSdk.Devices
 
         #endregion
 
-        private async Task ProcessQueue(bool response=false)
+        private async Task ProcessQueue(bool response = false)
         {
             while (messageQueue.Count > 0)
             {
@@ -103,7 +103,8 @@ namespace AmpsBoxSdk.Devices
         public IObservable<Unit> TableCompleteOrAborted { get; }
 
         public IObservable<Unit> ModeReady { get; }
-
+        public IAmpsCommunicator Communicator => communicator;
+        
         #endregion
 
         #region Public Methods and Operators
@@ -120,21 +121,21 @@ namespace AmpsBoxSdk.Devices
             var rfChannels = await this.GetNumberRfChannels();
             var digitalChannels = await this.GetNumberDigitalChannels();
             this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels));
-			return this.deviceData.Value;
-		}
+            return this.deviceData.Value;
+        }
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
-           
+
             return Unit.Default;
         }
 
         public async Task<int> GetDcBiasSetpoint(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCB, channel);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCB, channel);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -144,7 +145,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetDcBiasReadback(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCBV, channel);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCBV, channel);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
 
@@ -157,19 +158,19 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetDcBiasCurrentReadback(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCBI, channel);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCBI, channel);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
 
             int currentReadback = 0;
             var response = responseQueue.Dequeue();
-            int.TryParse(response, out currentReadback);            
+            int.TryParse(response, out currentReadback);
             return currentReadback;
         }
 
         public async Task<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
@@ -178,7 +179,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCBOF, brdNumber);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -189,7 +190,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetNumberDcBiasChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -202,17 +203,17 @@ namespace AmpsBoxSdk.Devices
         public async Task<Unit> SetDigitalState(string channel, bool state)
         {
             var stateAsInt = Convert.ToInt32(state).ToString();
-            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, stateAsInt);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIO, channel, stateAsInt);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
 
-           return Unit.Default;
+            return Unit.Default;
         }
 
         public async Task<Unit> PulseDigitalSignal(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, "P");
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIO, channel, "P");
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
@@ -221,7 +222,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<bool> GetDigitalState(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDIO, channel);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDIO, channel);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -243,7 +244,7 @@ namespace AmpsBoxSdk.Devices
                 case "F":
                 case "G":
                 case "H":
-                    var ampsmessage = Message.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
+                    var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
                     messageQueue.Enqueue(ampsmessage);
                     await ProcessQueue(false);
 
@@ -251,12 +252,12 @@ namespace AmpsBoxSdk.Devices
                 default:
                     return Unit.Default;
             }
-            
+
         }
 
         public async Task<DigitalDirection> GetDigitalDirection(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDIODR, channel);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDIODR, channel);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -267,7 +268,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetNumberDigitalChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -278,7 +279,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetPositiveHighVoltage(int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SPHV, volts);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SPHV, volts);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
@@ -287,7 +288,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetNegativeHighVoltage(int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SNHV, volts);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SNHV, volts);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
@@ -297,7 +298,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<(double, double)> GetPositiveEsi()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GPHVV);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GPHVV);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -314,7 +315,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<(double, double)> GetNegativeEsi()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GNHVV);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GNHVV);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -332,7 +333,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> TurnOnHeater()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.ON.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTR, State.ON.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
             return Unit.Default;
@@ -340,7 +341,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> TurnOffHeater()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.OFF.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTR, State.OFF.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(false);
 
@@ -350,7 +351,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetTemperatureSetpoint(int temperature)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTRTMP, temperature);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTRTMP, temperature);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -358,7 +359,7 @@ namespace AmpsBoxSdk.Devices
         }
         public async Task<int> GetTemperatureSetpoint()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GHTRTMP);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GHTRTMP);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -369,7 +370,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> ReadTemperature()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GHTRTC);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GHTRTC);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -380,7 +381,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetPidGain(int gain)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTRGAIN, gain);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTRGAIN, gain);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -389,7 +390,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<string> GetVersion()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GVER);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GVER);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -399,7 +400,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<ErrorCodes> GetError()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GERR);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GERR);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -408,19 +409,19 @@ namespace AmpsBoxSdk.Devices
             return result;
         }
 
-		public async Task<string> GetName()
-		{
-			var ampsmessage = Message.Create(AmpsCommand.GNAME);
-		    messageQueue.Enqueue(ampsmessage);
-		    await ProcessQueue(true);
-		    var response = responseQueue.Dequeue();
+        public async Task<string> GetName()
+        {
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GNAME);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
             return response;
-		}
+        }
 
-		public async Task<Unit> SetName(string name)
+        public async Task<Unit> SetName(string name)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SNAME, name);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SNAME, name);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -429,7 +430,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> Reset()
         {
-            var ampsmessage = Message.Create(AmpsCommand.RESET);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.RESET);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -438,7 +439,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> Save()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SAVE);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SAVE);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -447,10 +448,10 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<IEnumerable<string>> GetCommands()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCMDS);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCMDS);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
-          
+
             List<string> responses = new List<string>();
             while (responseQueue.Count > 0)
             {
@@ -471,7 +472,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetFrequency(int address, int frequency)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -480,7 +481,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetFrequencySetting(int address)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GRFFRQ, address);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -491,7 +492,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetRfDriveSetting(int address, int drive)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -500,7 +501,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetRfDriveSetting(int address)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GRFFRQ, address);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -510,7 +511,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<int> GetNumberRfChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.RF.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.RF.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -522,7 +523,7 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> AbortTimeTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLABRT);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLABRT);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -535,7 +536,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StartTimeTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLSTRT);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLSTRT);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -545,7 +546,7 @@ namespace AmpsBoxSdk.Devices
         public string LastTable { get; private set; }
         public async Task<string> ReportExecutionStatus()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLRPT);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLRPT);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue(true);
             var response = responseQueue.Dequeue();
@@ -558,10 +559,10 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public async Task<Unit> SetMode(Modes mode)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SMOD, mode.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SMOD, mode.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
-           return Unit.Default;
+            return Unit.Default;
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -569,7 +570,7 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StopTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLSTOP);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLSTOP);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
             return Unit.Default;
@@ -585,7 +586,7 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> LoadTimeTable(AmpsSignalTable table)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLDAT, table);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLDAT, table);
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -602,7 +603,7 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> SetClock(ClockType clockType)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLCLK, clockType.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLCLK, clockType.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
@@ -616,14 +617,14 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> SetTrigger(StartTrigger startTrigger)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
             messageQueue.Enqueue(ampsmessage);
             await ProcessQueue();
 
             return Unit.Default;
         }
 
-        
+
 
         #endregion
     }

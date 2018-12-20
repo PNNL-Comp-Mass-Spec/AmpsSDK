@@ -2,6 +2,7 @@
 {
     public enum AmpsCommand
     {
+        NONE,
         GVER,
         GCMDS,
         GERR,
