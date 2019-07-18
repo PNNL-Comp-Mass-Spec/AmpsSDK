@@ -23,7 +23,6 @@ namespace Mips.Data
 	    private MipsSignalTable(IEnumerable<PsgPoint> timePoints) : this()
 	    {
 		    this.timePoints.AddRange(timePoints);
-            Log.Information($" Signal Table timepoints{timePoints}");
         }
 
 	    public PsgPoint this[string pointName]
