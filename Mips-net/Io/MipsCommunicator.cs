@@ -92,9 +92,6 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				    serialPort.BaseStream.WriteByte(commandByte);
 			    }
 			}
-		   System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
-            Log.Information($"MIPS {(Encoding.UTF8.GetString(commandBytes))}" );
-
         }
 	    public void WriteEnd(string appendToEnd=null)
 	    {

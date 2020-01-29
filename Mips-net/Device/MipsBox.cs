@@ -53,7 +53,11 @@ namespace Mips.Device
 	    {
 		    if (messageQueue.TryDequeue(out var message))
 		    {
-			    message.WriteTo(this.communicator);
+#if DEBUG
+                Log.Information("MIPS: {message}", message.ToString());
+#endif
+
+                message.WriteTo(this.communicator);
 			    Thread.Sleep(25);
 			    while (response && responseQueue.Count == 0 && !isErrorState)
 			    {

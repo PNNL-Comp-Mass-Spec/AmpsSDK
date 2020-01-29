@@ -25,7 +25,7 @@ namespace Mips.Commands
 		}
 
 		public MipsCommand Command => command;
-		// public virtual string CommandAndKey => Command.ToString();
+        public abstract override string ToString();
 
 		public static MipsMessage Create(MipsCommand command)
 		{
@@ -164,11 +164,6 @@ namespace Mips.Commands
 				throw new InvalidOperationException();
 			}
 		}
-
-		public override string ToString()
-		{
-			return this.Command.ToString();
-		}
 	}
 
     internal class CommandTableValueMessage : MipsMessage
@@ -178,6 +173,11 @@ namespace Mips.Commands
         public CommandTableValueMessage(MipsCommand command, string table):base(command)
         {
            this.value = Encoding.ASCII.GetBytes(table); 
+        }
+
+        public override string ToString()
+        {
+            return command.ToString() + " " + Encoding.UTF8.GetString(value);
         }
 
         internal override void WriteImpl(IMipsCommunicator physical)
@@ -191,9 +191,12 @@ namespace Mips.Commands
     internal class CommandEnumerableMessage : CommandBase
 	{
 		private byte[][] bytevalue;
-		
-		public CommandEnumerableMessage(MipsCommand command,  IEnumerable<int> values) : base(command)
+        List<string> readable_values = new List<string>();
+
+        public CommandEnumerableMessage(MipsCommand command,  IEnumerable<int> values) : base(command)
 		{
+            readable_values.AddRange(values.Select(x => x.ToString()));
+
 			bytevalue = new byte[values.Count()][];
 			int i = 0;
 			foreach (var value in values)
@@ -203,8 +206,11 @@ namespace Mips.Commands
 				i++;
 			}
 		}
+
         public CommandEnumerableMessage(MipsCommand command, IEnumerable<string> values) : base(command)
         {
+            readable_values.AddRange(values);
+
             bytevalue = new byte[values.Count()][];
             int i = 0;
             foreach (var value in values)
@@ -216,7 +222,9 @@ namespace Mips.Commands
         }
         public CommandEnumerableMessage(MipsCommand command, IEnumerable<double> values) : base(command)
 		{
-			bytevalue = new byte[values.Count()][];
+            readable_values.AddRange(values.Select(x => x.ToString()));
+
+            bytevalue = new byte[values.Count()][];
 			int i = 0;
 			foreach (var value in values)
 			{
@@ -225,7 +233,13 @@ namespace Mips.Commands
 				i++;
 			}
 		}
-		internal override void WriteImpl(IMipsCommunicator physical)
+
+        public override string ToString()
+        {
+            return command.ToString() + " " + String.Join(" ", readable_values);
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			foreach (var value in bytevalue)
@@ -240,8 +254,15 @@ namespace Mips.Commands
 	{
 		private byte[][] bytevalue;
 		private readonly byte[] value;
-		public CommandValueEnumerableMessage(MipsCommand command,int value, IEnumerable<int> values) : base(command)
+
+        IEnumerable<string> readable_values;
+        string readable_value;
+
+        public CommandValueEnumerableMessage(MipsCommand command,int value, IEnumerable<int> values) : base(command)
 		{
+            readable_values = values.Select(x => x.ToString());
+            readable_value = value.ToString();
+
 			bytevalue = new byte[values.Count()][];
 			int i = 0;
 			this.value = Encoding.ASCII.GetBytes(value.ToString());
@@ -254,7 +275,10 @@ namespace Mips.Commands
 		}
 		public CommandValueEnumerableMessage(MipsCommand command, string value, IEnumerable<int> values) : base(command)
 		{
-			bytevalue = new byte[values.Count()][];
+            readable_values = values.Select(x => x.ToString());
+            readable_value = value;
+
+            bytevalue = new byte[values.Count()][];
 			int i = 0;
 			this.value = Encoding.ASCII.GetBytes(value);
 			foreach (var val in values)
@@ -275,7 +299,12 @@ namespace Mips.Commands
 			}
 			physical.WriteEnd();
 		}
-	}
+
+        public override string ToString()
+        {
+            return command.ToString() + " " + readable_value + " " + String.Join(" ", readable_values);
+        }
+    }
 	
 	
 
@@ -295,7 +324,12 @@ namespace Mips.Commands
 
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return "";
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.WriteEnd();
@@ -311,7 +345,12 @@ namespace Mips.Commands
 			this.value = Encoding.ASCII.GetBytes(compressionTable.RetrieveTableAsEncodedString());
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return "";
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ",");
@@ -327,8 +366,13 @@ namespace Mips.Commands
 		{
 			this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
 		}
-		
-		internal override void WriteImpl(IMipsCommunicator physical)
+
+        public override string ToString()
+        {
+            return "";
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ";");
@@ -358,7 +402,12 @@ namespace Mips.Commands
 			this.value = Encoding.ASCII.GetBytes(value.ToString());
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return command.ToString() + " " + Encoding.UTF8.GetString(value);
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value, ",");
@@ -422,7 +471,14 @@ namespace Mips.Commands
 			this.value2 = Encoding.ASCII.GetBytes(sb.ToString());
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return command.ToString()
+            + " " + Encoding.UTF8.GetString(value1)
+            + " " + Encoding.UTF8.GetString(value2);
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");
@@ -467,7 +523,15 @@ namespace Mips.Commands
 			this.value3 = Encoding.ASCII.GetBytes(value3.ToString());
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return command.ToString()
+            + " " + Encoding.UTF8.GetString(value1)
+            + " " + Encoding.UTF8.GetString(value2)
+            + " " + Encoding.UTF8.GetString(value3);
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");
@@ -494,7 +558,17 @@ namespace Mips.Commands
 			this.value5 = Encoding.ASCII.GetBytes(value5.ToString());
 		}
 
-		internal override void WriteImpl(IMipsCommunicator physical)
+        public override string ToString()
+        {
+            return command.ToString()
+            + " " + Encoding.UTF8.GetString(value1)
+            + " " + Encoding.UTF8.GetString(value2)
+            + " " + Encoding.UTF8.GetString(value3)
+            + " " + Encoding.UTF8.GetString(value4)
+            + " " + Encoding.UTF8.GetString(value5);
+        }
+
+        internal override void WriteImpl(IMipsCommunicator physical)
 		{
 			physical.WriteHeader(Command);
 			physical.Write(value1, ",");
