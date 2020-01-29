@@ -1,11 +1,13 @@
-﻿namespace Mips_net.Commands
+﻿namespace Mips.Commands
 {
 	public enum MipsCommand
 	{
+        NONE,
 		GVER,
 		GERR,
 		GNAME,
 		SNAME,
+		UUID,
 		ABOUT,
 		SMREV,
 		RESEST,
@@ -28,6 +30,26 @@
 		LEDOVRD,
 		LED,
 		DSPOFF,
+
+		SSERIALNAV,
+		LOADIMAGE,
+		CHKIMAGE,
+		BIMAGE,
+		SSPND,
+		GSPND,
+		TRACE,
+		STATUS,
+		DIR,
+		DEL,
+		SAVEMOD,
+		LPADMOD,
+		SAVEALL,
+		LOADALL,
+		GET,
+		PUT,
+		GETEEPROM,
+		PUTEEPROM,
+
 
 		GWIDTH,
 		SWIDTH,
@@ -64,12 +86,16 @@
 		DCBOFFRBENA,
 		SDCBOFFENA,
 
+		SDCBTEST,
+		SDCBADCADD,
+		SDCARST,
+
 		SDCBPRO,
 		GDCBPRO,
 		ADCBPRO,
 		CDCBPRO,
 		TDCBPRO,
-		TDCBSTOP,
+		TDCBSTP,
 
 		SRFFRQ,
 		SRFVLT,
@@ -82,6 +108,9 @@
 		GRFPWR,
 		GRFALL,
 
+		TUNERFCH,
+		RETUNERFCH,
+
 		SDIO,
 		GDIO,
 		RPT,
@@ -91,6 +120,14 @@
 		GHVV,
 		GHVI,
 		GHVMAX,
+
+		SHVPSUP,
+		SHVENA,
+		SHVDIS,
+		GHVSTATUS,
+		SHVNSUP,
+		GHVITST,
+		SHVITST,
 
 		STBLDAT,
 		STBLCLK,
@@ -159,6 +196,10 @@
 		STWSGO,
 		STWSHLT,
 		GTWSTA,
+		STWSSTRTV,
+		GTWSSTRTV,
+		STWSSTPV,
+		GTWSSTPV,
 
 		SRFHPCAL,
 		SRFHNCAL,
@@ -246,9 +287,20 @@
 		TARBTRG,
 		GARBCSW,
 		SARBCSW,
-
+		
 		SARBCCLK,
-		SARBCMP
+		SARBCMP,
+
+		ARBSYNC,
+		
+		SARBOFFA,
+		GARBOFFA,
+		SARBOFFB,
+		GARBOFFB,
+
+		SSER1ENA,
+		GSER1ENA
+
 
 	}
 }

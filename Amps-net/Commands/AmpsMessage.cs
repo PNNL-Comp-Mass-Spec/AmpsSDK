@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using AmpsBoxSdk.Data;
 using AmpsBoxSdk.Io;
 
 namespace AmpsBoxSdk.Commands
 {
-    abstract class Message
+    public abstract class AmpsMessage
     {
-        public static readonly Message[] EmptyArray = new Message[0];
+        public static readonly AmpsMessage[] EmptyArray = new AmpsMessage[0];
 
         protected AmpsCommand command;
 
         internal DateTime createdDateTime;
         internal long createdTimestamp;
 
-        protected Message(AmpsCommand command)
+        protected AmpsMessage(AmpsCommand command)
         {
             this.command = command;
             createdDateTime = DateTime.UtcNow;
@@ -25,41 +27,48 @@ namespace AmpsBoxSdk.Commands
 
         public virtual string CommandAndKey => Command.ToString();
 
-        public static Message Create(AmpsCommand command, AmpsSignalTable table)
+        public static AmpsMessage Create(AmpsCommand command, AmpsSignalTable table)
         {
             return new CommandSignalTableMessage(command, table);
         }
 
-        public static Message Create(AmpsCommand command)
+        public static AmpsMessage Create(AmpsCommand command)
         {
             return new CommandMessage(command);
         }
 
-        public static Message Create(AmpsCommand command, double value)
+        public static AmpsMessage Create(AmpsCommand command, double value)
         {
             return new CommandValueMessage(command, value);
         }
 
-        public static Message Create(AmpsCommand command, int value)
+        public static AmpsMessage Create(AmpsCommand command, int value)
         {
             return new CommandValueMessage(command, value);
         }
 
-        public static Message Create(AmpsCommand command, string value)
+        public static AmpsMessage Create(AmpsCommand command, string value)
         {
             return new CommandValueMessage(command, value);
         }
 	   
-		public static Message Create(AmpsCommand command, string value1, string value2)
+		public static AmpsMessage Create(AmpsCommand command, string value1, string value2)
         {
             return new CommandValueValueMessage(command, value1, value2);
         }
 
-        public static Message Create(AmpsCommand command, int value, int value2)
+        public static AmpsMessage Create(AmpsCommand command, int value, int value2)
         {
             return new CommandValueValueMessage(command, value, value2);
         }
-
+        public static AmpsMessage CreateTable(AmpsCommand command, string value)
+        {
+            return new CommandTableValueMessage(command, value);
+        }
+        public static AmpsMessage Create(AmpsCommand command, IEnumerable<string> values)
+        {
+            return new CommandEnumerableMessage(command, values);
+        }
         //internal void SetSource(ResultProcessor resultProcessor, ResultBox resultBox)
         //{ // note order here reversed to prevent overload resolution errors
         //    this.resultBox = resultBox;
@@ -72,20 +81,20 @@ namespace AmpsBoxSdk.Commands
         //    this.resultProcessor = resultProcessor;
         //}
 
-        internal abstract void WriteImpl(AmpsBoxCommunicator physical);
+        internal abstract void WriteImpl(IAmpsCommunicator physical);
 
         private string Read(AmpsBoxCommunicator physical)
         {
            return physical.ReadLine();
         }
 
-        internal void WriteTo(AmpsBoxCommunicator physical)
+        public void WriteTo(IAmpsCommunicator physical)
         {
             WriteImpl(physical);
         }
     }
 
-    internal abstract class CommandBase : Message
+    internal abstract class CommandBase : AmpsMessage
     {
         public CommandBase(AmpsCommand command) : base(command)
         {
@@ -98,7 +107,7 @@ namespace AmpsBoxSdk.Commands
         {
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             physical.WriteHeader(Command);
             physical.WriteEnd();
@@ -128,7 +137,7 @@ namespace AmpsBoxSdk.Commands
         }
 
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {         
             physical.WriteHeader(Command);
             physical.Write(value1, ",");
@@ -156,7 +165,7 @@ namespace AmpsBoxSdk.Commands
             this.value = Encoding.ASCII.GetBytes(value);
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             physical.WriteHeader(Command);
             physical.Write(value, ",");
@@ -173,7 +182,7 @@ namespace AmpsBoxSdk.Commands
             this.value = Encoding.ASCII.GetBytes(signalTable.RetrieveTableAsEncodedString());
         }
 
-        internal override void WriteImpl(AmpsBoxCommunicator physical)
+        internal override void WriteImpl(IAmpsCommunicator physical)
         {
             //Table format: STBLDAT;<data>;
             physical.WriteHeader(Command);
@@ -182,4 +191,47 @@ namespace AmpsBoxSdk.Commands
 
         }
     }
+    internal class CommandTableValueMessage : AmpsMessage
+    {
+        private byte[] value;
+
+        public CommandTableValueMessage(AmpsCommand command, string table) : base(command)
+        {
+            this.value = Encoding.ASCII.GetBytes(table);
+        }
+
+        internal override void WriteImpl(IAmpsCommunicator physical)
+        {
+            physical.WriteHeader(Command);
+            physical.Write(value, ";");
+            physical.WriteEnd(";");
+        }
+    }
+    internal class CommandEnumerableMessage : CommandBase
+    {
+        private byte[][] bytevalue;
+
+        public CommandEnumerableMessage(AmpsCommand command, IEnumerable<string> values) : base(command)
+        {
+            bytevalue = new byte[values.Count()][];
+            int i = 0;
+            foreach (var value in values)
+            {
+                byte[] result = Encoding.ASCII.GetBytes(value.ToString());
+                bytevalue[i] = result;
+                i++;
+            }
+        }
+        
+        internal override void WriteImpl(IAmpsCommunicator physical)
+        {
+            physical.WriteHeader(Command);
+            foreach (var value in bytevalue)
+            {
+                physical.Write(value, ",");
+            }
+            physical.WriteEnd();
+        }
+    }
+
 }

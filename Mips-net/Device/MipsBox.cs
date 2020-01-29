@@ -1,98 +1,231 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mips_net.Commands;
-using Mips_net.Data;
-using Mips_net.Io;
+using Mips.Commands;
+using Mips.Data;
+using Mips.Io;
+using Serilog;
 
-namespace Mips_net.Device
+namespace Mips.Device
 {
 	[DataContract]
     internal sealed class MipsBox : IMipsBox
     {
-		private readonly MipsCommunicator communicator;
+		public readonly IMipsCommunicator communicator;
 	    private Lazy<MipsBoxDeviceData> deviceData;
 
-		public MipsBox(MipsCommunicator communicator)
+	    private ConcurrentQueue<MipsMessage> messageQueue = new ConcurrentQueue<MipsMessage>();
+	    private Queue<string> responseQueue = new Queue<string>();
+	    private bool isErrorState = false;
+
+		public MipsBox(IMipsCommunicator communicator)
 		{
-			this.communicator = communicator?? throw new ArgumentNullException(nameof(communicator));
-			if (!this.communicator.IsOpen)
+			this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
+			this.communicator.Open();
+			//var task = GetConfig();
+			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);
+			var otherSource = this.communicator.MessageSources.Where(x => x.Item1 == true);
+			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && !x.Contains("TRIG") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
 			{
-				this.communicator.Open();
-			}
-			ClockFrequency = 16000000;
+				this.responseQueue.Enqueue(s);
+                Log.Information($"{s}");
+                return s;
+			}).Subscribe();
+
+			this.TableCompleteOrAborted = source
+				.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
+
+			otherSource.Subscribe(tuple =>
+			{
+				this.responseQueue.Enqueue(string.Empty);
+				isErrorState = true;
+			});
+
+			
 		}
-	    [DataMember]
+	    private async Task ProcessQueue(bool response=false)
+	    {
+		    if (messageQueue.TryDequeue(out var message))
+		    {
+			    message.WriteTo(this.communicator);
+			    Thread.Sleep(25);
+			    while (response && responseQueue.Count == 0 && !isErrorState)
+			    {
+				    Thread.Sleep(25);
+			    }
+		    }
+
+			isErrorState = false;
+	    }
+
+	    public IObservable<Unit> TableCompleteOrAborted { get; }
+
+
+		[DataMember]
 	    public int ClockFrequency { get; set; }
 	    [DataMember]
 	    public string Name => GetName().Result;
-	    public MipsBoxDeviceData GetConfig()
-	    {
-			//this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)this.GetNumberDcBiasChannels().Result,
-			// (uint)this.GetNumberRfChannels().Result, (uint)this.GetNumberDigitalChannels().Result));
-			//if (this.communicator.IsOpen)
-			//{
-			//	return this.deviceData.Value;
-			//}
 
-			return MipsBoxDeviceData.Empty;
+		public Lazy<MipsBoxDeviceData> DeviceData => deviceData;
+
+        public IMipsCommunicator Communicator =>communicator;
+
+        public async Task GetConfig()
+	    {
+		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
+		    var rfChannels = await this.GetNumberRfChannels();
+		    var digitalChannels = await this.GetNumberDigitalChannels();
+		    var twaveChannels = await this.GetNumberTwaveChannels();
+		    var arbChannels = await this.GetNumberArbChannels();
+
+			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
+								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels, (uint)arbChannels));
+
+		
 	    }
+	    public async Task<int> GetNumberESIChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ESI.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var result = responseQueue.Dequeue();
+
+		    int.TryParse(result, out int channels);
+		    return channels;
+
+		}
+	    public async Task<int> GetNumberFaimsChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.FAIMS.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+	    }
+	    public async Task<int> GetNumberFilamentChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.FIL.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+	    }
+
+	    public async Task<int> GetNumberArbChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ARB.ToString());
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+
+	    }
+
+		public async Task<int> GetNumberTwaveChannels()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.TWAVE.ToString());
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+			int.TryParse(result, out int channels);
+		    return channels;
+		  
+	    }
+
 	    public async Task<string> GetName()
 	    {
-		    var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+			var mipsmessage = MipsMessage.Create(MipsCommand.GNAME);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var name = responseQueue.Dequeue();
+		    return name;
+		}
 
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
-	    }
-	    public async Task<Unit> SetName(string name)
+	    public async Task<int> GetNumberDigitalChannels()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.DIO.ToString());
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+		}
+
+	    public  async Task<int> GetNumberRfChannels()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.RF.ToString());
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
+		}
+
+	    public async Task<int> GetNumberDcBiasChannels()
+		{
+			var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.DCB.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var result = responseQueue.Dequeue();
+			int.TryParse(result, out int channels);
+			return channels;
+		}
+
+		public async Task<Unit> SetName(string name)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SNAME, name);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(false);
+			return Unit.Default;
 
-		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
-	    }
+		}
 
 
 		public async Task<string> GetVersion()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GVER);
-		    mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 		public async Task<ErrorCode> GetError()
 		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.GERR);
-			mipsmessage.WriteImpl(communicator);
-			var messagePacket = communicator.MessageSources;
-			return await messagePacket.Select(bytes =>
-			{
-				Enum.TryParse(bytes, true, out ErrorCode result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var result = responseQueue.Dequeue();
+			Enum.TryParse(result, out ErrorCode error);
+			return error;
 		}
-	    public async Task<string> About()
+	    public async Task<IEnumerable<string>> About()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.ABOUT);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			List<string> responses = new List<string>();
+			Thread.Sleep(100);
+		    while (responseQueue.Count > 0)
+		    {
+			    var response = responseQueue.Dequeue();
+				if (string.IsNullOrEmpty(response))
+			    {
+				    continue;
+			    }
+			    responses.Add(response);
+		    }
+		    return responses;
+		}
 	    public async Task<Unit> RevisionLevel(int board,int module,int rev)
 	    {
 			//var mipsmessage = MipsMessage.Create(MipsCommand.SMREV);
@@ -115,130 +248,120 @@ namespace Mips_net.Device
 	    public async Task<Unit> Save()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SAVE);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    var result = responseQueue.Dequeue();
+		    return Unit.Default;
+		}
 	    public async Task<int> GetChannel(Modules module)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN,module.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int channels);
-			    return channels;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    int.TryParse(result, out int channels);
+		    return channels;
 		}
 		public async Task<Unit> Mute(State mute)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.MUTE,mute.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 	    public async Task<Unit> Echo(Status echo)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.ECHO,echo.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 	    public async Task<Unit> TriggerOut(TriggerValue trigger)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 	    public async Task<Unit> TriggerOut(int trigger)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TRIGOUT, trigger);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 		public async Task<Unit> Delay(double delay)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.DELAY, delay);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 	    public async Task<IEnumerable<string>> GetCommand()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCMDS);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-		   // return await messagePacket.Select(bytes => bytes).FirstAsync();
-			var aggregator = await messagePacket.Select(s => s)
-			 .Scan(new List<string>(),
-			 (list, s) =>
-			 {
-				 list.Add(s);
-				 return list;
-			 }).Where(list=>list.Count==225).FirstAsync() ; 
-
-			return aggregator;
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    List<string> responses = new List<string>();
+		    while (responseQueue.Count>0)
+		    {
+				var response = responseQueue.Dequeue();
+			    if (string.IsNullOrEmpty(response))
+			    {
+				    continue;
+			    }
+			    responses.Add(response);
+		    }
+		    return responses;
 		}
-
+		  
 	    public async Task<Status> GetAnalogInputStatus()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GAENA);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes, true, out Status result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out Status status);
+		    return status;
 		}
 	    public async Task<Unit> SetAnalogInputStatus(Status status)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SAENA,status.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 	    public async Task<IEnumerable<string>> Threads()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.THREADS);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			var aggregator = await messagePacket.Select(s => s).Scan(new List<string>(),
-				    (list, s) =>
-				    {
-					  list.Add(s);
-					  return list;
-				    }).Where(list=>list.Count==7).FirstAsync(); 
-		    return aggregator;
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			List<string> responses = new List<string>();
+		    while (responseQueue.Count > 0)
+			{
+				var response = responseQueue.Dequeue();
+				if (string.IsNullOrEmpty(response))
+				{
+					continue;
+				}
+				responses.Add(response);
+			}
+			return responses;
 		}
 	    public async Task<Unit> SetThreadControl(string threadName, string threadValue)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STHRDENA, threadName.ToString(),threadValue.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
 	    public async Task<Unit> SetADCAddress(int board, double address)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SDEVADD, board, address);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
 
 	    public async Task<string> ReadADC(int channel)
 	    {
@@ -253,11 +376,11 @@ namespace Mips_net.Device
 			    case 6:
 			    case 7:
 				    var mipsmessage = MipsMessage.Create(MipsCommand.RDEV, channel);
-				    mipsmessage.WriteTo(communicator);
-				    var messagePacket = communicator.MessageSources;
-
-				    return await messagePacket.Select(bytes => bytes).FirstAsync();
-			    default:
+					messageQueue.Enqueue(mipsmessage);
+				    await ProcessQueue(true);
+				   var  result = responseQueue.Dequeue();
+				    return result;
+			   default:
 				    return Unit.Default.ToString();
 		    }
 	    }
@@ -284,10 +407,9 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetIOTableMode(bool enable)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.TBLTSKENA,enable.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 
 		}
 	    public async Task<int> ReadADCChannel(int channel)
@@ -298,306 +420,253 @@ namespace Mips_net.Device
 				case 1:
 				case 2:
 				case 3:
-					var ampsmessage = MipsMessage.Create(MipsCommand.ADC, channel);
-					ampsmessage.WriteTo(communicator);
-					var messagePacket = communicator.MessageSources;
-
-					return await messagePacket.Select(bytes =>
-						{ int.TryParse(bytes, out int count);
-						  return count;
-						}).FirstAsync();
-			default:
+					var mipsmessage = MipsMessage.Create(MipsCommand.ADC, channel);
+					messageQueue.Enqueue(mipsmessage);
+					await ProcessQueue(true);
+					var result = responseQueue.Dequeue();
+					int.TryParse(result, out int adcChannel);
+					return adcChannel;
+				default:
 					return 0;
 			}
 		}
 	    public async Task<Unit> LEDOverride(bool LEDValue)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.LEDOVRD, LEDValue.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
 	    public async Task<Unit> LEDColor(int color)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.LED, color);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			var result = responseQueue.Dequeue();
+			return Unit.Default;
+		}
 	    public async Task<Unit> DisplayOff(Status status)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.DSPOFF, status.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
 		//Clock Generation
 
 	    public async Task<int> GetClockPulseWidth()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GWIDTH);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>{int.TryParse(bytes, out int result );
-			    return result;
-		    }).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
+		}
 	    public async Task<Unit> SetClockPulseWidth(int microseconds)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SWIDTH, microseconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
-
-	    public async Task<int> GetClockFrequency()
-		{
-		    var mipsmessage = MipsMessage.Create(MipsCommand.GFREQ);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => {
-				int.TryParse(bytes, out int result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 		}
 
-	    public async Task<Unit> SetClockFrequency(int frequencyInHz)
+	    public async Task<double> GetClockFrequency()
+		{
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GFREQ);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+	    public async Task<Unit> SetClockFrequency(double frequencyInHz)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SFREQ,frequencyInHz);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
 
 	    public async Task<Unit> ConfigureClockBurst(int numberCycles)
 		{
 		    var mipsmessage = MipsMessage.Create(MipsCommand.BURST,numberCycles);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			//var result = responseQueue.Dequeue();
+			return Unit.Default;
+		}
 
 		//DC Bias Module
 
 	    public async Task<Unit> SetDcVoltage(string channel, double volts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCB,channel,volts);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetDcSetpoint(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCB, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetDcReadback(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetDcOffset(string channel, double offsetVolts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCBOF, channel, offsetVolts);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetDcOffset(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBOF, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetMinimumVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCMIN, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetMaximumVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCMAX, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetDcPowerState(State state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCPWR, state.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<State> GetDcPowerState()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCPWR);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes, out State result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out State value);
+		    return value;
 		}
 
 	    public async Task<Unit> SetAllDcChannels(IEnumerable<double> channels)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCBALL, channels);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 		public async Task<IEnumerable<double>> GetAllDcSetpoints()
 		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBALL);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			List<double> responses = new List<double>();
+			var response = responseQueue.Dequeue();
+			var values = response.Split(',');
+			for(int i=0;i<values.Length;i++)
+			{
+				double.TryParse(values[i], out double result);
+				responses.Add(result);
+			}
+			return responses;
 
-			return await messagePacket.Select(bytes =>bytes)
-				.Scan(new List<double>(),
-				(list, bytes) =>
-				{
-					var value = bytes.Split(',');
-					if (value.Length == 8)
-					{
-						foreach (var v in value)
-						{
-							double.TryParse(v, out double result);
-							list.Add(result);
-						}
-						
-					}
-					
-					return list;
-				}).FirstAsync();
-			
-			
+
 		}
 
 		public async Task<IEnumerable<double>> GetAllDcReadbacks()
 		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBALLV);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			List<double> responses = new List<double>();
+			var response = responseQueue.Dequeue();
+			var values = response.Split(',');
+			for (int i = 0; i < values.Length; i++)
+			{
+				double.TryParse(values[i], out double result);
+				responses.Add(result);
+			}
+			return responses;
 
-			var aggregator = await messagePacket.Select(bytes => bytes)
-				.Scan(new List<double>(),
-				(list, bytes) =>
-				{
-					var value = bytes.Split(',');
-					if (value.Length == 8)
-					{
-						foreach (var v in value)
-						{
-							double.TryParse(v, out double result);
-							list.Add(result);
-						}
 
-					}
-
-					return list;
-				}).FirstAsync();
-			return aggregator;
 		}
 
 		public async Task<Unit> SetUniversalOffset(double voltageOffset)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCBDELTA, voltageOffset);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<Unit> SetNumberOfChannelsOnboard(int board, int numberChannels)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SDCBCHNS, board, numberChannels);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> UseSingleOffsetTwoModules(Status status)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SDCBONEOFF, status.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> EnableOffsetReadback(Status enableReadback)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.DCBOFFRBENA, enableReadback.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> EnableBoardOffsetOption(int board, Status enable)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCBOFFENA, board, enable.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 		
@@ -607,208 +676,170 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetDCbiasProfile(int profile, IEnumerable<int> channels)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDCBPRO, profile, channels);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<IEnumerable<double>> GetDCbiasProfile(int profile)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDCBPRO, profile);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			List<double> responses = new List<double>();
+		    var response = responseQueue.Dequeue();
+		    var values = response.Split(',');
+		    for (int i = 0; i < values.Length; i++)
+		    {
+			    double.TryParse(values[i], out double result);
+			    responses.Add(result);
+		    }
+		    return responses;
 
-		    return await messagePacket.Select(bytes => bytes)
-			    .Scan(new List<double>(),
-				    (list, bytes) =>
-				    {
-					    var value = bytes.Split(',');
-					    if (value.Length == 8)
-					    {
-						    foreach (var v in value)
-						    {
-							    double.TryParse(v, out double result);
-							    list.Add(result);
-						    }
-
-					    }
-
-					    return list;
-				    }).FirstAsync();
 		}
 
-	    public  async Task<Unit> OutputWithDCbiasProfile(int profile)
+		public  async Task<Unit> OutputWithDCbiasProfile(int profile)
 		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.ADCBPRO, profile);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			//var result = responseQueue.Dequeue();
+			return Unit.Default;
 			//throw new NotImplementedException();
-			
+
 		}
 
 	    public async Task<Unit> CopiesToDCbiasProfile(int profile)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.CDCBPRO, profile);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    //var result = responseQueue.Dequeue();
+		    return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 	    public async Task<Unit> ToggleProfile(int profile1, int profile2, int time)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBPRO, profile1, profile2, time);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    //var result = responseQueue.Dequeue();
+		    return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 	    public async Task<Unit> StopToggleProfile()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBSTOP);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.TDCBSTP);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   // var result = responseQueue.Dequeue();
+		    return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 	    //Rf Driver
 
-		public async Task<Unit> SetFrequency(string channel, int frequencyInHz)
+		public async Task<Unit> SetFrequency(string channel, double frequencyInHz)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFFRQ,channel,frequencyInHz);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetLevel(string channel, int peakToPeakVoltage)
+	    public async Task<Unit> SetRfPeakToPeak(string channel, double peakToPeakVoltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFVLT,channel,peakToPeakVoltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetDriveLevel(string channel, int drive)
+	    public async Task<Unit> SetDriveLevel(string channel, double drive)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFDRV,channel,drive);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetFrequency(string channel)
+	    public async Task<double> GetFrequency(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFFRQ, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<double> GetPositiveComponent(string channel)
+	    public async Task<double> GetRFPositive(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPPVP, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<double> GetNegativeComponent(string channel)
+	    public async Task<double> GetRFNegative(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPPVN, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			   double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetOutputDriveLevelPercent(string channel)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GRFDRV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GRFDRV, channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
 
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
-		}
-
-	    public async Task<double> GetPeakToPeakVoltageSetpoint(string channel)
+	    public async Task<double> GetPeakToPeakVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFVLT, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<int> GetChannelPower(string channel)
+	    public async Task<double> GetChannelPower(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFPWR, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 		public async Task<IEnumerable<double>> GetParameters()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFALL);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			List<double> responses = new List<double>();
+		    var response = responseQueue.Dequeue();
+		    var values = response.Split(',');
+		    for (int i = 0; i < values.Length; i++)
+		    {
+			    double.TryParse(values[i], out double result);
+			    responses.Add(result);
+		    }
+		    return responses;
 
-			return await messagePacket.Select(bytes => bytes)
-				.Scan(new List<double>(),
-					(list, bytes) =>
-					{
-						var value = bytes.Split(',');
-						if (value.Length == 8)
-						{
-							foreach (var v in value)
-							{
-								double.TryParse(v, out double result);
-								list.Add(result);
-							}
-
-						}
-
-						return list;
-					}).FirstAsync();
 		}
 
 		//DioModule
@@ -816,23 +847,19 @@ namespace Mips_net.Device
 		public async Task<Unit> SetDigitalOutput(string channel, int state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SDIO, channel, state);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetDigitalState(string channel)
+	    public async Task<bool> GetDigitalState(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GDIO, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    bool.TryParse(response, out bool result);
+		    return result;
 		}
 
 	    public async Task<Unit> ReporInputChannelState(string channel, DigitalEdge edge)
@@ -848,10 +875,9 @@ namespace Mips_net.Device
 				case "W":
 				case "X":
 					var mipsmessage = MipsMessage.Create(MipsCommand.RPT, channel, edge.ToString());
-					mipsmessage.WriteTo(communicator);
-					var messagePacket = communicator.MessageSources;
-
-					return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+					messageQueue.Enqueue(mipsmessage);
+					await ProcessQueue();
+					return Unit.Default;
 				default:
 					return Unit.Default;
 			}
@@ -891,10 +917,9 @@ namespace Mips_net.Device
 						case "P":
 						case "OFF":
 							var mipsmessage = MipsMessage.Create(MipsCommand.MIRROR, input, output);
-							mipsmessage.WriteTo(communicator);
-							var messagePacket = communicator.MessageSources;
-
-							return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+							messageQueue.Enqueue(mipsmessage);
+							await ProcessQueue();
+							return Unit.Default;
 						default:
 							return Unit.Default;
 					}
@@ -911,63 +936,50 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetEsiVoltage(int channel, int volts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SHV, channel, volts);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    
 	    public async Task<int> GetEsiSetpointVoltage(int channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GHV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-				return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<int> GetEsiReadbackVoltage(int channel)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GHVV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-				return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<int> GetEsiReadbackCurrent(int channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GHVI, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-				return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<int> GetMaximumEsiVoltage(int channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GHVMAX, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-				return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 		
@@ -987,196 +999,178 @@ namespace Mips_net.Device
 	    public async Task<Unit> StopMacro()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.MSTOP);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> PlayMacro(string name)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.MPLAY,name);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<string> ListMacro()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.MLIST);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    public async Task<Unit> DeleteMacro(string name)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.MDELETE,name);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 		//TWAVE Module
 
 	    public async Task<double> GetTWaveFrequency(string channel)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GTWF,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes =>
-			{
-				double.TryParse(bytes, out double freq);
-				return freq;
-			}).FirstAsync();
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWF, channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    double.TryParse(result, out double freq);
+		    return freq;
+			
+				
 		}
 
-	    public async Task<Unit> SetTWaveFrequency(string channel, int frequency)
+	    public async Task<Unit> SetTWaveFrequency(string channel, double frequency)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWF, channel,frequency);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<double> GetTWavePulseVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWPV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response= responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+			return result;
 		}
 
-	    public async Task<Unit> SetTWavePulseVoltage(string channel, int voltage)
+	    public async Task<Unit> SetTWavePulseVoltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWPV, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
-	    public async Task<Unit> SetTWaveGuard1Voltage(string channel, int voltage)
+	    public async Task<Unit> SetTWaveGuard1Voltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWG1V, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetTWaveGuard1Voltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWG1V, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double volt);
-			    return volt;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetTWaveGuard2Voltage(string channel, int voltage)
+	    public async Task<Unit> SetTWaveGuard2Voltage(string channel,double voltage)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWG2V, channel,voltage);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetTWaveGuard2Voltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWG2V, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double volt);
-			    return volt;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	   public async Task<BitArray> GetTWaveSequence(string channel)
-	    {
+		{
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSEQ, channel);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-			var bitPattern = await messagePacket.Select(s =>{
-				var boolArray = new List<bool>();
-				foreach (var v in s.ToCharArray())
-				{
-					boolArray.Add(v == '0' ? false : true);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var result = responseQueue.Dequeue();
+			var boolArray = new List<bool>();
+			foreach (var v in result.ToCharArray())
+			{
+				boolArray.Add(v == '0' ? false : true);
 
-				}
-				
-				return boolArray;
-			}).FirstAsync();
-			var sequence = new BitArray(bitPattern.ToArray());
+			}
+			var sequence = new BitArray(boolArray.ToArray());
 			return sequence;
-		    //throw new NotImplementedException();
+			throw new NotImplementedException();
 	    }
 
 	    public async Task<Unit> SetTWaveSequence(string channel, BitArray sequence)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSEQ, channel,sequence);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<TWaveDirection> GetTWaveDirection(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWDIR, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out TWaveDirection dir);
-			    return dir;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    Enum.TryParse(response, true, out TWaveDirection result);
+			return result;
 		}
 
 	    public async Task<Unit> SetTWaveDirection(string channel, TWaveDirection direction)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWDIR, channel,direction.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<Unit> SetTWaveCompressionCommand(CompressionTable compressionTable)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, compressionTable);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<string> GetTWaveCompressionCommand()
+	    public async Task<Unit> SetTWaveCompressionCommand(string compressionTable)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWCTBL, compressionTable);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+
+		public async Task<string> GetTWaveCompressionCommand()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTBL);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>bytes).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    
@@ -1184,80 +1178,65 @@ namespace Mips_net.Device
 	    public async Task<StateCommands> GetCompressorMode()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCMODE);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out StateCommands mod);
-			    return mod;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response= responseQueue.Dequeue();
+		    Enum.TryParse(response, true, out StateCommands result);
+			return result;
 		}
 
 	    public async Task<Unit> SetCompressorMode(StateCommands mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCMODE, mode.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetCompressorOrder()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCORDER);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetCompressorOrder(int order)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCORDER, order);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetCompressorTriggerDelay()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTD);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetCompressorTriggerDelay(double delayMilliseconds)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTD, delayMilliseconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 		public async Task<double> GetCompressionTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTC);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	   
@@ -1265,10 +1244,9 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetCompressionTime(int timeMilliseconds)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTC, timeMilliseconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    
@@ -1276,55 +1254,47 @@ namespace Mips_net.Device
 	    public async Task<double> GetNormalTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTN);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetNormalTime(int timeMilliseconds)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTN, timeMilliseconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    
 	    public async Task<double> GetNonCompressTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCTNC);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double freq);
-			    return freq;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetNonCompressTime(int timemilliSeconds)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCTNC,timemilliSeconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> ForceMultipassTrigger()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TWCTRG);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    var result = responseQueue.Dequeue();
+		    return Unit.Default;
 		}
 
 	    
@@ -1332,135 +1302,117 @@ namespace Mips_net.Device
 	    public async Task<SwitchState> GetSwitchState()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWCSW);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out SwitchState state);
-			    return state;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    Enum.TryParse(response, true, out SwitchState result);
+			return result;
 		}
 
 	    public async Task<Unit> SetSwitchState(SwitchState state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWCSW);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
-	    public async Task<Unit> SetTWaveToCommonClockMode(bool setToMode)
+	    public async Task<Unit> SetTWaveToCommonClockMode(bool setClock)
 	    {
-		    throw new NotImplementedException();
-	    }
+			var mipsmessage = MipsMessage.Create(MipsCommand.STWCMP, setClock);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
-	    public async Task<Unit> SetTWaveToCompressorMode(bool setToMode)
+	    public async Task<Unit> SetTWaveToCompressorMode(bool setMode)
 	    {
-		    throw new NotImplementedException();
-	    }
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWCMP, setMode);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
 
 
-		//IFrequencySweepModule
+		//TWaveSweepModule
 
-		public async Task<Unit> SetStartFrequency(string channel, int frequency)
+		public async Task<Unit> SetSweepStartFrequency(string channel, double frequency)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTRT,channel,frequency);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-		public async Task<int> GetStartFrequency(string channel)
+	    public async Task<double> GetSweepStartFrequency(string channel)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTRT,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-
-				int.TryParse(bytes, NumberStyles.Number,
-				    CultureInfo.CurrentCulture.NumberFormat,
-				    out int result);
-			    return result;
-		    }).FirstAsync();
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTRT, channel);
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetStopFrequency(string channel, int stopFrequency)
+	    public async Task<Unit> SetSweepStopFrequency(string channel, double stopFrequency)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTP,channel,stopFrequency);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-		public async Task<int> GetStopFrequency(string channel)
+		public async Task<double> GetSweepStopFrequency(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTP,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-
-				int.TryParse(bytes, NumberStyles.Number,
-				    CultureInfo.CurrentCulture.NumberFormat,
-				    out int result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 		public async Task<Unit> SetSweepTime(string channel, double timeInSeconds)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSTM,channel,timeInSeconds);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 		public async Task<double> GetSweepTime(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSTM,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double state);
-			    return state;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 		public async Task<Unit> StartSweep(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSGO,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 		public async Task<Unit> StopSweep(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STWSHLT,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default; 
 		}
 
-		public async Task<string> GetStatus(string channel)
+		public async Task<string> GetSweepStatus(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTWSTA,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>bytes).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 		//WiFi Module
@@ -1468,215 +1420,189 @@ namespace Mips_net.Device
 	    public async Task<string> GetHostName()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GHOST);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    public async Task<string> GetSSID()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GSSID);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    public async Task<string> GetWiFiPassword()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GPSWD);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    public async Task<Unit> SetHostName(string name)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SHOST,name);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetSSID(string id)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SSSID,id);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetWiFiPassword(string password)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SPSWD,password);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> EnablesInterface(bool enables)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWIFIENA,enables.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 	    //IPulse GeneratorModule
 
 	    public async Task<Unit> SetSignalTable(MipsSignalTable table)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLDAT,table);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetClock(ClockType clockType)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLCLK, clockType.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 	    public async Task<Unit> SetClock(double clockValue)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.STBLCLK, clockValue);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
 		public async Task<Unit> SetTrigger(SignalTableTrigger trigger)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLTRG, trigger.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> AbortTimeTable()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TBLABRT);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetMode(Modes mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SMOD, mode.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> StartTimeTable()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TBLSTRT);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> StopTable()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TBLSTOP);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetClockFreuency()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTBLFRQ);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetTableNumber(int number)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLNUM, number);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetTableNumber()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTBLNUM);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes =>
-			{
-				int.TryParse(bytes, out int result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetAdvanceTableNumber(State state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLADV,state.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<State> GetAdvanceTableNumber()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTBLNUM);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			   Enum.TryParse(bytes, out State result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out State value);
+		    return value;
 		}
 
 	    public async Task<Unit> SetChannelValue(int count, string channel, int newValue)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLVLT,count,channel, newValue);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetChannelValue(int count, string channel)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTVLVLT, count, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 
 		}
 
@@ -1684,57 +1610,48 @@ namespace Mips_net.Device
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLCNT, count, channel, newCount);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetTableDelay(int delay)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLDLY, delay);
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<Unit> SetSoftwareGeneration(Status value)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.SOFTLDAC, value.ToString());
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> EnablesRelpy(Status enables)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.STBLREPLY, enables.ToString());
-			mipsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    var result = responseQueue.Dequeue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Status> GetStatusReply()
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.GTBLREPLY);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes =>
-			{
-				Enum.TryParse(bytes, out Status result);
-				return result;
-			}).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out Status value);
+		    return value;
 		}
 
 
@@ -1743,116 +1660,97 @@ namespace Mips_net.Device
 
 		public async Task<Unit> SetTriggerChannelLevel(string channel, TriggerLevel trigger)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGINP, channel, trigger.ToString());
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			 throw new NotImplementedException();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGINP, channel, trigger.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+			
 		}
 
 		public async Task<Unit> SetTriggerDelay(double delayTime)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGDLY, delayTime);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGDLY, delayTime);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+			
 		}
 
 		public async Task<double> GetTriggerDelay()
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGDLY);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes =>
-			//{
-			//	double.TryParse(bytes, out double result);
-			//	return result;
-
-			//}).FirstAsync();
-			throw new NotImplementedException();
+			var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGDLY);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+			
 		}
 
 		public async Task<Unit> SetTriggerPeriod(double delayPeriod)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGPRD, delayPeriod);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGPRD, delayPeriod);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 		public async Task<double> GetTriggerPeriod()
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGPRD);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes =>
-			//{
-			//	double.TryParse(bytes, out double result);
-			//	return result;
-
-			//}).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGPRD);
+			 messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
 			throw new NotImplementedException();
 		}
 
 		public async Task<Unit> SetTriggerRepeatCount(int count)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGRPT, count);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGRPT, count);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 		public async Task<int> GetTriggerRepeatCount()
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGRPT);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes =>
-			//{
-			//	int.TryParse(bytes, out int result);
-			//	return result;
-
-			//}).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGRPT);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			int.TryParse(response, out int result);
+			return result;
 			throw new NotImplementedException();
 		}
 
 		public async Task<Unit> SetTriggerModule(ArbMode mode)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGMOD, mode.ToString());
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-			throw new NotImplementedException();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGMOD, mode.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 		}
 
 		public async Task<Unit> EnableDelayTrigger(Status enable)
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGENA, enable.ToString());
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.SDTRIGENA, enable.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
 			throw new NotImplementedException();
 		}
 
 		public async Task<string> GetDelayTriggerStatus()
 		{
-			//var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGENA);
-			//mipsmessage.WriteTo(communicator);
-			//var messagePacket = communicator.MessageSources;
-
-			//return await messagePacket.Select(bytes => bytes).FirstAsync();
+			var mipsmessage = MipsMessage.Create(MipsCommand.GDTRIGENA);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var result = responseQueue.Dequeue();
+			return result;
 			throw new NotImplementedException();
 		}
 
@@ -1861,61 +1759,57 @@ namespace Mips_net.Device
 		public async Task<string> GetIP()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GEIP);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 			//throw new NotImplementedException();
 		}
 
 	    public async Task<Unit> SetIP(string ip)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SEIP,ip);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetPortNumber()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GEPORT);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => { int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 			//throw new NotImplementedException();
 		}
 
 	    public async Task<Unit> SetPortNumber(int port)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SEPORT,port);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-				// throw new NotImplementedException();
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+			// throw new NotImplementedException();
+		}
 
 	    public async Task<string> GetGatewayIP()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GEGATE);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result; ;
 			//throw new NotImplementedException();
 		}
 
 	    public async Task<Unit> SetGatewayIP(string ip)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GEGATE,ip);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 			//throw new NotImplementedException();
 		}
 		//FAIMS Module
@@ -1923,19 +1817,17 @@ namespace Mips_net.Device
 	    public async Task<Unit> SetPositiveOutput(int slope, int offset)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFHPCAL,slope,offset);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<Unit> SetNegativeOutput(int slope, int offset)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SRFHPCAL,slope,offset);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 
@@ -1945,545 +1837,455 @@ namespace Mips_net.Device
 	    public async Task<State> GetFilamentEnable(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLENA,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes, out State result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out State value);
+		    return value;
 		}
 
 		public async Task<Unit> SetFilamentEnable(string channel, State state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLENA,channel,state.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 		public async Task<double> GetFilamentSetPointCurrent(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLI,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 		public async Task<double> GetFilamentActualCurrent(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLAI, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => {
-				double.TryParse(bytes, out double result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetFilamentCurrent(string channel, int current)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLI, channel,current);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<double> GetFilamentSetPointVoltaget(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLSV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetFilamentActualVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLASV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => {
-				double.TryParse(bytes, out double result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetFilamentSetVoltage(string channel, int volts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLSV, channel,volts);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync(); 
-	    }
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
 
 	    public async Task<double> GetFilamentLoadVoltage(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLV, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetFilamentPower(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLPWR,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => {
-				double.TryParse(bytes, out double result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<double> GetFilamentRampRate(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLRT, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => {
-				double.TryParse(bytes, out double result);
-				return result;
-			}).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetFilamentRampRate(string channel, int ramp)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLRT,channel,ramp);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetCyclingCurrent1(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLP1, channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetCyclingCurrent1(string channel, int current)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLP1,channel,current);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<double> GetCyclingCurrent2(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLP2,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetCyclingCurrent2(string channel, int current)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLP2,channel,current);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<int> GetCycle(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLCY,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetCycle(string channel, int cycle)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLCY,channel,cycle);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<State> GetCycleStatus(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GFLENAR,channel);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    Enum.TryParse(bytes, out State result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out State value);
+		    return value;
 		}
 
 	    public async Task<Unit> SetCycleStatus(string channel, State state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLENAR,channel,state.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
 	    public async Task<double> GetCurrentToHost(double resistor)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.RFLPARMS, resistor);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetResistor(string channel, int time)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SFLSRES,channel,time);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		  return Unit.Default;
 		}
 
 	    public async Task<double> GetResistor()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GFLSRES);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync(); throw new NotImplementedException();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result; 
 	    }
 
 	    public async Task<double> GetEmissionCurrent()
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.GFLECUR);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GFLECUR);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
 
-		    return await messagePacket.Select(bytes => {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
-		}
+	    //ARB Module
 
-		//ARB Module
-
-	    public async Task<string> SetArbMode(int module, ArbMode mode)
+		public async Task<Unit> SetArbMode(string module, ArbMode mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBMODE, module, mode.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => bytes).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 			//throw new NotImplementedException();
 		}
 
-	    public async Task<ArbMode> GetArbMode(int module)
+	    public async Task<ArbMode> GetArbMode(string module)
 	    {
 
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBMODE, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-			{ Enum.TryParse(bytes, true, out ArbMode result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out ArbMode value);
+		    return value;
 		}
 
-	    public async Task<Unit> SetArbFrequency(int module, int frequencyInHz)
+	    public async Task<Unit> SetArbFrequency(string module, double frequencyInHz)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFREQ,module,frequencyInHz);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbFrequency(int module)
+	    public async Task<double> GetArbFrequency(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFREQ, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			   int.TryParse(bytes,  out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetArbVoltsPeakToPeak(int module, int peakToPeakVolts)
+	    public async Task<Unit> SetArbVoltsPeakToPeak(string module,double peakToPeakVolts)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFVRNG, module, peakToPeakVolts);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
-	    public async Task<int> GetArbVoltsPeakToPeak(int module)
+	    public async Task<double> GetArbVoltsPeakToPeak(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVRNG, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetArbOffsetVoltage(int module, int value)
+	    public async Task<Unit> SetArbOffsetVoltage(string module, double value)
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SWFVOFF, module, value);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetArbOffsetVoltage(int module)
+	    public async Task<double> GetArbOffsetVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVOFF, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-		public async Task<Unit> SetAuxOutputVoltage(int module, int value)
+		public async Task<Unit> SetAuxOutputVoltage(string module, double value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFVAUX, module, value);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		   return Unit.Default;
 		}
 
-	    public async Task<int> GetAuxOutputVoltage(int module)
+	    public async Task<double> GetAuxOutputVoltage(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFVAUX, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
-	    public async Task<Unit> StopArb(int module)
+	    public async Task<Unit> StopArb(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFDIS, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> StartArb(int module)
+	    public async Task<Unit> StartArb(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFENA, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetTwaveDirection(int module, TWaveDirection direction)
+	    public async Task<Unit> SetTwaveDirection(string module, TWaveDirection direction)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFDIR, module, direction.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<TWaveDirection> GetTwaveDirection(int module)
+	    public async Task<TWaveDirection> GetTwaveDirection(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFDIR, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			   Enum.TryParse(bytes,true, out TWaveDirection result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out TWaveDirection value);
+		    return value;
 		}
 
-	    public async Task<Unit> SetWaveform(int module, IEnumerable<int> points)
+	    public async Task<Unit> SetWaveform(string module, IEnumerable<int> points)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFARB, module, points);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<IEnumerable<int>> GetWaveform(int module)
+	    public async Task<IEnumerable<int>> GetWaveform(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFARB, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => bytes)
-				.Scan(new List<int>(),
-					(list, bytes) =>
-					{
-						var value = bytes.Split(',');
-						if (value.Length == 32)
-						{
-							foreach (var v in value)
-							{
-								int.TryParse(v, out int result);
-								list.Add(result);
-							}
-
-						}
-
-						return list;
-					}).FirstAsync();
-
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    List<int> responses = new List<int>();
+		    var response = responseQueue.Dequeue();
+		    var values = response.Split(',');
+		    for (int i = 0; i < values.Length; i++)
+		    {
+			    int.TryParse(values[i], out int result);
+			    responses.Add(result);
+		    }
+		    return responses;
+			
 		}
 
-		public async Task<Unit> SetWaveformType(int module, ArbWaveForms waveForms)
+		public async Task<Unit> SetWaveformType(string module, ArbWaveForms waveForms)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SWFTYP, module, waveForms.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<ArbWaveForms> GetWaveformType(int module)
+	    public async Task<ArbWaveForms> GetWaveformType(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GWFTYP, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out ArbWaveForms result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out ArbWaveForms value);
+		    return value;
 		}
 
-	    public async Task<Unit> SetBufferLength(int module, int length)
+	    public async Task<Unit> SetBufferLength(string module, int length)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBBUF, module, length);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetBufferLength(int module)
+	    public async Task<int> GetBufferLength(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBBUF, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetBufferRepeat(int module, int count)
+	    public async Task<Unit> SetBufferRepeat(string module, int count)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBNUM, module, count);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<int> GetBufferRepeat(int module)
+	    public async Task<int> GetBufferRepeat(string module)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBNUM, module);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
-	    public async Task<Unit> SetAllChannelValue(int module, int value)
+	    public async Task<Unit> SetAllChannelValue(string module, int value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCHS, module,value);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetChannelValue(int module, int channel, int value)
+	    public async Task<Unit> SetChannelValue(string module, string channel, int value)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCH, module, channel,value);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
-	    public async Task<Unit> SetChannelRange(int module, int channel, int start, int stop, int range)
+	    public async Task<Unit> SetChannelRange(string module, string channel, int start, int stop, int range)
 	    {
 
 		    var mipsmessage = MipsMessage.Create(MipsCommand.SACHRNG, module, channel,start,stop, range);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 
@@ -2493,202 +2295,291 @@ namespace Mips_net.Device
 		public async  Task<Unit> SetArbCompressionCommand(CompressionTable table)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTBL,table);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 			//throw new NotImplementedException();
 		}
 
-	    public async Task<string> GetArbCompressionCommand()
+	    public async Task<Unit> SetArbCompressionCommand(string table)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTBL, table);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		    //throw new NotImplementedException();
+	    }
+
+		public async Task<string> GetArbCompressionCommand()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTBL);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>bytes).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    return result;
 		}
 
 	    public async Task<StateCommands> GetArbCompressorMode()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCMODE);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out StateCommands result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out StateCommands value);
+		    return value;
 		}
 
 	    public async Task<Unit> SetArbCompressorMode(StateCommands mode)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCMODE, mode.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<int> GetArbCompressorOrder()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCORDER);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    int.TryParse(bytes, out int result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    int.TryParse(response, out int result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetArbCompressorOrder(int order)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCORDER, order);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetArbTriggerDelay()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTD);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetArbTriggerDelay(double delay)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTD, delay);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetArbCompressionTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTC);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetArbCompressionTime(double time)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTC, time);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetArbNormalTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTN);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 		public async Task<Unit> SetArbNormalTime(double time)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTN,time);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<double> GetArbNonCompressionTime()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCTNC);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    double.TryParse(bytes, out double result);
-			    return result;
-		    }).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
 		}
 
 	    public async Task<Unit> SetArbNonCompressionTime(double time)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCTNC, time);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetArbTrigger()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.TARBTRG);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<SwitchState> GetArbSwitchState()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GARBCSW);
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes =>
-		    {
-			    Enum.TryParse(bytes,true, out SwitchState result);
-			    return result;
-		    }).FirstAsync();
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var result = responseQueue.Dequeue();
+		    Enum.TryParse(result, out SwitchState value);
+		    return value;
 		}
 		
 	    public async Task<Unit> SetArbSwitchState(SwitchState state)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCSW, state.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 
 	    public async Task<Unit> SetArbClock(Status status)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCCLK, status.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
 
 	    public async Task<Unit> SetArbCompressor(Status status)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.SARBCMP, status.ToString());
-		    mipsmessage.WriteTo(communicator);
-		    var messagePacket = communicator.MessageSources;
-
-		    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+			messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
 		}
+
+	    public async Task<Unit> SetArbSoftwareSync()
+	    {
+			var mipsmessage = MipsMessage.Create(MipsCommand.ARBSYNC);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+		}
+	    public async Task<Unit> SetArbOffsetA(string module,double offsetvalue)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBOFFA,module,offsetvalue);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetArbOffsetA(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFA,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetArbOffsetB(string module,double offsetvalue)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SARBOFFB,module,offsetvalue);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetArbOffsetB(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GARBOFFB,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetSerialport1Enable(bool value)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.SSER1ENA,value);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<bool> GetSerialport1Enable()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GSER1ENA);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    bool.TryParse(response, out bool result);
+		    return result;
+	    }
+
+	    public async Task<string> GetUniqueID()
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.UUID);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    return response;
+	    }
+	    public async Task<Unit> TuneRFChannel(string channel)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.TUNERFCH,channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<Unit> ReTuneRFChannel(string channel)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.RETUNERFCH,channel);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<Unit> SetTwaveSweepStopingVoltage(string module, double voltage)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTPV,module,voltage);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetTwaveSweepStopingVoltage(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTPV,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    public async Task<Unit> SetTwaveSweepStartingVoltage(string module,double voltage)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.STWSSTRTV,module,voltage);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue();
+		    return Unit.Default;
+	    }
+	    public async Task<double> GetTwaveSweepStartingVoltage(string module)
+	    {
+		    var mipsmessage = MipsMessage.Create(MipsCommand.GTWSSTRTV,module);
+		    messageQueue.Enqueue(mipsmessage);
+		    await ProcessQueue(true);
+		    var response = responseQueue.Dequeue();
+		    double.TryParse(response, out double result);
+		    return result;
+	    }
+	    
     }
 }

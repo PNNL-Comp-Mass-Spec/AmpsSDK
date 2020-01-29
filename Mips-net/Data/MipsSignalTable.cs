@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using DynamicData;
 
-namespace Mips_net.Data
+namespace Mips.Data
 {
 	[DataContract]
    public class MipsSignalTable
@@ -23,7 +23,7 @@ namespace Mips_net.Data
 	    private MipsSignalTable(IEnumerable<PsgPoint> timePoints) : this()
 	    {
 		    this.timePoints.AddRange(timePoints);
-	    }
+        }
 
 	    public PsgPoint this[string pointName]
 	    {

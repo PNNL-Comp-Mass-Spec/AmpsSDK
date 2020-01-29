@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Threading.Tasks;
-using Mips_net.Commands;
-using Mips_net.Device;
+using Mips.Commands;
+using Mips.Device;
 
-
-namespace Mips_net.Module
+namespace Mips.Module
 {
 	public interface IArbCompressorModule
 	{
 		Task<Unit> SetArbCompressionCommand(CompressionTable compressionTable);
+		Task<Unit> SetArbCompressionCommand(string compressionTable);
 		Task<string> GetArbCompressionCommand();
 		Task<StateCommands> GetArbCompressorMode();
 		Task<Unit> SetArbCompressorMode(StateCommands mode);
@@ -26,11 +25,5 @@ namespace Mips_net.Module
 		Task<Unit> SetArbTrigger();
 		Task<SwitchState> GetArbSwitchState();
 		Task<Unit> SetArbSwitchState(SwitchState state);
-
-
-
-
-
-
 	}
 }

@@ -1,19 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Reactive;
 using System.Threading.Tasks;
-using Microsoft.SqlServer.Server;
-using Mips_net.Device;
+using Mips.Device;
 
-
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IStandardModule
     {
-	    Task<string> GetName();
+	    Task<int> GetNumberArbChannels();
+		Task<int> GetNumberTwaveChannels();
+		Task<string> GetName();
 	    Task<string> GetVersion();
 	    Task<ErrorCode> GetError();
 	    Task<Unit> SetName(string name);
-	    Task<string> About();
+	    Task<IEnumerable<string>> About();
 	    Task<Unit> RevisionLevel(int board, int mudule,int revLevel);
 	    Task<Unit> Reset();
 	    Task<Unit> Save();
@@ -36,6 +36,10 @@ namespace Mips_net.Module
 		Task<Unit> LEDColor(int color);
 		Task<Unit> DisplayOff(Status status);
 
+	    Task<Unit> SetSerialport1Enable(bool value);
+	    Task<bool> GetSerialport1Enable();
+	    Task<string> GetUniqueID();
 
-	}
+
+    }
 }

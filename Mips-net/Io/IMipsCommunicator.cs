@@ -1,7 +1,10 @@
 ﻿using System;
 
-namespace Mips_net.Io
+namespace Mips.Io
 {
+    using Mips.Commands;
+    using System.Collections.Generic;
+
     public interface IMipsCommunicator
     {
         /// <summary>
@@ -10,7 +13,7 @@ namespace Mips_net.Io
         /// <param name="command"></param>
         //void Write(MipsMessage command);
 
-        IObservable<string> MessageSources { get; }
+        IObservable<(bool, string)> MessageSources { get; }
 
         /// <summary>
         /// Opens connection and allows 
@@ -39,6 +42,12 @@ namespace Mips_net.Io
         /// Gets whether the port is open.
         /// </summary>
         bool IsOpen { get; }
-		
+
+        void Write(byte[] value, string separator);
+
+        void WriteEnd(string appendToEnd = null);
+
+        void WriteHeader(MipsCommand command);
+        IObservable<byte> Read { get; }
     }
 }

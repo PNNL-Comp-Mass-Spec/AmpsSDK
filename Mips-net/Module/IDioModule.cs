@@ -1,13 +1,13 @@
 ﻿using System.Reactive;
 using System.Threading.Tasks;
-using Mips_net.Device;
+using Mips.Device;
 
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IDioModule
     {
         Task<Unit> SetDigitalOutput(string channel, int state);
-        Task<int> GetDigitalState(string channel);
+        Task<bool> GetDigitalState(string channel);
         Task<Unit> ReporInputChannelState(string channel,DigitalEdge edge);
         /// <summary>
         /// Input: Q-X

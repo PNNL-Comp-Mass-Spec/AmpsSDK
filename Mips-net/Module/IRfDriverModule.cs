@@ -2,26 +2,21 @@
 using System.Reactive;
 using System.Threading.Tasks;
 
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface IRfDriverModule
     {
-        Task<Unit> SetFrequency(string channel, int frequencyInHz);
-        Task<Unit> SetLevel(string channel, int peakToPeakVoltage);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="channel"></param>
-        /// <param name="drive">[0-100]</param>
-        /// <returns></returns>
-        Task<Unit> SetDriveLevel(string channel, int drive);
+        Task<Unit> SetFrequency(string channel, double frequencyInHz);
+        Task<Unit> SetRfPeakToPeak(string channel,double peakToPeakVoltage);
+       
+        Task<Unit> SetDriveLevel(string channel, double drive);
 
-        Task<int> GetFrequency(string channel);
-        Task<double> GetPositiveComponent(string channel);
-        Task<double> GetNegativeComponent(string channel);
+        Task<double> GetFrequency(string channel);
+        Task<double> GetRFPositive(string channel);
+        Task<double> GetRFNegative(string channel);
         Task<double> GetOutputDriveLevelPercent(string channel);
-        Task<double> GetPeakToPeakVoltageSetpoint(string channel);
-        Task<int> GetChannelPower(string channel);
+        Task<double> GetPeakToPeakVoltage(string channel);
+        Task<double> GetChannelPower(string channel);
         Task<IEnumerable<double>> GetParameters();
     }
 }

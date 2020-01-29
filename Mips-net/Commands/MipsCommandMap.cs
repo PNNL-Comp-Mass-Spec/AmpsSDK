@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Mips_net.Commands
+namespace Mips.Commands
 {
 	public  class MipsCommandMap
     {

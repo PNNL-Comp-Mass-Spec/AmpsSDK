@@ -31,9 +31,13 @@ namespace AmpsBoxSdk.Devices
     [DataContract]
     internal sealed class AmpsBox : IAmpsBox
     {
-        private readonly AmpsBoxCommunicator communicator;
+        public readonly IAmpsCommunicator communicator;
 
         private Lazy<AmpsBoxDeviceData> deviceData;
+
+        private readonly Queue<AmpsMessage> messageQueue = new Queue<AmpsMessage>();
+
+        private readonly Queue<string> responseQueue = new Queue<string>();
 
 
         #region Constants
@@ -41,15 +45,49 @@ namespace AmpsBoxSdk.Devices
         /// <summary>
         /// 
         /// </summary>
-        public AmpsBox(AmpsBoxCommunicator communicator)
+        public AmpsBox(IAmpsCommunicator communicator)
         {
             this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
             this.communicator.Open();
-            
+            var source = this.communicator.MessageSources;
+
+            source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
+            {
+                this.responseQueue.Enqueue(s);
+                return s;
+            }).Subscribe();
+
+            this.TableCompleteOrAborted = source
+                .Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
+            this.TableCompleteOrAborted.Subscribe(unit =>
+            {
+                System.Diagnostics.Trace.WriteLine($"{Environment.NewLine}complete{DateTime.Now}");
+            });
+
+            this.ModeReady = source.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default);
+            this.ModeReady.Subscribe();
             ClockFrequency = 16000000;
         }
 
         #endregion
+
+        private async Task ProcessQueue(bool response = false)
+        {
+            while (messageQueue.Count > 0)
+            {
+                var message = messageQueue.Dequeue();
+                message.WriteTo(this.communicator);
+                Thread.Sleep(50);
+                while (response && responseQueue.Count == 0)
+                {
+                    Thread.Sleep(50);
+                }
+                break;
+
+            }
+
+
+        }
 
         #region Public Properties
 
@@ -62,6 +100,11 @@ namespace AmpsBoxSdk.Devices
         [DataMember]
         public string Name => GetName().Result;
 
+        public IObservable<Unit> TableCompleteOrAborted { get; }
+
+        public IObservable<Unit> ModeReady { get; }
+        public IAmpsCommunicator Communicator => communicator;
+        
         #endregion
 
         #region Public Methods and Operators
@@ -78,128 +121,113 @@ namespace AmpsBoxSdk.Devices
             var rfChannels = await this.GetNumberRfChannels();
             var digitalChannels = await this.GetNumberDigitalChannels();
             this.deviceData = new Lazy<AmpsBoxDeviceData>(() => new AmpsBoxDeviceData((uint)dcBiasChannels, (uint)rfChannels, (uint)digitalChannels));
-			return this.deviceData.Value;
-		}
+            return this.deviceData.Value;
+        }
 
         public async Task<Unit> SetDcBiasVoltage(int channel, int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCB, channel.ToString(), volts.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<int> GetDcBiasSetpoint(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCB, channel);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int setPoint);
-                return setPoint;
-            }).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCB, channel);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out int setPoint);
+            return setPoint;
         }
 
         public async Task<int> GetDcBiasReadback(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCBV, channel);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCBV, channel);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int voltageReadback);
-                return voltageReadback;
-            }).FirstAsync();
+            int voltageReadback = 0;
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out voltageReadback);
+
+            return voltageReadback;
         }
 
         public async Task<int> GetDcBiasCurrentReadback(int channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDCBI, channel);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDCBI, channel);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int currentReadback);
-                return currentReadback;
-            }).FirstAsync();
+            int currentReadback = 0;
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out currentReadback);
+            return currentReadback;
         }
 
         public async Task<Unit> SetBoardDcBiasOffsetVoltage(int brdNumber, int offsetVolts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCBOF, brdNumber, offsetVolts);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<int> GetBoardDcBiasOffsetVoltage(int brdNumber)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDCBOF, brdNumber);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDCBOF, brdNumber);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int offsetVoltage);
-                return offsetVoltage;
-            }).FirstAsync();
+            int.TryParse(response, out int offsetVoltage);
+            return offsetVoltage;
         }
 
         public async Task<int> GetNumberDcBiasChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.DCB.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int channels);
-                return channels;
-            }).FirstAsync();
+            int.TryParse(response, out int channels);
+            return channels;
 
         }
 
         public async Task<Unit> SetDigitalState(string channel, bool state)
         {
-            var messagePacket = communicator.MessageSources;
             var stateAsInt = Convert.ToInt32(state).ToString();
-            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, stateAsInt);
-            ampsmessage.WriteTo(communicator);
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIO, channel, stateAsInt);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+
+            return Unit.Default;
         }
 
         public async Task<Unit> PulseDigitalSignal(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SDIO, channel, "P");
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIO, channel, "P");
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<bool> GetDigitalState(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDIO, channel);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes =>
-            {
-                if (string.IsNullOrEmpty(bytes))
-                {
-                    return false;
-                }
-                var result = Convert.ToBoolean(Convert.ToInt16(bytes));
-                return result;
-
-            }).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDIO, channel);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+            var result = Convert.ToBoolean(Convert.ToInt16(response));
+            return result;
         }
 
         /// <summary>
@@ -216,225 +244,225 @@ namespace AmpsBoxSdk.Devices
                 case "F":
                 case "G":
                 case "H":
-                    var ampsmessage = Message.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
-                    ampsmessage.WriteTo(communicator);
-                    var messagePacket = communicator.MessageSources;
+                    var ampsmessage = AmpsMessage.Create(AmpsCommand.SDIODR, channel, digitalDirection.ToString());
+                    messageQueue.Enqueue(ampsmessage);
+                    await ProcessQueue(false);
 
-                    return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+                    return Unit.Default;
                 default:
                     return Unit.Default;
             }
-            
+
         }
 
         public async Task<DigitalDirection> GetDigitalDirection(string channel)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GDIODR, channel);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GDIODR, channel);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                Enum.TryParse(bytes, true, out DigitalDirection result);
-                return result;
-            }).FirstAsync();
+            Enum.TryParse(response, true, out DigitalDirection result);
+            return result;
         }
 
         public async Task<int> GetNumberDigitalChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.DIO.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int channels);
-                return channels;
-            }).FirstAsync();
+            int.TryParse(response, out int channels);
+            return channels;
         }
 
         public async Task<Unit> SetPositiveHighVoltage(int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SPHV, volts);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SPHV, volts);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<Unit> SetNegativeHighVoltage(int volts)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SNHV, volts);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SNHV, volts);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+
+            return Unit.Default;
         }
 
         public async Task<(double, double)> GetPositiveEsi()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GPHVV);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes =>
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GPHVV);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+            var values = response.Split(',');
+            if (values.Length < 2)
             {
-                var values = bytes.Split(',');
-                if (values.Length < 2)
-                {
-                    return (0, 0);
-                }
-                int.TryParse(values[0], out int voltage);
-                int.TryParse(values[1], out int current);
+                return (0, 0);
+            }
+            int.TryParse(values[0], out int voltage);
+            int.TryParse(values[1], out int current);
 
-                return (voltage, current);
-            }).FirstAsync();
+            return (voltage, current);
         }
 
         public async Task<(double, double)> GetNegativeEsi()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GNHVV);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GNHVV);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
+            var values = response.Split(',');
+            if (values.Length < 2)
             {
-                var values = bytes.Split(',');
-                if (values.Length < 2)
-                {
-                    return (0, 0);
-                }
-                int.TryParse(values[0], out int voltage);
-                int.TryParse(values[1], out int current);
+                return (0, 0);
+            }
+            int.TryParse(values[0], out int voltage);
+            int.TryParse(values[1], out int current);
 
-                return (voltage, current);
-            }).FirstAsync();
+            return (voltage, current);
         }
 
         public async Task<Unit> TurnOnHeater()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.ON.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTR, State.ON.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
+            return Unit.Default;
         }
 
         public async Task<Unit> TurnOffHeater()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTR, State.OFF.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTR, State.OFF.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(false);
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+
+            return Unit.Default;
         }
 
         public async Task<Unit> SetTemperatureSetpoint(int temperature)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTRTMP, temperature);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTRTMP, temperature);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
+        }
+        public async Task<int> GetTemperatureSetpoint()
+        {
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GHTRTMP);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+
+            int.TryParse(response, out int temperature);
+            return temperature;
         }
 
         public async Task<int> ReadTemperature()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GHTRTC);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GHTRTC);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int temperature);
-                return temperature;
-            }).FirstAsync();
+            int.TryParse(response, out int temperature);
+            return temperature;
         }
 
         public async Task<Unit> SetPidGain(int gain)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SHTRGAIN, gain);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SHTRGAIN, gain);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<string> GetVersion()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GVER);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GVER);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes => bytes).FirstAsync();
+            return response;
         }
 
         public async Task<ErrorCodes> GetError()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GERR);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GERR);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                Enum.TryParse(bytes, true, out ErrorCodes result);
-                return result;
-            }).FirstAsync();
+            Enum.TryParse(response, true, out ErrorCodes result);
+            return result;
         }
 
-		public async Task<string> GetName()
-		{
-			var ampsmessage = Message.Create(AmpsCommand.GNAME);
-			ampsmessage.WriteTo(communicator);
-			var messagePacket = communicator.MessageSources;
-
-			return await messagePacket.Select(bytes => bytes).FirstAsync();
-		}
-
-		public async Task<Unit> SetName(string name)
+        public async Task<string> GetName()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SNAME, name);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GNAME);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
-    }
+            return response;
+        }
+
+        public async Task<Unit> SetName(string name)
+        {
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SNAME, name);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
+
+            return Unit.Default;
+        }
 
         public async Task<Unit> Reset()
         {
-            var ampsmessage = Message.Create(AmpsCommand.RESET);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.RESET);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<Unit> Save()
         {
-            var ampsmessage = Message.Create(AmpsCommand.SAVE);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SAVE);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<IEnumerable<string>> GetCommands()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCMDS);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-            var aggregator = await messagePacket.Select(s => s).Scan(new List<string>(),
-                    (list, s) =>
-                    {
-                        if (!string.IsNullOrEmpty(s))
-                        {
-                            list.Add(s);
-                        }
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCMDS);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
 
-                        return list;
-                    })
-                .Where(list => list.Count == 51).FirstAsync(); // hardcoded hack
-            return aggregator;
+            List<string> responses = new List<string>();
+            while (responseQueue.Count > 0)
+            {
+                var response = responseQueue.Dequeue();
+                if (string.IsNullOrEmpty(response))
+                {
+                    continue;
+                }
+                responses.Add(response);
+            }
+            return responses;
         }
 
         public async Task<Unit> SetSerialBaudRate(int baudRate)
@@ -444,68 +472,62 @@ namespace AmpsBoxSdk.Devices
 
         public async Task<Unit> SetFrequency(int address, int frequency)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SRFFRQ, address.ToString(), frequency.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<int> GetFrequencySetting(int address)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GRFFRQ, address);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int frequencySetting);
-                return frequencySetting;
-            }).FirstAsync();
+            int.TryParse(response, out int frequencySetting);
+            return frequencySetting;
         }
 
         public async Task<Unit> SetRfDriveSetting(int address, int drive)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SRFDRV, address.ToString(), drive.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public async Task<int> GetRfDriveSetting(int address)
         {
-            var ampsmessage = Message.Create(AmpsCommand.GRFFRQ, address);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int rfDriveSetting);
-                return rfDriveSetting;
-            }).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GRFFRQ, address);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
+            int.TryParse(response, out int rfDriveSetting);
+            return rfDriveSetting;
         }
 
         public async Task<int> GetNumberRfChannels()
         {
-            var ampsmessage = Message.Create(AmpsCommand.GCHAN, Module.RF.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.GCHAN, Module.RF.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes =>
-            {
-                int.TryParse(bytes, out int channels);
-                return channels;
-            }).FirstAsync();
+
+            int.TryParse(response, out int channels);
+            return channels;
         }
 
         public async Task<Unit> AbortTimeTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLABRT);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLABRT);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         /// <summary>
@@ -514,21 +536,22 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StartTimeTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLSTRT);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLSTRT);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         public string LastTable { get; private set; }
         public async Task<string> ReportExecutionStatus()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLRPT);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLRPT);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue(true);
+            var response = responseQueue.Dequeue();
 
-            return await messagePacket.Select(bytes => bytes).FirstAsync();
+            return response;
         }
 
         /// <summary>
@@ -536,11 +559,10 @@ namespace AmpsBoxSdk.Devices
         /// </summary>
         public async Task<Unit> SetMode(Modes mode)
         {
-            var ampsmessage = Message.Create(AmpsCommand.SMOD, mode.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Where(bytes => bytes.Equals("tblrdy", StringComparison.OrdinalIgnoreCase)).Select(x => Unit.Default).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.SMOD, mode.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
+            return Unit.Default;
         }
         /// <summary>
         /// Stop the time table of the device.
@@ -548,11 +570,10 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> StopTable()
         {
-            var ampsmessage = Message.Create(AmpsCommand.TBLSTOP);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
-
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.TBLSTOP);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
+            return Unit.Default;
         }
 
         /// <summary>
@@ -565,11 +586,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> LoadTimeTable(AmpsSignalTable table)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLDAT, table);
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLDAT, table);
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         /// <summary>
@@ -582,11 +603,11 @@ namespace AmpsBoxSdk.Devices
         /// </returns>
         public async Task<Unit> SetClock(ClockType clockType)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLCLK, clockType.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLCLK, clockType.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
 
         /// <summary>
@@ -596,12 +617,14 @@ namespace AmpsBoxSdk.Devices
         /// <returns></returns>
         public async Task<Unit> SetTrigger(StartTrigger startTrigger)
         {
-            var ampsmessage = Message.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
-            ampsmessage.WriteTo(communicator);
-            var messagePacket = communicator.MessageSources;
+            var ampsmessage = AmpsMessage.Create(AmpsCommand.STBLTRG, startTrigger.ToString());
+            messageQueue.Enqueue(ampsmessage);
+            await ProcessQueue();
 
-            return await messagePacket.Select(bytes => Unit.Default).FirstAsync();
+            return Unit.Default;
         }
+
+
 
         #endregion
     }

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using Mips_net.Commands;
-using RJCP.IO.Ports;
-
-
-namespace Mips_net.Io
+using Mips.Commands;
+using Serilog;
+namespace Mips.Io
 {
 internal sealed class MipsCommunicator : IMipsCommunicator
     {
@@ -21,29 +19,37 @@ internal sealed class MipsCommunicator : IMipsCommunicator
         private readonly object sync = new object();     
 	    private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
 		#endregion
+	    private SerialPort serialPort;
+       
 
-		#region Construction and Initialization
+        #region Construction and Initialization
 
-		public MipsCommunicator(SerialPortStream port)
-        {
-            this.port = port;
-	        this.port.BaudRate = port.BaudRate;
-			this.port.PortName = port.PortName;
-            this.port.NewLine = "\n";
-	        this.port.ErrorReceived += PortErrorReceived;
-            this.port.RtsEnable = true; // must be true for MIPS / AMPS communication.
-            this.port.WriteTimeout = 250;
-            this.port.ReadTimeout = 250;
-            IsEmulated = false;
+        public MipsCommunicator(SerialPort port)
+		{
+			
+			this.serialPort= port ?? throw new ArgumentNullException(nameof(port));
+			IsEmulated = false;
 
-            messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+            read = Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                        h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
+                        {
+                            var buffer = new byte[1024];
+                            var ret = new List<byte>();
+                            int bytesRead;
+                            do
+                            {
+                                bytesRead = serialPort.Read(buffer, 0, buffer.Length);
+                                ret.AddRange(buffer.Take(bytesRead));
+                            } while (bytesRead >= buffer.Length);
+                           return ret;
+                        }).Publish().RefCount();
         }
 
 		#endregion
 
 		internal string ReadLine()
 		{
-			return this.port.ReadLine();
+			return this.serialPort.ReadLine();
 		}
 
 	    /// <summary>
@@ -53,7 +59,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 	    /// <param name="separator"></param>
 	    public void Write(byte[] value, string separator)
 		{
-			if (!port.IsOpen)
+			if (!serialPort.IsOpen)
 			{
 				return;
 			}
@@ -64,12 +70,11 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				var bytes = Encoding.ASCII.GetBytes(separator);
 				foreach (var b in bytes)
 				{
-					port.WriteByte(b);
+					serialPort.BaseStream.WriteByte(b);
 				}
-
 				foreach (var b in value)
 				{
-					port.WriteByte(b);
+					serialPort.BaseStream.WriteByte(b);
 				}
 			}
 		}
@@ -80,16 +85,20 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 		    {
 			    throw new NotImplementedException();
 		    }
-
-		    foreach (var commandByte in commandBytes)
+		    lock (sync)
 		    {
-			 port.WriteByte(commandByte);
-		    }
+			    foreach (var commandByte in commandBytes)
+			    {
+				    serialPort.BaseStream.WriteByte(commandByte);
+			    }
+			}
+		   System.Diagnostics.Debug.Write(Encoding.UTF8.GetString(commandBytes));
+            Log.Information($"MIPS {(Encoding.UTF8.GetString(commandBytes))}" );
 
-		}
+        }
 	    public void WriteEnd(string appendToEnd=null)
 	    {
-		    if (!port.IsOpen)
+		    if (!serialPort.IsOpen)
 		    {
 			    return;
 		    }
@@ -100,63 +109,60 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 				    var bytes = Encoding.ASCII.GetBytes(appendToEnd);
 				    foreach (var b in bytes)
 				    {
-					    port.WriteByte(b);
+					    serialPort.BaseStream.WriteByte(b);
 				    }
 			    }
 			    foreach (var b in _lf)
 			    {
-				    port.WriteByte(b);
+				    serialPort.BaseStream.WriteByte(b);
 			    }
-		    }
+			    System.Diagnostics.Debug.Write(Environment.NewLine);
+
+			}
 		}
 
 		public void Close()
         {
             lock (sync)
             {
-                if (port.IsOpen)
+                if (serialPort.IsOpen)
                 {
-                    port.Close();
+                    serialPort.Close();
                     connection.Dispose();
                 }
             }
         }
+		public void Open()
+		{
+			lock (sync)
+			{
 
-        /// <summary>
-        /// TODO The m_port_ error received.
-        /// </summary>
-        /// <param name="sender">
-        /// TODO The sender.
-        /// </param>
-        /// <param name="e">
-        /// TODO The e.
-        /// </param>
-        /// <exception cref="IOException">
-        /// </exception>
-        private void PortErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
-        {
-            switch (e.EventType)
-            {
-                case RJCP.IO.Ports.SerialError.Frame:
-                    System.Diagnostics.Trace.WriteLine(e.EventType.ToString());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+				if (messageSources == null)
+				{
+					messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
+				}
+				if (connection == null)
+				{
+					connection = messageSources.Connect();
+				}
+				if (serialPort.IsOpen) return;
+
+				serialPort.Open();
+			}
+		}
 
 
         #region Properties
 
         /// <summary>
-        /// Gets port open status.
+        /// Gets serialPort open status.
         /// </summary>
-        public bool IsOpen => port.IsOpen;
+        public bool IsOpen => serialPort.IsOpen;
 
         /// <summary>
-        /// Gets the serial port
+        /// Gets the serial serialPort
         /// </summary>
-        private SerialPortStream port;
+       
 
         /// <summary>
         /// Get or set read timeout for commincator.
@@ -176,35 +182,13 @@ internal sealed class MipsCommunicator : IMipsCommunicator
 
         private IDisposable connection;
 
-        public void Open()
-        {
-            lock (sync)
-            {
-                if (port.IsOpen) return;
-                port.Open();
-                connection = messageSources.Connect();
-            }
-            ;
-        }
+        private IObservable<byte> read;
 
-        private IObservable<byte> Read
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                    Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
-						h => port.DataReceived += h, h => port.DataReceived -= h).SelectMany(_ =>
-                    {
-                        var buffer = new byte[1024];
-                        var ret = new List<byte>();
-                        int bytesRead;
-                        do
-                        {
-                            bytesRead = port.Read(buffer, 0, buffer.Length);
-                            ret.AddRange(buffer.Take(bytesRead));
-                        } while (bytesRead >= buffer.Length);
-                        return ret;
-                    });
+                return read;
             }
         }
 
@@ -222,7 +206,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
             }
         }
 
-        private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
+        private IObservable<(bool, List<byte>)> ToMessage(IObservable<byte> input)
         {
             return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
             {
@@ -246,7 +230,7 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                         case 0x15:
                             buffer.IsError = true;
-                            break;
+							break;
                         case 63:
                             break;
                         case 13:
@@ -256,32 +240,33 @@ internal sealed class MipsCommunicator : IMipsCommunicator
                             break;
                     }
                 return buffer;
-            }).Where(fc => fc.Complete).Select(fc => fc.Message);
+            }).Where(fc => fc.Complete).Select(fc => (fc.IsError, fc.Message));
         }
 
-        private IObservable<string> ToDecodedMessage(IObservable<IEnumerable<byte>> input)
+        private IObservable<(bool, string)> ToDecodedMessage(IObservable<(bool, List<byte>)> input)
         {
             return input.Select(bytes =>
             {
-                if (bytes.Any())
+
+				if (bytes.Item2.Count != 0)
                 {
-                    return Encoding.ASCII.GetString(bytes.ToArray());
+                    return (bytes.Item1, Encoding.ASCII.GetString(bytes.Item2.ToArray()));
                 }
                 else
                 {
-                    return string.Empty;
+                    return (bytes.Item1, string.Empty);
                 }
 
             });
         }
 
-        private IConnectableObservable<string> messageSources;
+        private IConnectableObservable<(bool, string)> messageSources;
 
-        public IObservable<string> MessageSources => messageSources;
-
+        public IObservable<(bool, string)> MessageSources => messageSources;
+       
         public void Dispose()
         {
-            port?.Dispose();
+            serialPort?.Dispose();
             connection?.Dispose();
         }
 	    

@@ -1,4 +1,4 @@
-﻿namespace Mips_net.Device
+﻿namespace Mips.Device
 {
 	public enum TWaveParameter
 	{

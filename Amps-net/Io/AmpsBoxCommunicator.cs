@@ -8,14 +8,14 @@ using System.Reactive.Subjects;
 using System.Text;
 using AmpsBoxSdk.Commands;
 using AmpsBoxSdk.Devices;
-using RJCP.IO.Ports;
+using Infrastructure.Io;
 using SerialDataReceivedEventArgs = System.IO.Ports.SerialDataReceivedEventArgs;
 using SerialError = System.IO.Ports.SerialError;
 using SerialErrorReceivedEventArgs = System.IO.Ports.SerialErrorReceivedEventArgs;
 
 namespace AmpsBoxSdk.Io
 {
-    internal sealed class AmpsBoxCommunicator : IDisposable
+    internal sealed  class AmpsBoxCommunicator : IAmpsCommunicator, IDisposable
     {
         #region Members
 
@@ -25,27 +25,35 @@ namespace AmpsBoxSdk.Io
         private readonly object sync = new object();
 
         private readonly byte[] _lf = Encoding.ASCII.GetBytes("\n");
-
         /// <summary>
         /// Gets the serial port
         /// </summary>
-        private readonly SerialPortStream serialPort;
+        private readonly SerialPort serialPort;
 
         private IDisposable connection;
         #endregion
 
         #region Construction and Initialization
 
-        public AmpsBoxCommunicator(SerialPortStream serialPort)
+        public AmpsBoxCommunicator(SerialPort serialPort)
         {
             this.serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-            IsEmulated = false; 
+            IsEmulated = false;
+            read = Observable.FromEventPattern<SerialDataReceivedEventHandler, SerialDataReceivedEventArgs>(
+                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
+                              {
+                                  var buffer = new byte[1024];
+                                  var ret = new List<byte>();
+                                  int bytesRead;
+                                  do
+                                  {
+                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
+                                      ret.AddRange(buffer.Take(bytesRead));
+                                  } while (bytesRead >= buffer.Length);
+                                  return ret;
+                              }).Publish().RefCount() ;
         }
 
-        private void SerialPort_ErrorReceived(object sender, RJCP.IO.Ports.SerialErrorReceivedEventArgs e)
-        {
-            throw new Exception(e.EventType.ToString());
-        }
 
         #endregion
 
@@ -54,7 +62,8 @@ namespace AmpsBoxSdk.Io
         /// Writes ASCII / UTF8 Encoded value to stream
         /// </summary>
         /// <param name="value"></param>
-        internal void Write(byte[] value, string separator)
+        /// <param name="separator"></param>
+        public void Write(byte[] value, string separator)
         {
             if (!serialPort.IsOpen)
             {
@@ -63,21 +72,20 @@ namespace AmpsBoxSdk.Io
             lock (sync)
             {
                 if (string.IsNullOrEmpty(separator)) return;
-                serialPort.DiscardInBuffer(); // ensure that no reply is sitting in queue! 
                 var bytes = Encoding.ASCII.GetBytes(separator);
                 foreach (var b in bytes)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
 
                 foreach (var b in value)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
             }
         }
 
-        internal void WriteEnd(string appendToEnd = null)
+        public void WriteEnd(string appendToEnd = null)
         {
             if (!serialPort.IsOpen)
             {
@@ -90,19 +98,19 @@ namespace AmpsBoxSdk.Io
                     var bytes = Encoding.ASCII.GetBytes(appendToEnd);
                     foreach (var b in bytes)
                     {
-                        serialPort.WriteByte(b);
+                        serialPort.BaseStream.WriteByte(b);
                     }
                 }
                 foreach (var b in _lf)
                 {
-                    serialPort.WriteByte(b);
+                    serialPort.BaseStream.WriteByte(b);
                 }
             }
         }
 
 
 
-        internal void WriteHeader(AmpsCommand command)
+        public void WriteHeader(AmpsCommand command)
         {
             var commandBytes = CommandMap.Default.GetBytes(command);
             if (commandBytes == null)
@@ -110,13 +118,17 @@ namespace AmpsBoxSdk.Io
                 throw new NotImplementedException();
             }
 
-            foreach (var commandByte in commandBytes)
+            lock (sync)
             {
-                serialPort.WriteByte(commandByte);
+                foreach (var commandByte in commandBytes)
+                {
+                    serialPort.BaseStream.WriteByte(commandByte);
+                }
             }
+          
         }
 
-        internal string ReadLine()
+        public string ReadLine()
         {
             return this.serialPort.ReadLine();
         }
@@ -137,7 +149,7 @@ namespace AmpsBoxSdk.Io
         #region Properties
 
         /// <summary>
-        /// Get or set read timeout for commincator.
+        /// Get or set read timeout for communicator.
         /// </summary>
         public int ReadTimeout { get; set; }
 
@@ -151,12 +163,12 @@ namespace AmpsBoxSdk.Io
         /// </summary>
         public bool IsEmulated { get; set; }
 
-        
+        private IObservable<byte> read;
+
         public void Open()
         {
             lock (sync)
             {
-
                 if (messageSources == null)
                 {
                     messageSources = ToDecodedMessage(ToMessage(Read)).Publish(); // Only create one connection.
@@ -171,44 +183,17 @@ namespace AmpsBoxSdk.Io
             }
         }
 
-        private IObservable<byte> Read
+        public IObservable<byte> Read
         {
             get
             {
-                return
-                          Observable.FromEventPattern<EventHandler<RJCP.IO.Ports.SerialDataReceivedEventArgs>, RJCP.IO.Ports.SerialDataReceivedEventArgs>(
-                              h => serialPort.DataReceived += h, h => serialPort.DataReceived -= h).SelectMany(_ =>
-                              {
-                                  var buffer = new byte[1024];
-                                  var ret = new List<byte>();
-                                  int bytesRead;
-                                  do
-                                  {
-                                      bytesRead = serialPort.Read(buffer, 0, buffer.Length);
-                                      ret.AddRange(buffer.Take(bytesRead));
-                                  } while (bytesRead >= buffer.Length);
-                                  return ret;
-                              });
-            }
-        }
-
-        private class FillingCollection
-        {
-            public byte[] LineEnding { get; }
-            public List<byte> Message { get; set; }
-            public bool Complete { get; set; }
-
-            public bool IsError { get; set; }
-
-            public FillingCollection()
-            {
-                LineEnding = Encoding.ASCII.GetBytes("\r\n");
+                return read;
             }
         }
 
         private IObservable<IEnumerable<byte>> ToMessage(IObservable<byte> input)
         {
-            return input.Scan(new FillingCollection {Message = new List<byte>()}, (buffer, newByte) =>
+            return input.Scan(new FillingCollection(), (buffer, newByte) =>
             {
 
                 if (buffer.Complete)
@@ -249,16 +234,10 @@ namespace AmpsBoxSdk.Io
         {
             return input.Select(bytes =>
             {
-                if (bytes.Any())
-                {
-                    var str = Encoding.ASCII.GetString(bytes.ToArray());
-                   return str;
-                }
-                else
-                {
-                    return string.Empty;
-                }
-                
+                var enumerable = bytes.ToArray();
+                if (enumerable.Length <= 0) return string.Empty;
+                var str = Encoding.ASCII.GetString(enumerable);
+                return str;
             });
         }
 

@@ -1,4 +1,7 @@
+using System;
+using System.Reactive;
 using System.Threading.Tasks;
+using AmpsBoxSdk.Io;
 using AmpsBoxSdk.Modules;
 
 namespace AmpsBoxSdk.Devices
@@ -7,5 +10,10 @@ namespace AmpsBoxSdk.Devices
     {
         Task<AmpsBoxDeviceData> GetAmpsConfigurationAsync();
         string Name { get; }
+
+        IObservable<Unit> TableCompleteOrAborted { get; }
+
+        IObservable<Unit> ModeReady { get; }
+        IAmpsCommunicator Communicator { get; }
     }
 }

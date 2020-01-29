@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using RJCP.IO.Ports;
 using Xunit;
 using Xunit.Abstractions;
@@ -29,8 +31,14 @@ namespace Amps.SDK.Tests.Devices
         }
 
         [Fact]
-        public void AmpsSignalTableTest()
+        public async void AmpsSignalTableTest()
         {
+            
+
+            box.ModeReady.Subscribe(unit =>
+            {
+                output.WriteLine("mode");
+            });
             var signalTable = new AmpsSignalTable();
             signalTable = signalTable.AddTimePoint(0, new LoopData());
             signalTable[0].CreateOutput("1", 10);
@@ -42,16 +50,16 @@ namespace Amps.SDK.Tests.Devices
             output.WriteLine(encodedString);
 
             box.LoadTimeTable(signalTable).Wait();
-            var error = box.GetError().Result;
-            output.WriteLine(error.ToString());
+            var ampsError = box.GetError().Result;
+            output.WriteLine(ampsError.ToString());
             box.SetClock(ClockType.INT).Wait();
-            error = box.GetError().Result;
-            output.WriteLine(error.ToString());
+            ampsError = box.GetError().Result;
+            output.WriteLine(ampsError.ToString());
             box.SetTrigger(StartTrigger.SW).Wait();
-            error = box.GetError().Result;
-            output.WriteLine(error.ToString());
+            ampsError = box.GetError().Result;
+            output.WriteLine(ampsError.ToString());
             box.SetMode(Modes.TBL).Wait();
-            error = box.GetError().Result;
+            var error = box.GetError().Result;
             output.WriteLine(error.ToString());
             box.StartTimeTable().Wait();
             error = box.GetError().Result;
@@ -61,6 +69,8 @@ namespace Amps.SDK.Tests.Devices
 
             box.StopTable().Wait();
             box.AbortTimeTable().Wait();
+            box.TableCompleteOrAborted.FirstAsync().Wait();
+            Thread.Sleep(1000);
         }
 
         [Fact]
@@ -160,8 +170,8 @@ namespace Amps.SDK.Tests.Devices
         public void SetDigitalStateTest(string channel, bool state)
         {
             var unit = box.SetDigitalState(channel, state).Result;
-            var error = box.GetError().Result;
-            output.WriteLine(error.ToString());
+            //var error = box.GetError().Result;
+            //output.WriteLine(error.ToString());
         }
         [Theory]
         [InlineData(ErrorCodes.Nominal)]

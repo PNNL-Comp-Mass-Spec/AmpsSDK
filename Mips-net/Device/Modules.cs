@@ -1,4 +1,4 @@
-﻿namespace Mips_net.Device
+﻿namespace Mips.Device
 {
 	public enum Modules
 	{
@@ -8,6 +8,8 @@
 		TWAVE,
 		FAIMS,
 		FIL,
-		
+		ARB,
+		DIO
+
 	}
 }

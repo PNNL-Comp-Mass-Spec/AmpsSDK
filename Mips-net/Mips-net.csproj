@@ -1,8 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net47</TargetFramework>
-    <RootNamespace>Mips_net</RootNamespace>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>Mips</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
@@ -13,26 +17,15 @@
 
 
   <ItemGroup>
-    <PackageReference Include="DynamicData" Version="4.12.0.1210" />
-    <PackageReference Include="SerialPortStream" Version="2.0.3" />
+    <PackageReference Include="DynamicData" Version="6.3.1.2409" />
+    <PackageReference Include="FTD2XX.Net" Version="1.0.14" />
+    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="xunit" Version="2.3.1" />
   </ItemGroup>
 
 
   <ItemGroup>
     <ProjectReference Include="..\Amps-net\Amps-net.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Reference Include="F.Controls">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\F.Controls.dll</HintPath>
-    </Reference>
-    <Reference Include="Falkor.Infrastructure">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\Falkor.Infrastructure.dll</HintPath>
-    </Reference>
-    <Reference Include="Falkor.SDK">
-      <HintPath>..\..\Visual Studio 2017\Projects\Mips-falkor-plugin\mips-control\bin\Debug\Falkor.SDK.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

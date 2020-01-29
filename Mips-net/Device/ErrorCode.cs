@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Mips_net.Device
+namespace Mips.Device
 {
 	[DataContract]
 	public enum ErrorCode

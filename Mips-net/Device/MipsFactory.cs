@@ -1,15 +1,18 @@
-﻿
-using FalkorSDK.IO.Ports;
-using Mips_net.Io;
-using RJCP.IO.Ports;
+﻿using System.IO.Ports;
+using Mips.Io;
 
-namespace Mips_net.Device
+namespace Mips.Device
 {
    public class MipsFactory
     {
-	    public static IMipsBox CreateMipsBox(SerialPortStream serialPort)
+	    public static IMipsBox CreateMipsBox(SerialPort serialPort)
 	    {
 		    return new MipsBox(new MipsCommunicator(serialPort));
 	    }
-	}
+
+	    public static IMipsBox CreateMipsBox(string serialNumber)
+	    {
+		    return new MipsBox(new MipsFtdiCommunicator(serialNumber, false));
+	    }
+    }
 }

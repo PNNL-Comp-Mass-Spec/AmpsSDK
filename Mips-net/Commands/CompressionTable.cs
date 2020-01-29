@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
 using System.Text;
-using Mips_net.Device;
 
-namespace Mips_net.Commands
+namespace Mips.Commands
 {
 	public  class CompressionTable
 	{
@@ -13,11 +9,14 @@ namespace Mips_net.Commands
 		private StringBuilder commandBuilder;
 		public CompressionTable()
 		{
-			
+			this.CommandQueue = new Queue<string>();
 		}
-		public CompressionTable(Queue<string> commandQueue)
+		public CompressionTable(IEnumerable<string> commandQueue) : this()
 		{
-			this.CommandQueue = commandQueue;
+			foreach (var command in commandQueue)
+			{
+				CommandQueue.Enqueue(command);
+			}
 		}
 
 		public string RetrieveTableAsEncodedString()
@@ -36,13 +35,7 @@ namespace Mips_net.Commands
 			
 		}
 
-		//throw new NotImplementedException();
-		
-		public  Queue<string> CommandQueue { get; set; }
+		public Queue<string> CommandQueue { get; }
 
-		public static CompressionTable GetCompressionTable()
-		{
-			return new CompressionTable() ;
-		}
 	}
 }

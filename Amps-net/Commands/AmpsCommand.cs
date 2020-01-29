@@ -2,6 +2,7 @@
 {
     public enum AmpsCommand
     {
+        NONE,
         GVER,
         GCMDS,
         GERR,
@@ -31,8 +32,10 @@
 
         SHTR,
         SHTRTMP,
+        GHTRTMP,
         GHTRTC,
         SHTRGAIN,
+		GHTRGAIN,
 
 
         STBLDAT,

@@ -1,27 +1,28 @@
 ﻿using System.Collections;
 using System.Reactive;
 using System.Threading.Tasks;
-using Mips_net.Commands;
-using Mips_net.Device;
+using Mips.Commands;
+using Mips.Device;
 
-
-namespace Mips_net.Module
+namespace Mips.Module
 {
     public interface ITwaveModule
     {
         Task<double> GetTWaveFrequency(string channel);
-        Task<Unit> SetTWaveFrequency(string channel, int frequency);
+        Task<Unit> SetTWaveFrequency(string channel, double frequency);
         Task<double> GetTWavePulseVoltage(string channel);
-        Task<Unit> SetTWavePulseVoltage(string channel, int voltage);
-        Task<Unit> SetTWaveGuard1Voltage(string channel, int voltage);
+        Task<Unit> SetTWavePulseVoltage(string channel, double voltage);
+        Task<Unit> SetTWaveGuard1Voltage(string channel, double voltage);
         Task<double> GetTWaveGuard1Voltage(string channel);
-        Task<Unit> SetTWaveGuard2Voltage(string channel, int voltage);
+        Task<Unit> SetTWaveGuard2Voltage(string channel, double voltage);
         Task<double> GetTWaveGuard2Voltage(string channel);
         Task<BitArray> GetTWaveSequence(string channel);
         Task<Unit> SetTWaveSequence(string channel, BitArray sequence);
         Task<TWaveDirection> GetTWaveDirection(string channel);
         Task<Unit> SetTWaveDirection(string channel, TWaveDirection direction);
         Task<Unit> SetTWaveCompressionCommand(CompressionTable compressionTable);
+
+        Task<Unit> SetTWaveCompressionCommand(string compressionTable);
         Task<string> GetTWaveCompressionCommand();
         Task<StateCommands> GetCompressorMode();
         Task<Unit> SetCompressorMode(StateCommands mode);
