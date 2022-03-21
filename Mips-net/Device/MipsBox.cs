@@ -36,7 +36,7 @@ namespace Mips.Device
 				this.responseQueue.Enqueue(s);
                 Log.Information($"{s}");
                 return s;
-			}).Subscribe();
+			}).Subscribe(s => { }, (Exception e) => Log.Error(e.ToString()));
 
 			this.TableCompleteOrAborted = source
 				.Where(x => x.Equals("tblcmplt", StringComparison.OrdinalIgnoreCase) || x.Contains("ABORTED")).Select(x => Unit.Default);
@@ -2584,6 +2584,350 @@ namespace Mips.Device
 		    double.TryParse(response, out double result);
 		    return result;
 	    }
-	    
+
+        public async Task<Unit> SetEnableWaveformGeneration(State state)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMENA, state.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<Status> GetEnableWaveformGeneration()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMENA);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			Enum.TryParse(response, out Status result);
+			return result;
+		}
+
+        public async Task<Unit> SetDriveLevelPercent(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMDRV, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetDriveLevelPercent()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMDRV);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetWaveformGenerationPower()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMPWR);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetPositivePeakOutputVoltageKW()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMPV);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetNegativePeakOutputVoltageKW()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMNV);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetEnableOutputVoltageLocking(State state)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMLOCK, state.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<Status> GetOutputVoltageLockStatus()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMLOCK);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			Status.TryParse(response, out Status result);
+			return result;
+		}
+
+        public async Task<Unit> SetOutputVoltageSetPointKV(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMSP, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<Unit> SetEnableSystemAutotune()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMTUNE);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+		public async Task<Unit> AbortSystemAutotune()
+		{
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMTABRT);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<string> GetSystemAutotuneStatus()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMTSTAT);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			return response;
+		}
+
+        public async Task<Unit> SetCVOutputDcVoltageSetpoint(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMCV, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetCVOutputDcVoltageSetpoint()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMCV);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetCvOutputVoltageReadback()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMCVA);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetBiasOutputDcVoltageSetpoint(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMBIAS, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetBiasOutputDcVoltageSetpoint()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMBIAS);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetBiasOutputDcVoltagReadback()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMBIASA);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetOffsetOutputVoltageSetpoint(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMOFF, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetOffsetOutputVoltageSetpoint()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMOFF);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<double> GetOffsetOutputVoltageReadback()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMOFFA);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetCVScanStartVoltage(double voltage)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMCVSTART, voltage);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetCVScanStartVoltage()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMCVSTART);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetCVScanEndVoltage(double voltage)
+        {
+            var mipsmessage = MipsMessage.Create(MipsCommand.SFMCVEND, voltage);
+            messageQueue.Enqueue(mipsmessage);
+            await ProcessQueue();
+            return Unit.Default;
+        }
+
+        public async Task<double> GetCVScanEndVoltage()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMCVEND);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetScanDuration(double seconds)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMDUR, seconds);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<double> GetScanDuration()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMDUR);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			double.TryParse(response, out double result);
+			return result;
+		}
+
+        public async Task<Unit> SetScanLoopCount(int count)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMLOOPS, count);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<int> GetScanLoopCount()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMLOOPS);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			int.TryParse(response, out int result);
+			return result;
+		}
+
+        public async Task<Unit> StartLinearScan(Status status)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMSTRTLIN, status.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<Status> GetLinearScanStatus()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMSTRTLIN);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			Status.TryParse(response, out Status result);
+			return result;
+		}
+
+        public async Task<Unit> SetStepScanDuration(int milliseconds)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMSTPTM, milliseconds);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<int> GetStepScanDuration()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMSTPTM);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			int.TryParse(response, out int result);
+			return result;
+		}
+
+        public async Task<Unit> SetStepScanStepCount(int count)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMSTEPS, count);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<int> GetStepScanStepCount()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMSTEPS);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			int.TryParse(response, out int result);
+			return result;
+		}
+
+        public async Task<Unit> StartStepScan(Status status)
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMSTPTM, status.ToString());
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue();
+			return Unit.Default;
+		}
+
+        public async Task<Status> GetStepScanModeStatus()
+        {
+			var mipsmessage = MipsMessage.Create(MipsCommand.GFMSTRTSTP);
+			messageQueue.Enqueue(mipsmessage);
+			await ProcessQueue(true);
+			var response = responseQueue.Dequeue();
+			Status.TryParse(response, out Status result);
+			return result;
+		}
     }
 }
