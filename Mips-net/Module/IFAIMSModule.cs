@@ -8,20 +8,20 @@ namespace Mips.Module
 	{
 		Task<Unit> SetPositiveOutput(int slope,int offset);
 		Task<Unit> SetNegativeOutput(int slope, int offset);
-		Task<Unit> SetEnableWaveformGeneration(Status status);
+		Task<Unit> SetEnableWaveformGeneration(Status status);//
 		Task<Status> GetEnableWaveformGeneration();
-		Task<Unit> SetDriveLevelPercent(double level);
+		Task<Unit> SetDriveLevelPercent(double level);//
 		Task<double> GetDriveLevelPercent();
 		Task<double> GetWaveformGenerationPower();
 		Task<double> GetPositivePeakOutputVoltageKW();
 		Task<double> GetNegativePeakOutputVoltageKW();
-		Task<Unit> SetEnableOutputVoltageLocking(Status status);
+		Task<Unit> SetEnableOutputVoltageLocking(Status status);//
 		Task<Status> GetOutputVoltageLockStatus();
-		Task<Unit> SetOutputVoltageSetPointKV(double voltage);
+		Task<Unit> SetOutputVoltageSetPointKV(double voltage);//
 		Task<Unit> SetEnableSystemAutotune();
 		Task<Unit> AbortSystemAutotune();
 		Task<string> GetSystemAutotuneStatus();
-		Task<Unit> SetCVOutputDcVoltageSetpoint(double voltage);
+		Task<Unit> SetCVOutputDcVoltageSetpoint(double voltage);//
 		Task<double> GetCVOutputDcVoltageSetpoint();
 		Task<double> GetCvOutputVoltageReadback();
 		Task<Unit> SetBiasOutputDcVoltageSetpoint(double voltage);

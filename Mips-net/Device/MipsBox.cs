@@ -2585,9 +2585,9 @@ namespace Mips.Device
 		    return result;
 	    }
 
-        public async Task<Unit> SetEnableWaveformGeneration(State state)
+        public async Task<Unit> SetEnableWaveformGeneration(Status status)
         {
-			var mipsmessage = MipsMessage.Create(MipsCommand.SFMENA, state.ToString());
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMENA, status.ToString());
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
 			return Unit.Default;
@@ -2651,9 +2651,9 @@ namespace Mips.Device
 			return result;
 		}
 
-        public async Task<Unit> SetEnableOutputVoltageLocking(State state)
+        public async Task<Unit> SetEnableOutputVoltageLocking(Status status)
         {
-			var mipsmessage = MipsMessage.Create(MipsCommand.SFMLOCK, state.ToString());
+			var mipsmessage = MipsMessage.Create(MipsCommand.SFMLOCK, status.ToString());
 			messageQueue.Enqueue(mipsmessage);
 			await ProcessQueue();
 			return Unit.Default;
