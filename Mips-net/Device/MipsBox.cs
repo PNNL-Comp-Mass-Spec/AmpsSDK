@@ -747,9 +747,9 @@ namespace Mips.Device
 
 	    //Rf Driver
 
-		public async Task<Unit> SetFrequency(string channel, double frequencyInHz)
+		public async Task<Unit> SetFrequency(string channel, int frequencyInHz)
 	    {
-			var mipsmessage = MipsMessage.Create(MipsCommand.SRFFRQ,channel,frequencyInHz);
+			var mipsmessage = MipsMessage.Create(MipsCommand.SRFFRQ, channel, frequencyInHz);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue();
 		    return Unit.Default;
@@ -771,13 +771,13 @@ namespace Mips.Device
 		    return Unit.Default;
 		}
 
-	    public async Task<double> GetFrequency(string channel)
+	    public async Task<int> GetFrequency(string channel)
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFFRQ, channel);
 			messageQueue.Enqueue(mipsmessage);
 		    await ProcessQueue(true);
 		    var response = responseQueue.Dequeue();
-		    double.TryParse(response, out double result);
+		    int.TryParse(response, out int result);
 		    return result;
 		}
 
@@ -831,6 +831,7 @@ namespace Mips.Device
 		    return result;
 		}
 
+		// TODO this should return a structure 
 		public async Task<IEnumerable<double>> GetParameters()
 	    {
 			var mipsmessage = MipsMessage.Create(MipsCommand.GRFALL);
