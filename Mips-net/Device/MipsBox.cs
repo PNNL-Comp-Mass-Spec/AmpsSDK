@@ -28,7 +28,7 @@ namespace Mips.Device
 		{
 			this.communicator = communicator ?? throw new ArgumentNullException(nameof(communicator));
 			this.communicator.Open();
-			//var task = GetConfig();
+
 			var source = this.communicator.MessageSources.Where(x => x.Item1 == false).Select(x => x.Item2);
 			var otherSource = this.communicator.MessageSources.Where(x => x.Item1 == true);
 			source.Where(x => x != "tblcmplt" && !x.Contains("ABORTED") && !x.Contains("TRIG") && x != "tblrdy" && !string.IsNullOrEmpty(x) && x != "TableNotReady").Select(s =>
@@ -47,8 +47,23 @@ namespace Mips.Device
 				isErrorState = true;
 			});
 
-			
-		}
+			deviceData = new Lazy<MipsBoxDeviceData>(() =>
+			{
+                var dcBiasChannels = this.GetNumberDcBiasChannels().Result;
+                var rfChannels = this.GetNumberRfChannels().Result;
+                var digitalChannels = this.GetNumberDigitalChannels().Result;
+                var twaveChannels = this.GetNumberTwaveChannels().Result;
+                var arbChannels = this.GetNumberArbChannels().Result;
+
+                return new MipsBoxDeviceData(
+                        (uint)dcBiasChannels,
+                        (uint)rfChannels,
+                        (uint)digitalChannels,
+                        (uint)twaveChannels,
+                        (uint)arbChannels);
+            });
+
+        }
 	    private async Task ProcessQueue(bool response=false)
 	    {
 		    if (messageQueue.TryDequeue(out var message))
@@ -76,23 +91,10 @@ namespace Mips.Device
 	    [DataMember]
 	    public string Name => GetName().Result;
 
-		public Lazy<MipsBoxDeviceData> DeviceData => deviceData;
+		public MipsBoxDeviceData DeviceData => deviceData.Value;
 
         public IMipsCommunicator Communicator =>communicator;
 
-        public async Task GetConfig()
-	    {
-		    var dcBiasChannels = await this.GetNumberDcBiasChannels();
-		    var rfChannels = await this.GetNumberRfChannels();
-		    var digitalChannels = await this.GetNumberDigitalChannels();
-		    var twaveChannels = await this.GetNumberTwaveChannels();
-		    var arbChannels = await this.GetNumberArbChannels();
-
-			this.deviceData = new Lazy<MipsBoxDeviceData>(() => new MipsBoxDeviceData((uint)dcBiasChannels,
-								(uint)rfChannels,  (uint) digitalChannels, (uint)twaveChannels, (uint)arbChannels));
-
-		
-	    }
 	    public async Task<int> GetNumberESIChannels()
 	    {
 		    var mipsmessage = MipsMessage.Create(MipsCommand.GCHAN, Modules.ESI.ToString());

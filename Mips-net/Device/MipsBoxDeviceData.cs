@@ -32,7 +32,7 @@ namespace Mips.Device
 		    }
 
 		}
-	    public static MipsBoxDeviceData Empty { get; } = new MipsBoxDeviceData(0, 0,0, 0,0);
+
 	    public uint NumberHvChannels { get; }
 	    public uint NumberRfChannels { get; }
 

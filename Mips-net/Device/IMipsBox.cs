@@ -11,12 +11,12 @@ namespace Mips.Device
 								IFrequencySweepModule,IWiFiModule,IEthernetModule,IFAIMSModule, IFilamentModule, IArbModule,
 								IArbCompressorModule, IArbConfigurationModule
 	{
-		Task GetConfig();
 		string Name { get; }
-		IObservable<Unit> TableCompleteOrAborted { get; }
-		Lazy<MipsBoxDeviceData> DeviceData { get; }
-        IMipsCommunicator Communicator { get; }
-       
 
+		IObservable<Unit> TableCompleteOrAborted { get; }
+
+		MipsBoxDeviceData DeviceData { get; }
+
+        IMipsCommunicator Communicator { get; }
     }
 }
